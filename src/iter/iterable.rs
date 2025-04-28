@@ -10,7 +10,5 @@ pub trait IterableFrom: Iterable {
     type IterFrom<'a>: Iterator<Item = <Self as Iterable>::Item>
     where
         Self: 'a;
-    // this can always be implemented as self.iter().skip(idx)
-    // but the implementer might know better ways to do it
     fn iter_from(&self, idx: usize) -> Self::IterFrom<'_>;
 }
