@@ -1,4 +1,4 @@
-use slices::{SliceBy, SliceByValue, SliceByValueIndex};
+use slices::{SliceByValue, SliceByValueIndex};
 
 pub mod iter;
 pub mod slices;
@@ -13,7 +13,7 @@ impl<T: Clone> SliceByValueIndex<&[T]> for usize {
     type Value = T;
 
     fn get_value(&self, slice: &&[T]) -> Option<Self::Value> {
-        slice.get(*self).cloned()
+        slice.get(*self).map(|v| v.clone())
     }
     fn index_value(&self, slice: &&[T]) -> Self::Value {
         slice[*self].clone()
