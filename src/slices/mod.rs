@@ -64,17 +64,17 @@ pub trait SliceByValueMutIndex<S: SliceByValueMut + ?Sized>: SliceByValueIndex<S
 ///
 /// This traits makes it possible to write trait bounds as
 /// ```ignore
-/// T: IndexableBy<usize, Value = int32>
+/// T: SliceBy<usize, Value = int32>
 /// ```
 /// instead of the equivalent `where` clause
 /// ```ignore
 /// where T: SliceByValue, usize: SliceByValueIndex<Value = i32>
 /// ```
-pub trait IndexableBy<I>: SliceByValue {
+pub trait SliceBy<I = usize>: SliceByValue {
     type Value;
 }
 
-impl<I, T> IndexableBy<I> for T
+impl<I, T> SliceBy<I> for T
 where
     I: SliceByValueIndex<T>,
     T: SliceByValue,
@@ -87,17 +87,17 @@ where
 ///
 /// This traits makes it possible to write trait bounds as
 /// ```ignore
-/// T: IndexableByMut<usize, Value = int32>
+/// T: SliceByMut<usize, Value = int32>
 /// ```
 /// instead of the equivalent `where` clause
 /// ```ignore
 /// where T: SliceByValueMut, usize: SliceByValueMutIndex<Value = i32>
 /// ```
-pub trait IndexableByMut<I>: SliceByValueMut {
+pub trait SliceByMut<I = usize>: SliceByValueMut {
     type Value;
 }
 
-impl<I, T> IndexableByMut<I> for T
+impl<I, T> SliceByMut<I> for T
 where
     I: SliceByValueMutIndex<T>,
     T: SliceByValueMut,
