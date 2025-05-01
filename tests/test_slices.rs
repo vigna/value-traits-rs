@@ -6,9 +6,6 @@ fn test_slices() {
     assert_eq!(test(s.as_slice()), 1);
 }
 
-fn test<S>(s: S) -> i32
-where
-    S: SliceByValue<usize, Value = i32>,
-{
+fn test(s: impl SliceByValue<usize, Value = i32>) -> i32 {
     s.index_value(0_usize)
 }
