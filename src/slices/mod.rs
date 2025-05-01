@@ -1,22 +1,16 @@
-use core::ops::Range;
+pub trait SliceByValue<I> {
+    type Value;
 
-pub trait SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_value<I: SliceByValueIndex<Self>>(&self, index: I) -> I::Value {
-        index.index_value(self)
-    }
+    fn index_value(&self, index: I) -> Self::Value;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_value_unchecked<I: SliceByValueIndex<Self>>(&self, index: I) -> I::Value {
-        unsafe { index.get_value_unchecked(self) }
-    }
+    unsafe fn get_value_unchecked(&self, index: I) -> Self::Value;
 
     /// See [`slice::get`].
-    fn get_value<I: SliceByValueIndex<Self>>(&self, index: I) -> Option<I::Value> {
-        index.get_value(self)
-    }
+    fn get_value(&self, index: I) -> Option<Self::Value>;
 
     /// See [`slice::len`].
     fn len(&self) -> usize;
@@ -27,80 +21,14 @@ pub trait SliceByValue {
     }
 }
 
-pub trait SliceByValueMut: SliceByValue {
+pub trait SliceByValueMut<I>: SliceByValue<I> {
     /// Sets the value at the given index to the given value and
     /// returns the previous value, without doing bounds checking.
     ///
     /// For a safe alternative see [`SliceByValueMut::set_value`].
-    unsafe fn set_value_unchecked<I: SliceByValueMutIndex<Self>>(
-        &mut self,
-        index: I,
-        value: I::Value,
-    ) -> I::Value {
-        unsafe { index.set_value_unchecked(self, value) }
-    }
+    unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value;
 
     /// Sets the value at the given index to the given value and
     /// returns the previous value.
-    fn set_value<I: SliceByValueMutIndex<Self>>(&mut self, index: I, value: I::Value) -> I::Value {
-        index.set_value(self, value)
-    }
-}
-
-pub trait SliceByValueIndex<S: SliceByValue + ?Sized> {
-    type Value;
-    fn get_value(&self, slice: &S) -> Option<Self::Value>;
-    fn index_value(&self, slice: &S) -> Self::Value;
-    unsafe fn get_value_unchecked(&self, slice: &S) -> Self::Value;
-}
-
-pub trait SliceByValueMutIndex<S: SliceByValueMut + ?Sized>: SliceByValueIndex<S> {
-    fn set_value(&self, slice: &mut S, value: Self::Value) -> Self::Value;
-    unsafe fn set_value_unchecked(&self, slice: &mut S, value: Self::Value) -> Self::Value;
-}
-
-/// Convenience trait for specifying the behavior of a
-/// by-value slice.
-///
-/// This traits makes it possible to write trait bounds as
-/// ```ignore
-/// T: SliceBy<usize, Value = int32>
-/// ```
-/// instead of the equivalent `where` clause
-/// ```ignore
-/// where T: SliceByValue, usize: SliceByValueIndex<Value = i32>
-/// ```
-pub trait SliceBy<I = usize>: SliceByValue {
-    type Value;
-}
-
-impl<I, T> SliceBy<I> for T
-where
-    I: SliceByValueIndex<T>,
-    T: SliceByValue,
-{
-    type Value = I::Value;
-}
-
-/// Convenience trait for specifying the behavior of a
-/// mutable by-value slice.
-///
-/// This traits makes it possible to write trait bounds as
-/// ```ignore
-/// T: SliceByMut<usize, Value = int32>
-/// ```
-/// instead of the equivalent `where` clause
-/// ```ignore
-/// where T: SliceByValueMut, usize: SliceByValueMutIndex<Value = i32>
-/// ```
-pub trait SliceByMut<I = usize>: SliceByValueMut {
-    type Value;
-}
-
-impl<I, T> SliceByMut<I> for T
-where
-    I: SliceByValueMutIndex<T>,
-    T: SliceByValueMut,
-{
-    type Value = I::Value;
+    fn set_value(&mut self, index: I, value: Self::Value) -> Self::Value;
 }
