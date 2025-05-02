@@ -1,4 +1,5 @@
 #![deny(unconditional_recursion)]
+use core::ops::Range;
 use slices::{SliceByValue, SliceByValueMut};
 
 pub mod iter;
@@ -51,6 +52,30 @@ impl<T: Copy> SliceByValueMut<usize> for [T] {
             let elem = self.get_unchecked_mut(index);
             core::mem::replace(elem, value)
         }
+    }
+}
+
+impl<'a, T> SliceByValue<Range<usize>> for &'a [T] {
+    type Value = &'a [T];
+
+    #[inline]
+    fn get_value(&self, index: Range<usize>) -> Option<Self::Value> {
+        (*self).get(index)
+    }
+
+    #[inline]
+    fn index_value(&self, index: Range<usize>) -> Self::Value {
+        &self[index]
+    }
+
+    #[inline]
+    unsafe fn get_value_unchecked(&self, index: Range<usize>) -> Self::Value {
+        unsafe { (*self).get_unchecked(index) }
+    }
+
+    #[inline]
+    fn len(&self) -> usize {
+        <[T]>::len(self)
     }
 }
 

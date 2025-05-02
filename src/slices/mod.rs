@@ -1,21 +1,15 @@
 pub trait SliceByValue<I> {
     type Value;
 
-    /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_value(&self, index: I) -> Self::Value;
 
-    /// See [`slice::get_unchecked`].
-    ///
     /// For a safe alternative see [`SliceByValue::get_value`].
     unsafe fn get_value_unchecked(&self, index: I) -> Self::Value;
 
-    /// See [`slice::get`].
     fn get_value(&self, index: I) -> Option<Self::Value>;
 
-    /// See [`slice::len`].
     fn len(&self) -> usize;
 
-    /// See [`slice::is_empty`].
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
