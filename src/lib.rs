@@ -6,10 +6,62 @@ use std::sync::Arc;
 pub mod iter;
 pub mod slices;
 
+impl<S: Length + ?Sized> Length for &S {
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+}
+
+impl<S: Length + ?Sized> Length for &mut S {
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+}
+
 impl<T> Length for [T] {
     #[inline]
     fn len(&self) -> usize {
         <[T]>::len(self)
+    }
+}
+
+// Implement SliceByValue for &S by delegating to S
+impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &S {
+    type Value = S::Value;
+
+    fn get_value(&self, index: I) -> Option<Self::Value> {
+        (**self).get_value(index)
+    }
+    fn index_value(&self, index: I) -> Self::Value {
+        (**self).index_value(index)
+    }
+    unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
+        (**self).get_value_unchecked(index)
+    }
+}
+
+// Implement SliceByValue for &mut S by delegating to S (for read-only access)
+impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &mut S {
+    type Value = S::Value;
+    fn get_value(&self, index: I) -> Option<Self::Value> {
+        (**self).get_value(index)
+    }
+    fn index_value(&self, index: I) -> Self::Value {
+        (**self).index_value(index)
+    }
+    unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
+        (**self).get_value_unchecked(index)
+    }
+}
+
+impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for &mut S {
+    fn set_value(&mut self, index: I, value: Self::Value) -> Self::Value {
+        (**self).set_value(index, value)
+    }
+    unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
+        (**self).set_value_unchecked(index, value)
     }
 }
 
@@ -58,13 +110,6 @@ impl<T: Clone> SliceByValueMut<usize> for [T] {
     }
 }
 
-impl<'a, T> Length for &'a [T] {
-    #[inline]
-    fn len(&self) -> usize {
-        <[T]>::len(self)
-    }
-}
-
 impl<'a, T> SliceByValue<Range<usize>> for &'a [T] {
     type Value = &'a [T];
 
@@ -84,39 +129,8 @@ impl<'a, T> SliceByValue<Range<usize>> for &'a [T] {
     }
 }
 
-impl<I, S: SliceByValue<I> + ?Sized> Length for &mut S {
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
-// Implement SliceByValue for &mut S by delegating to S (for read-only access)
-impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &mut S {
-    type Value = S::Value;
-    fn get_value(&self, index: I) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: I) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
-        (**self).get_value_unchecked(index)
-    }
-}
-
-impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for &mut S {
-    fn set_value(&mut self, index: I, value: Self::Value) -> Self::Value {
-        (**self).set_value(index, value)
-    }
-    unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
-        (**self).set_value_unchecked(index, value)
-    }
-}
-
 // --- Implementations for std collections ---
-
-impl<I, S: SliceByValue<I> + ?Sized> Length for Box<S> {
+impl<S: Length + ?Sized> Length for Box<S> {
     #[inline]
     fn len(&self) -> usize {
         (**self).len()
@@ -146,6 +160,13 @@ impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for Box<S> {
     }
 }
 
+impl<S: Length + ?Sized> Length for Arc<S> {
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+}
+
 impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Arc<S> {
     type Value = S::Value;
 
@@ -158,15 +179,6 @@ impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Arc<S> {
     unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
         (**self).get_value_unchecked(index)
     }
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-
-    #[inline]
-    fn is_empty(&self) -> bool {
-        (**self).is_empty()
-    }
 }
 
 impl<I, S: SliceByValueMut<I> + Clone> SliceByValueMut<I> for Arc<S> {
@@ -177,6 +189,13 @@ impl<I, S: SliceByValueMut<I> + Clone> SliceByValueMut<I> for Arc<S> {
     unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
         // This will clone the arc if there are more than 1 strong reference to it.
         Arc::make_mut(self).set_value_unchecked(index, value)
+    }
+}
+
+impl<T, const N: usize> Length for [T; N] {
+    #[inline(always)]
+    fn len(&self) -> usize {
+        N
     }
 }
 
@@ -201,11 +220,6 @@ impl<T: Clone, const N: usize> SliceByValue<usize> for [T; N] {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
         // slice.get_unchecked returns &T, which we dereference and copy.
         unsafe { (*self).get_unchecked(index).clone() }
-    }
-
-    #[inline]
-    fn len(&self) -> usize {
-        N
     }
 }
 
@@ -247,10 +261,12 @@ impl<'a, T, const N: usize> SliceByValue<Range<usize>> for &'a [T; N] {
     unsafe fn get_value_unchecked(&self, index: Range<usize>) -> Self::Value {
         unsafe { (*self).get_unchecked(index) }
     }
+}
 
+impl<T> Length for Vec<T> {
     #[inline]
     fn len(&self) -> usize {
-        N
+        <[T]>::len(self)
     }
 }
 
@@ -275,10 +291,6 @@ impl<T: Clone> SliceByValue<usize> for Vec<T> {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
         // slice.get_unchecked returns &T, which we dereference and copy.
         unsafe { (*self).get_unchecked(index).clone() }
-    }
-    #[inline]
-    fn len(&self) -> usize {
-        <[T]>::len(self)
     }
 }
 
@@ -319,10 +331,5 @@ impl<'a, T> SliceByValue<Range<usize>> for &'a Vec<T> {
     #[inline]
     unsafe fn get_value_unchecked(&self, index: Range<usize>) -> Self::Value {
         unsafe { (*self).get_unchecked(index) }
-    }
-
-    #[inline]
-    fn len(&self) -> usize {
-        <[T]>::len(self)
     }
 }

@@ -7,6 +7,7 @@ fn test_slices() {
     assert_eq!(test_usize(s.as_slice()), 1);
     assert_eq!(test_range(s.as_slice()), &[1, 2]);
     assert_eq!(test_usize_range(s.as_slice()), (1, [1, 2].as_ref()));
+    assert_eq!(test_len(s.as_slice()), 3);
 }
 
 fn test_usize(s: impl SliceByValue<usize, Value = i32>) -> i32 {
