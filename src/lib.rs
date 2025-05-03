@@ -186,7 +186,6 @@ impl<'a, T, const N: usize> SliceByValue<Range<usize>> for &'a [T; N] {
 
     #[inline]
     fn get_value(&self, index: Range<usize>) -> Option<Self::Value> {
-        // slice.get returns Option<&T>, .copied() converts to Option<T>
         (*self).get(index)
     }
 
@@ -313,7 +312,8 @@ mod alloc_impls {
 #[cfg(feature = "std")]
 mod std_impls {
     use super::*;
-    use std::sync::Arc;
+    use std::{rc::Rc, sync::Arc};
+
     impl<S: Length + ?Sized> Length for Arc<S> {
         #[inline]
         fn len(&self) -> usize {
@@ -335,14 +335,24 @@ mod std_impls {
         }
     }
 
-    impl<I, S: SliceByValueMut<I> + Clone> SliceByValueMut<I> for Arc<S> {
-        fn set_value(&mut self, index: I, value: Self::Value) -> Self::Value {
-            // This will clone the arc if there are more than 1 strong reference to it.
-            Arc::make_mut(self).set_value(index, value)
+    impl<S: Length + ?Sized> Length for Rc<S> {
+        #[inline]
+        fn len(&self) -> usize {
+            (**self).len()
         }
-        unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
-            // This will clone the arc if there are more than 1 strong reference to it.
-            Arc::make_mut(self).set_value_unchecked(index, value)
+    }
+
+    impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Rc<S> {
+        type Value = S::Value;
+
+        fn get_value(&self, index: I) -> Option<Self::Value> {
+            (**self).get_value(index)
+        }
+        fn index_value(&self, index: I) -> Self::Value {
+            (**self).index_value(index)
+        }
+        unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
+            (**self).get_value_unchecked(index)
         }
     }
 }
