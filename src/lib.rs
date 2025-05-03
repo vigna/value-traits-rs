@@ -1,10 +1,17 @@
 #![deny(unconditional_recursion)]
 use core::ops::Range;
-use slices::{SliceByValue, SliceByValueMut};
+use slices::{Length, SliceByValue, SliceByValueMut};
 use std::sync::Arc;
 
 pub mod iter;
 pub mod slices;
+
+impl<T> Length for [T] {
+    #[inline]
+    fn len(&self) -> usize {
+        <[T]>::len(self)
+    }
+}
 
 // --- Implementations for standard slices [T] and usize index ---
 impl<T: Clone> SliceByValue<usize> for [T] {
@@ -29,11 +36,6 @@ impl<T: Clone> SliceByValue<usize> for [T] {
         // slice.get_unchecked returns &T, which we dereference and copy.
         unsafe { (*self).get_unchecked(index).clone() }
     }
-
-    #[inline]
-    fn len(&self) -> usize {
-        <[T]>::len(self)
-    }
 }
 
 impl<T: Clone> SliceByValueMut<usize> for [T] {
@@ -56,6 +58,13 @@ impl<T: Clone> SliceByValueMut<usize> for [T] {
     }
 }
 
+impl<'a, T> Length for &'a [T] {
+    #[inline]
+    fn len(&self) -> usize {
+        <[T]>::len(self)
+    }
+}
+
 impl<'a, T> SliceByValue<Range<usize>> for &'a [T] {
     type Value = &'a [T];
 
@@ -73,35 +82,12 @@ impl<'a, T> SliceByValue<Range<usize>> for &'a [T] {
     unsafe fn get_value_unchecked(&self, index: Range<usize>) -> Self::Value {
         unsafe { (*self).get_unchecked(index) }
     }
-
-    #[inline]
-    fn len(&self) -> usize {
-        <[T]>::len(self)
-    }
 }
 
-// Implement SliceByValue for &S by delegating to S
-impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &S {
-    type Value = S::Value;
-
-    fn get_value(&self, index: I) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: I) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
-        (**self).get_value_unchecked(index)
-    }
+impl<I, S: SliceByValue<I> + ?Sized> Length for &mut S {
     #[inline]
     fn len(&self) -> usize {
-        // `self` is `&&S`, so `*self` is `&S`, `**self` is `S`
         (**self).len()
-    }
-
-    #[inline]
-    fn is_empty(&self) -> bool {
-        (**self).is_empty()
     }
 }
 
@@ -117,15 +103,6 @@ impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &mut S {
     unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
         (**self).get_value_unchecked(index)
     }
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-
-    #[inline]
-    fn is_empty(&self) -> bool {
-        (**self).is_empty()
-    }
 }
 
 impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for &mut S {
@@ -139,6 +116,13 @@ impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for &mut S {
 
 // --- Implementations for std collections ---
 
+impl<I, S: SliceByValue<I> + ?Sized> Length for Box<S> {
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+}
+
 impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Box<S> {
     type Value = S::Value;
 
@@ -150,15 +134,6 @@ impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Box<S> {
     }
     unsafe fn get_value_unchecked(&self, index: I) -> Self::Value {
         (**self).get_value_unchecked(index)
-    }
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-
-    #[inline]
-    fn is_empty(&self) -> bool {
-        (**self).is_empty()
     }
 }
 

@@ -23,7 +23,7 @@ fn test_usize_range<'a>(
     (s.index_value(0_usize), s.index_value(0..2))
 }
 
-fn test_les<'a>(
+fn test_len<'a>(
     s: impl SliceByValue<usize, Value = i32> + SliceByValue<Range<usize>, Value = &'a [i32]>,
 ) -> usize {
     s.len()

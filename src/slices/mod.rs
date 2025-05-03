@@ -1,4 +1,14 @@
-pub trait SliceByValue<I> {
+pub trait Length {
+    /// See [`slice::len`].
+    fn len(&self) -> usize;
+
+    /// See [`slice::is_empty`].
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+pub trait SliceByValue<I>: Length {
     type Value;
 
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -11,14 +21,6 @@ pub trait SliceByValue<I> {
 
     /// See [`slice::get`].
     fn get_value(&self, index: I) -> Option<Self::Value>;
-
-    /// See [`slice::len`].
-    fn len(&self) -> usize;
-
-    /// See [`slice::is_empty`].
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
 }
 
 pub trait SliceByValueMut<I>: SliceByValue<I> {
