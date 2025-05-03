@@ -1,5 +1,5 @@
 use core::ops::Range;
-use value_traits_rs::slices::SliceByValue;
+use value_traits_rs::slices::SliceByValueGet;
 
 #[test]
 fn test_slices() {
@@ -10,22 +10,22 @@ fn test_slices() {
     assert_eq!(test_len(s.as_slice()), 3);
 }
 
-fn test_usize(s: impl SliceByValue<usize, Value = i32>) -> i32 {
+fn test_usize(s: impl SliceByValueGet<usize, Value = i32>) -> i32 {
     s.index_value(0_usize)
 }
 
-fn test_range<'a>(s: impl SliceByValue<Range<usize>, Value = &'a [i32]>) -> &'a [i32] {
+fn test_range<'a>(s: impl SliceByValueGet<Range<usize>, Value = &'a [i32]>) -> &'a [i32] {
     s.index_value(0..2)
 }
 
 fn test_usize_range<'a>(
-    s: impl SliceByValue<usize, Value = i32> + SliceByValue<Range<usize>, Value = &'a [i32]>,
+    s: impl SliceByValueGet<usize, Value = i32> + SliceByValueGet<Range<usize>, Value = &'a [i32]>,
 ) -> (i32, &'a [i32]) {
     (s.index_value(0_usize), s.index_value(0..2))
 }
 
 fn test_len<'a>(
-    s: impl SliceByValue<usize, Value = i32> + SliceByValue<Range<usize>, Value = &'a [i32]>,
+    s: impl SliceByValueGet<usize, Value = i32> + SliceByValueGet<Range<usize>, Value = &'a [i32]>,
 ) -> usize {
     s.len()
 }

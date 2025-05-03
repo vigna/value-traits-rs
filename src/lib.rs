@@ -2,7 +2,7 @@
 #![deny(unconditional_recursion)]
 
 use core::ops::Range;
-use slices::{Length, SliceByValue, SliceByValueMut};
+use slices::{Length, SliceByValueGet, SliceByValueRepl, SliceByValueSet};
 
 pub mod iter;
 pub mod slices;
@@ -29,7 +29,7 @@ impl<T> Length for [T] {
 }
 
 // Implement SliceByValue for &S by delegating to S
-impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &S {
+impl<I, S: SliceByValueGet<I> + ?Sized> SliceByValueGet<I> for &S {
     type Value = S::Value;
 
     fn get_value(&self, index: I) -> Option<Self::Value> {
@@ -44,8 +44,9 @@ impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &S {
 }
 
 // Implement SliceByValue for &mut S by delegating to S (for read-only access)
-impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &mut S {
+impl<I, S: SliceByValueGet<I> + ?Sized> SliceByValueGet<I> for &mut S {
     type Value = S::Value;
+
     fn get_value(&self, index: I) -> Option<Self::Value> {
         (**self).get_value(index)
     }
@@ -57,17 +58,30 @@ impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for &mut S {
     }
 }
 
-impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for &mut S {
-    fn set_value(&mut self, index: I, value: Self::Value) -> Self::Value {
+impl<I, S: SliceByValueSet<I> + ?Sized> SliceByValueSet<I> for &mut S {
+    type Value = S::Value;
+
+    fn set_value(&mut self, index: I, value: Self::Value) {
         (**self).set_value(index, value)
     }
-    unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
+    unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) {
         (**self).set_value_unchecked(index, value)
     }
 }
 
+impl<I, S: SliceByValueRepl<I> + ?Sized> SliceByValueRepl<I> for &mut S {
+    type Value = S::Value;
+
+    fn replace_value(&mut self, index: I, value: Self::Value) -> Self::Value {
+        (**self).replace_value(index, value)
+    }
+    unsafe fn replace_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
+        (**self).replace_value_unchecked(index, value)
+    }
+}
+
 // --- Implementations for standard slices [T] and usize index ---
-impl<T: Clone> SliceByValue<usize> for [T] {
+impl<T: Clone> SliceByValueGet<usize> for [T] {
     type Value = T;
 
     #[inline]
@@ -91,9 +105,30 @@ impl<T: Clone> SliceByValue<usize> for [T] {
     }
 }
 
-impl<T: Clone> SliceByValueMut<usize> for [T] {
+impl<T: Clone> SliceByValueSet<usize> for [T] {
+    type Value = T;
+
     #[inline]
-    fn set_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+    fn set_value(&mut self, index: usize, value: Self::Value) {
+        // Standard indexing panics on out-of-bounds.
+        self[index] = value;
+    }
+
+    #[inline]
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+        // Safety: The caller must ensure that `*self` (the index) is in bounds.
+        unsafe {
+            let elem = self.get_unchecked_mut(index);
+            *elem = value;
+        }
+    }
+}
+
+impl<T: Clone> SliceByValueRepl<usize> for [T] {
+    type Value = T;
+
+    #[inline]
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         // Standard indexing panics on out-of-bounds.
         // We get a mutable reference `&mut T`.
         // mem::replace swaps the value at the location with the new `value`
@@ -102,7 +137,7 @@ impl<T: Clone> SliceByValueMut<usize> for [T] {
     }
 
     #[inline]
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
         unsafe {
             let elem = self.get_unchecked_mut(index);
@@ -111,9 +146,8 @@ impl<T: Clone> SliceByValueMut<usize> for [T] {
     }
 }
 
-impl<'a, T> SliceByValue<Range<usize>> for &'a [T] {
+impl<'a, T> SliceByValueGet<Range<usize>> for &'a [T] {
     type Value = &'a [T];
-
     #[inline]
     fn get_value(&self, index: Range<usize>) -> Option<Self::Value> {
         (*self).get(index)
@@ -137,7 +171,7 @@ impl<T, const N: usize> Length for [T; N] {
     }
 }
 
-impl<T: Clone, const N: usize> SliceByValue<usize> for [T; N] {
+impl<T: Clone, const N: usize> SliceByValueGet<usize> for [T; N] {
     type Value = T;
 
     #[inline]
@@ -161,9 +195,30 @@ impl<T: Clone, const N: usize> SliceByValue<usize> for [T; N] {
     }
 }
 
-impl<T: Clone, const N: usize> SliceByValueMut<usize> for [T; N] {
+impl<T: Clone, const N: usize> SliceByValueSet<usize> for [T; N] {
+    type Value = T;
+
     #[inline]
-    fn set_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+    fn set_value(&mut self, index: usize, value: Self::Value) {
+        // Standard indexing panics on out-of-bounds.
+        self[index] = value;
+    }
+
+    #[inline]
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+        // Safety: The caller must ensure that `*self` (the index) is in bounds.
+        unsafe {
+            let elem = self.get_unchecked_mut(index);
+            *elem = value;
+        }
+    }
+}
+
+impl<T: Clone, const N: usize> SliceByValueRepl<usize> for [T; N] {
+    type Value = T;
+
+    #[inline]
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         // Standard indexing panics on out-of-bounds.
         // We get a mutable reference `&mut T`.
         // mem::replace swaps the value at the location with the new `value`
@@ -172,7 +227,7 @@ impl<T: Clone, const N: usize> SliceByValueMut<usize> for [T; N] {
     }
 
     #[inline]
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
         unsafe {
             let elem = self.get_unchecked_mut(index);
@@ -181,7 +236,7 @@ impl<T: Clone, const N: usize> SliceByValueMut<usize> for [T; N] {
     }
 }
 
-impl<'a, T, const N: usize> SliceByValue<Range<usize>> for &'a [T; N] {
+impl<'a, T, const N: usize> SliceByValueGet<Range<usize>> for &'a [T; N] {
     type Value = &'a [T];
 
     #[inline]
@@ -214,7 +269,7 @@ mod alloc_impls {
         }
     }
 
-    impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Box<S> {
+    impl<I, S: SliceByValueGet<I> + ?Sized> SliceByValueGet<I> for Box<S> {
         type Value = S::Value;
 
         fn get_value(&self, index: I) -> Option<Self::Value> {
@@ -228,11 +283,24 @@ mod alloc_impls {
         }
     }
 
-    impl<I, S: SliceByValueMut<I> + ?Sized> SliceByValueMut<I> for Box<S> {
-        fn set_value(&mut self, index: I, value: Self::Value) -> Self::Value {
+    impl<I, S: SliceByValueRepl<I> + ?Sized> SliceByValueRepl<I> for Box<S> {
+        type Value = S::Value;
+
+        fn replace_value(&mut self, index: I, value: Self::Value) -> Self::Value {
+            (**self).replace_value(index, value)
+        }
+        unsafe fn replace_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
+            (**self).replace_value_unchecked(index, value)
+        }
+    }
+
+    impl<I, S: SliceByValueSet<I> + ?Sized> SliceByValueSet<I> for Box<S> {
+        type Value = S::Value;
+
+        fn set_value(&mut self, index: I, value: Self::Value) {
             (**self).set_value(index, value)
         }
-        unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value {
+        unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value) {
             (**self).set_value_unchecked(index, value)
         }
     }
@@ -244,7 +312,7 @@ mod alloc_impls {
         }
     }
 
-    impl<T: Clone> SliceByValue<usize> for Vec<T> {
+    impl<T: Clone> SliceByValueGet<usize> for Vec<T> {
         type Value = T;
 
         #[inline]
@@ -268,9 +336,11 @@ mod alloc_impls {
         }
     }
 
-    impl<T: Clone> SliceByValueMut<usize> for Vec<T> {
+    impl<T: Clone> SliceByValueRepl<usize> for Vec<T> {
+        type Value = T;
+
         #[inline]
-        fn set_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
             // Standard indexing panics on out-of-bounds.
             // We get a mutable reference `&mut T`.
             // mem::replace swaps the value at the location with the new `value`
@@ -279,7 +349,11 @@ mod alloc_impls {
         }
 
         #[inline]
-        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        unsafe fn replace_value_unchecked(
+            &mut self,
+            index: usize,
+            value: Self::Value,
+        ) -> Self::Value {
             // Safety: The caller must ensure that `*self` (the index) is in bounds.
             unsafe {
                 let elem = self.get_unchecked_mut(index);
@@ -288,7 +362,26 @@ mod alloc_impls {
         }
     }
 
-    impl<'a, T> SliceByValue<Range<usize>> for &'a Vec<T> {
+    impl<T: Clone> SliceByValueSet<usize> for Vec<T> {
+        type Value = T;
+
+        #[inline]
+        fn set_value(&mut self, index: usize, value: Self::Value) {
+            // Standard indexing panics on out-of-bounds
+            self[index] = value;
+        }
+
+        #[inline]
+        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+            // Safety: The caller must ensure that `*self` (the index) is in bounds.
+            unsafe {
+                let elem = self.get_unchecked_mut(index);
+                *elem = value;
+            }
+        }
+    }
+
+    impl<'a, T> SliceByValueGet<Range<usize>> for &'a Vec<T> {
         type Value = &'a [T];
 
         #[inline]
@@ -321,7 +414,7 @@ mod std_impls {
         }
     }
 
-    impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Arc<S> {
+    impl<I, S: SliceByValueGet<I> + ?Sized> SliceByValueGet<I> for Arc<S> {
         type Value = S::Value;
 
         fn get_value(&self, index: I) -> Option<Self::Value> {
@@ -342,7 +435,7 @@ mod std_impls {
         }
     }
 
-    impl<I, S: SliceByValue<I> + ?Sized> SliceByValue<I> for Rc<S> {
+    impl<I, S: SliceByValueGet<I> + ?Sized> SliceByValueGet<I> for Rc<S> {
         type Value = S::Value;
 
         fn get_value(&self, index: I) -> Option<Self::Value> {
