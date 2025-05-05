@@ -14,18 +14,25 @@ fn test_usize(s: impl SliceByValueGet<Value = i32>) -> i32 {
     s.index_value(0_usize)
 }
 
-fn test_range<'a>(s: impl SliceByValueRange<Range<usize>, SliceRange = &'a [i32]>) -> &'a [i32] {
+fn test_range<'a, S>(s: &S) -> &[i32]
+where
+    S: for<'b> SliceByValueRange<Range<usize>, SliceRange<'b> = &'b [i32]>,
+{
     s.index_range(0..2)
 }
 
-fn test_usize_range<'a>(
-    s: impl SliceByValueGet<Value = i32> + SliceByValueRange<Range<usize>, SliceRange = &'a [i32]>,
-) -> (i32, &'a [i32]) {
+fn test_usize_range<'a, S>(s: &S) -> (i32, &[i32])
+where
+    S: SliceByValueGet<Value = i32>
+        + for<'b> SliceByValueRange<Range<usize>, SliceRange<'b> = &'b [i32]>,
+{
     (s.index_value(0_usize), s.index_range(0..2))
 }
 
-fn test_len<'a>(
-    s: impl SliceByValueGet<Value = i32> + SliceByValueRange<Range<usize>, SliceRange = &'a [i32]>,
-) -> usize {
+fn test_len<'a, S>(s: &S) -> usize
+where
+    S: SliceByValueGet<Value = i32>
+        + for<'b> SliceByValueRange<Range<usize>, SliceRange<'b> = &'b [i32]>,
+{
     s.len()
 }

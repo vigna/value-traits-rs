@@ -48,31 +48,34 @@ pub trait SliceByValueRepl: LengthValue {
 }
 
 pub trait SliceByValueRange<R>: LengthValue {
-    type SliceRange: SliceByValueGet<Value = Self::Value>;
+    type SliceRange<'a>: SliceByValueGet<Value = Self::Value>
+    where
+        Self: 'a;
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range(&self, range: R) -> Self::SliceRange;
+    fn index_range(&self, range: R) -> Self::SliceRange<'_>;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked(&self, range: R) -> Self::SliceRange;
+    unsafe fn get_range_unchecked(&self, range: R) -> Self::SliceRange<'_>;
 
     /// See [`slice::get`].
-    fn get_range(&self, range: R) -> Option<Self::SliceRange>;
+    fn get_range(&self, range: R) -> Option<Self::SliceRange<'_>>;
 }
 
-pub trait SliceByValueRangeMut<R>: SliceByValueRange<R> {
-    type SliceRangeMut: SliceByValueGet<Value = Self::Value>
-        + SliceByValueSet<Value = Self::Value>
-        + SliceByValueRepl<Value = Self::Value>;
+pub trait SliceByValueRangeMut<R>: LengthValue {
+    type SliceRangeMut<'a>: SliceByValueSet<Value = Self::Value>
+        + SliceByValueRepl<Value = Self::Value>
+    where
+        Self: 'a;
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range_mut(&self, range: R) -> Self::SliceRangeMut;
+    fn index_range_mut(&mut self, range: R) -> Self::SliceRangeMut<'_>;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_mut_unchecked(&self, range: R) -> Self::SliceRangeMut;
+    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> Self::SliceRangeMut<'_>;
 
     /// See [`slice::get`].
-    fn get_range_mut(&self, range: R) -> Option<Self::SliceRangeMut>;
+    fn get_range_mut(&mut self, range: R) -> Option<Self::SliceRangeMut<'_>>;
 }

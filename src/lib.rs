@@ -2,7 +2,10 @@
 #![deny(unconditional_recursion)]
 
 use core::ops::Range;
-use slices::{LengthValue, SliceByValueGet, SliceByValueRange, SliceByValueRepl, SliceByValueSet};
+use slices::{
+    LengthValue, SliceByValueGet, SliceByValueRange, SliceByValueRangeMut, SliceByValueRepl,
+    SliceByValueSet,
+};
 
 pub mod iter;
 pub mod slices;
@@ -136,20 +139,44 @@ impl<T: Clone> SliceByValueRepl for [T] {
 }
 
 impl<'a, T: Clone> SliceByValueRange<Range<usize>> for &'a [T] {
-    type SliceRange = &'a [T];
+    type SliceRange<'b>
+        = &'b [T]
+    where
+        Self: 'b;
     #[inline]
-    fn get_range(&self, index: Range<usize>) -> Option<Self::SliceRange> {
+    fn get_range(&self, index: Range<usize>) -> Option<Self::SliceRange<'_>> {
         (*self).get(index)
     }
 
     #[inline]
-    fn index_range(&self, index: Range<usize>) -> Self::SliceRange {
+    fn index_range(&self, index: Range<usize>) -> Self::SliceRange<'_> {
         &self[index]
     }
 
     #[inline]
-    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> Self::SliceRange {
+    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> Self::SliceRange<'_> {
         unsafe { (*self).get_unchecked(index) }
+    }
+}
+
+impl<'a, T: Clone> SliceByValueRangeMut<Range<usize>> for &'a mut [T] {
+    type SliceRangeMut<'b>
+        = &'b mut [T]
+    where
+        Self: 'b;
+    #[inline]
+    fn get_range_mut(&mut self, index: Range<usize>) -> Option<Self::SliceRangeMut<'_>> {
+        (*self).get_mut(index)
+    }
+
+    #[inline]
+    fn index_range_mut(&mut self, index: Range<usize>) -> Self::SliceRangeMut<'_> {
+        &mut self[index]
+    }
+
+    #[inline]
+    unsafe fn get_range_unchecked_mut(&mut self, index: Range<usize>) -> Self::SliceRangeMut<'_> {
+        unsafe { (*self).get_unchecked_mut(index) }
     }
 }
 
@@ -221,20 +248,23 @@ impl<T: Clone, const N: usize> SliceByValueRepl for [T; N] {
 }
 
 impl<'a, T: Clone, const N: usize> SliceByValueRange<Range<usize>> for &'a [T; N] {
-    type SliceRange = &'a [T];
+    type SliceRange<'b>
+        = &'b [T]
+    where
+        Self: 'b;
 
     #[inline]
-    fn get_range(&self, index: Range<usize>) -> Option<Self::SliceRange> {
+    fn get_range(&self, index: Range<usize>) -> Option<Self::SliceRange<'_>> {
         (*self).get(index)
     }
 
     #[inline]
-    fn index_range(&self, index: Range<usize>) -> Self::SliceRange {
+    fn index_range(&self, index: Range<usize>) -> Self::SliceRange<'_> {
         &self[index]
     }
 
     #[inline]
-    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> Self::SliceRange {
+    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> Self::SliceRange<'_> {
         unsafe { (*self).get_unchecked(index) }
     }
 }
@@ -360,21 +390,24 @@ mod alloc_impls {
     }
 
     impl<'a, T: Clone> SliceByValueRange<Range<usize>> for &'a Vec<T> {
-        type SliceRange = &'a [T];
+        type SliceRange<'b>
+            = &'b [T]
+        where
+            Self: 'b;
 
         #[inline]
-        fn get_range(&self, index: Range<usize>) -> Option<Self::SliceRange> {
+        fn get_range(&self, index: Range<usize>) -> Option<Self::SliceRange<'_>> {
             // slice.get returns Option<&T>, .copied() converts to Option<T>
             (*self).get(index)
         }
 
         #[inline]
-        fn index_range(&self, index: Range<usize>) -> Self::SliceRange {
+        fn index_range(&self, index: Range<usize>) -> Self::SliceRange<'_> {
             &self[index]
         }
 
         #[inline]
-        unsafe fn get_range_unchecked(&self, index: Range<usize>) -> Self::SliceRange {
+        unsafe fn get_range_unchecked(&self, index: Range<usize>) -> Self::SliceRange<'_> {
             unsafe { (*self).get_unchecked(index) }
         }
     }
