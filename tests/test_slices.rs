@@ -5,9 +5,10 @@ use value_traits_rs::slices::{SliceByValueGet, SliceByValueRange};
 fn test_slices() {
     let s = vec![1_i32, 2, 3];
     assert_eq!(test_usize(s.as_slice()), 1);
-    assert_eq!(test_range(s.as_slice()), &[1, 2]);
-    assert_eq!(test_usize_range(s.as_slice()), (1, [1, 2].as_ref()));
-    assert_eq!(test_len(s.as_slice()), 3);
+    let t = s.as_slice();
+    assert_eq!(test_range(&t), &[1, 2]);
+    assert_eq!(test_usize_range(&t), (1, [1, 2].as_ref()));
+    assert_eq!(test_len(&t), 3);
 }
 
 fn test_usize(s: impl SliceByValueGet<Value = i32>) -> i32 {
