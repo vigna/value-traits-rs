@@ -78,44 +78,53 @@ impl<T: Clone> SliceByValueRepl for [T] {
     }
 }
 
-impl<'lend, T: Clone> SBVRL<'lend> for [T] {
+impl<'lend, T: Clone> SBVRL<'lend, Range<usize>> for [T] {
     type SliceRange = &'lend [T];
 }
 
 impl<T: Clone> SliceByValueRange<Range<usize>> for [T] {
     #[inline]
-    fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Self>> {
+    fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Range<usize>, Self>> {
         (*self).get(index)
     }
 
     #[inline]
-    fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Self> {
+    fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Range<usize>, Self> {
         &self[index]
     }
 
     #[inline]
-    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> SliceRange<'_, Self> {
+    unsafe fn get_range_unchecked(
+        &self,
+        index: Range<usize>,
+    ) -> SliceRange<'_, Range<usize>, Self> {
         unsafe { (*self).get_unchecked(index) }
     }
 }
 
-impl<'lend, T: Clone> SBVRML<'lend> for [T] {
+impl<'lend, T: Clone> SBVRML<'lend, Range<usize>> for [T] {
     type SliceRangeMut = &'lend mut [T];
 }
 
 impl<T: Clone> SliceByValueRangeMut<Range<usize>> for [T] {
     #[inline]
-    fn get_range_mut(&mut self, index: Range<usize>) -> Option<SliceRangeMut<'_, Self>> {
+    fn get_range_mut(
+        &mut self,
+        index: Range<usize>,
+    ) -> Option<SliceRangeMut<'_, Range<usize>, Self>> {
         (*self).get_mut(index)
     }
 
     #[inline]
-    fn index_range_mut(&mut self, index: Range<usize>) -> SliceRangeMut<'_, Self> {
+    fn index_range_mut(&mut self, index: Range<usize>) -> SliceRangeMut<'_, Range<usize>, Self> {
         &mut self[index]
     }
 
     #[inline]
-    unsafe fn get_range_unchecked_mut(&mut self, index: Range<usize>) -> SliceRangeMut<'_, Self> {
+    unsafe fn get_range_unchecked_mut(
+        &mut self,
+        index: Range<usize>,
+    ) -> SliceRangeMut<'_, Range<usize>, Self> {
         unsafe { (*self).get_unchecked_mut(index) }
     }
 }
@@ -187,23 +196,26 @@ impl<T: Clone, const N: usize> SliceByValueRepl for [T; N] {
     }
 }
 
-impl<'lend, T: Clone, const N: usize> SBVRL<'lend> for [T; N] {
+impl<'lend, T: Clone, const N: usize> SBVRL<'lend, Range<usize>> for [T; N] {
     type SliceRange = &'lend [T];
 }
 
 impl<T: Clone, const N: usize> SliceByValueRange<Range<usize>> for [T; N] {
     #[inline]
-    fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Self>> {
+    fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Range<usize>, Self>> {
         (*self).get(index)
     }
 
     #[inline]
-    fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Self> {
+    fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Range<usize>, Self> {
         &self[index]
     }
 
     #[inline]
-    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> SliceRange<'_, Self> {
+    unsafe fn get_range_unchecked(
+        &self,
+        index: Range<usize>,
+    ) -> SliceRange<'_, Range<usize>, Self> {
         unsafe { (*self).get_unchecked(index) }
     }
 }
@@ -328,24 +340,27 @@ mod alloc_impls {
         }
     }
 
-    impl<'lend, T: Clone> SBVRL<'lend> for Vec<T> {
+    impl<'lend, T: Clone> SBVRL<'lend, Range<usize>> for Vec<T> {
         type SliceRange = &'lend [T];
     }
 
     impl<T: Clone> SliceByValueRange<Range<usize>> for Vec<T> {
         #[inline]
-        fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Self>> {
+        fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Range<usize>, Self>> {
             // slice.get returns Option<&T>, .copied() converts to Option<T>
             (*self).get(index)
         }
 
         #[inline]
-        fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Self> {
+        fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Range<usize>, Self> {
             &self[index]
         }
 
         #[inline]
-        unsafe fn get_range_unchecked(&self, index: Range<usize>) -> SliceRange<'_, Self> {
+        unsafe fn get_range_unchecked(
+            &self,
+            index: Range<usize>,
+        ) -> SliceRange<'_, Range<usize>, Self> {
             unsafe { (*self).get_unchecked(index) }
         }
     }

@@ -104,90 +104,97 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
     }
 }
 
-pub trait SBVRL<'lend, __Implicit = &'lend Self>: LengthValue {
-    type SliceRange: 'lend + SliceByValueGet<Value = Self::Value>;
+pub trait SBVRL<'lend, R, __Implicit = &'lend Self>: LengthValue {
+    type SliceRange: 'lend
+        + SliceByValueGet<Value = Self::Value>
+        + SBVRL<'lend, R, SliceRange = Self::SliceRange> // recursion
+        + SliceByValueRange<R>;
 }
 
-impl<'lend, T: LengthValue + SBVRL<'lend> + ?Sized> SBVRL<'lend> for &T {
-    type SliceRange = <T as SBVRL<'lend>>::SliceRange;
+impl<'lend, R, T: LengthValue + SBVRL<'lend, R> + ?Sized> SBVRL<'lend, R> for &T {
+    type SliceRange = <T as SBVRL<'lend, R>>::SliceRange;
 }
-impl<'lend, T: LengthValue + SBVRL<'lend> + ?Sized> SBVRL<'lend> for &mut T {
-    type SliceRange = <T as SBVRL<'lend>>::SliceRange;
+impl<'lend, R, T: LengthValue + SBVRL<'lend, R> + ?Sized> SBVRL<'lend, R> for &mut T {
+    type SliceRange = <T as SBVRL<'lend, R>>::SliceRange;
 }
 
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type SliceRange<'lend, T: LengthValue + SBVRL<'lend>> = <T as SBVRL<'lend>>::SliceRange;
+pub type SliceRange<'lend, R, T: LengthValue + SBVRL<'lend, R>> =
+    <T as SBVRL<'lend, R>>::SliceRange;
 
-pub trait SliceByValueRange<R>: LengthValue + for<'a> SBVRL<'a> {
+pub trait SliceByValueRange<R>: LengthValue + for<'a> SBVRL<'a, R> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range(&self, range: R) -> SliceRange<'_, Self>;
+    fn index_range(&self, range: R) -> SliceRange<'_, R, Self>;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked(&self, range: R) -> SliceRange<'_, Self>;
+    unsafe fn get_range_unchecked(&self, range: R) -> SliceRange<'_, R, Self>;
 
     /// See [`slice::get`].
-    fn get_range(&self, range: R) -> Option<SliceRange<'_, Self>>;
+    fn get_range(&self, range: R) -> Option<SliceRange<'_, R, Self>>;
 }
 
 impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &S {
-    fn get_range(&self, range: R) -> Option<SliceRange<'_, Self>> {
+    fn get_range(&self, range: R) -> Option<SliceRange<'_, R, Self>> {
         (**self).get_range(range)
     }
-    fn index_range(&self, range: R) -> SliceRange<'_, Self> {
+    fn index_range(&self, range: R) -> SliceRange<'_, R, Self> {
         (**self).index_range(range)
     }
-    unsafe fn get_range_unchecked(&self, range: R) -> SliceRange<'_, Self> {
+    unsafe fn get_range_unchecked(&self, range: R) -> SliceRange<'_, R, Self> {
         (**self).get_range_unchecked(range)
     }
 }
 impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &mut S {
-    fn get_range(&self, range: R) -> Option<SliceRange<'_, Self>> {
+    fn get_range(&self, range: R) -> Option<SliceRange<'_, R, Self>> {
         (**self).get_range(range)
     }
-    fn index_range(&self, range: R) -> SliceRange<'_, Self> {
+    fn index_range(&self, range: R) -> SliceRange<'_, R, Self> {
         (**self).index_range(range)
     }
-    unsafe fn get_range_unchecked(&self, range: R) -> SliceRange<'_, Self> {
+    unsafe fn get_range_unchecked(&self, range: R) -> SliceRange<'_, R, Self> {
         (**self).get_range_unchecked(range)
     }
 }
 
-pub trait SBVRML<'lend, __Implicit = &'lend Self>: LengthValue {
+pub trait SBVRML<'lend, R, __Implicit = &'lend Self>: LengthValue {
     type SliceRangeMut: 'lend
         + SliceByValueSet<Value = Self::Value>
-        + SliceByValueRepl<Value = Self::Value>;
+        + SliceByValueRepl<Value = Self::Value>
+        + SBVRML<'lend, R, SliceRangeMut = Self::SliceRangeMut> // recursion
+        + SliceByValueRangeMut<R>;
 }
 
-impl<'lend, T: LengthValue + SBVRML<'lend> + ?Sized> SBVRML<'lend> for &mut T {
-    type SliceRangeMut = <T as SBVRML<'lend>>::SliceRangeMut;
+impl<'lend, R, T: LengthValue + SBVRML<'lend, R> + ?Sized> SBVRML<'lend, R> for &mut T {
+    type SliceRangeMut = <T as SBVRML<'lend, R>>::SliceRangeMut;
 }
 
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type SliceRangeMut<'lend, T: LengthValue + SBVRML<'lend>> = <T as SBVRML<'lend>>::SliceRangeMut;
+pub type SliceRangeMut<'lend, R, T: LengthValue + SBVRML<'lend, R>> =
+    <T as SBVRML<'lend, R>>::SliceRangeMut;
 
-pub trait SliceByValueRangeMut<R>: LengthValue + for<'a> SBVRML<'a> {
+pub trait SliceByValueRangeMut<R>: LengthValue + for<'a> SBVRML<'a, R> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range_mut(&mut self, range: R) -> SliceRangeMut<'_, Self>;
+    fn index_range_mut(&mut self, range: R) -> SliceRangeMut<'_, R, Self>;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SliceRangeMut<'_, Self>;
+    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SliceRangeMut<'_, R, Self>;
 
     /// See [`slice::get`].
-    fn get_range_mut(&mut self, range: R) -> Option<SliceRangeMut<'_, Self>>;
+    fn get_range_mut(&mut self, range: R) -> Option<SliceRangeMut<'_, R, Self>>;
 }
 
 impl<S: SliceByValueRangeMut<R> + ?Sized, R> SliceByValueRangeMut<R> for &mut S {
-    fn get_range_mut(&mut self, range: R) -> Option<SliceRangeMut<'_, Self>> {
+    fn get_range_mut(&mut self, range: R) -> Option<SliceRangeMut<'_, R, Self>> {
         (**self).get_range_mut(range)
     }
-    fn index_range_mut(&mut self, range: R) -> SliceRangeMut<'_, Self> {
+    fn index_range_mut(&mut self, range: R) -> SliceRangeMut<'_, R, Self> {
         (**self).index_range_mut(range)
     }
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SliceRangeMut<'_, Self> {
+    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SliceRangeMut<'_, R, Self> {
         (**self).get_range_unchecked_mut(range)
     }
 }
