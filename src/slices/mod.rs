@@ -1,4 +1,7 @@
-pub trait Length {
+use core::ops::Range;
+
+pub trait LengthValue {
+    type Value;
     /// See [`slice::len`].
     fn len(&self) -> usize;
 
@@ -8,41 +11,68 @@ pub trait Length {
     }
 }
 
-pub trait SliceByValueGet<I>: Length {
-    type Value;
+pub trait SliceByValueGet: LengthValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_value(&self, index: I) -> Self::Value;
+    fn index_value(&self, index: usize) -> Self::Value;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_value_unchecked(&self, index: I) -> Self::Value;
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value;
 
     /// See [`slice::get`].
-    fn get_value(&self, index: I) -> Option<Self::Value>;
+    fn get_value(&self, index: usize) -> Option<Self::Value>;
 }
 
-pub trait SliceByValueSet<I>: Length {
-    type Value;
+pub trait SliceByValueSet: LengthValue {
     /// Sets the value at the given index to the given value without doing
     /// bounds checking.
     ///
     /// For a safe alternative see [`SliceByValueMut::set_value`].
-    unsafe fn set_value_unchecked(&mut self, index: I, value: Self::Value);
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value);
 
     /// Sets the value at the given index to the given value.
-    fn set_value(&mut self, index: I, value: Self::Value);
+    fn set_value(&mut self, index: usize, value: Self::Value);
 }
 
-pub trait SliceByValueRepl<I>: Length {
-    type Value;
+pub trait SliceByValueRepl: LengthValue {
     /// Sets the value at the given index to the given value and
     /// returns the previous value, without doing bounds checking.
     ///
     /// For a safe alternative see [`SliceByValueMut::set_value`].
-    unsafe fn replace_value_unchecked(&mut self, index: I, value: Self::Value) -> Self::Value;
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value;
 
     /// Sets the value at the given index to the given value and
     /// returns the previous value.
-    fn replace_value(&mut self, index: I, value: Self::Value) -> Self::Value;
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value;
+}
+
+pub trait SliceByValueRange<R>: LengthValue {
+    type SliceRange: SliceByValueGet<Value = Self::Value>;
+    /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
+    fn index_range(&self, range: R) -> Self::SliceRange;
+
+    /// See [`slice::get_unchecked`].
+    ///
+    /// For a safe alternative see [`SliceByValue::get_value`].
+    unsafe fn get_range_unchecked(&self, range: R) -> Self::SliceRange;
+
+    /// See [`slice::get`].
+    fn get_range(&self, range: R) -> Option<Self::SliceRange>;
+}
+
+pub trait SliceByValueRangeMut<R>: SliceByValueRange<R> {
+    type SliceRangeMut: SliceByValueGet<Value = Self::Value>
+        + SliceByValueSet<Value = Self::Value>
+        + SliceByValueRepl<Value = Self::Value>;
+    /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
+    fn index_range_mut(&self, range: R) -> Self::SliceRangeMut;
+
+    /// See [`slice::get_unchecked`].
+    ///
+    /// For a safe alternative see [`SliceByValue::get_value`].
+    unsafe fn get_range_mut_unchecked(&self, range: R) -> Self::SliceRangeMut;
+
+    /// See [`slice::get`].
+    fn get_range_mut(&self, range: R) -> Option<Self::SliceRangeMut>;
 }
