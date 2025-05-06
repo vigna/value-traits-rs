@@ -22,7 +22,7 @@ jobs:
       - name: Run tests no_std & no_alloc
         run: RUST_BACKTRACE=full cargo test --verbose --no-default-features
       - name: Run tests no_std & alloc
-        run: RUST_BACKTRACE=full cargo test --verbose--no-default-features --features "alloc"
+        run: RUST_BACKTRACE=full cargo test --verbose --no-default-features --features "alloc"
       - name: Run tests std & alloc
         run: RUST_BACKTRACE=full cargo test --verbose
 
