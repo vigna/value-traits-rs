@@ -209,22 +209,31 @@ impl<'a, T: Clone, const N: usize> SBVRL<'a> for [T; N] {
     type SliceRange = &'a [T];
 }
 
-impl<T: Clone, const N: usize> SliceByValueRange<Range<usize>> for [T; N] {
-    #[inline]
-    fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Self>> {
-        (*self).get(index)
-    }
+macro_rules! impl_range_arrays {
+    ($range:ty) => {
+        impl<T: Clone, const N: usize> SliceByValueRange<$range> for [T; N] {
+            #[inline]
+            fn get_range(&self, index: $range) -> Option<SliceRange<'_, Self>> {
+                (*self).get(index)
+            }
 
-    #[inline]
-    fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Self> {
-        &self[index]
-    }
+            #[inline]
+            fn index_range(&self, index: $range) -> SliceRange<'_, Self> {
+                &self[index]
+            }
 
-    #[inline]
-    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> SliceRange<'_, Self> {
-        unsafe { (*self).get_unchecked(index) }
-    }
+            #[inline]
+            unsafe fn get_range_unchecked(&self, index: $range) -> SliceRange<'_, Self> {
+                unsafe { (*self).get_unchecked(index) }
+            }
+        }
+    };
 }
+
+impl_range_arrays!(RangeFull);
+impl_range_arrays!(RangeFrom<usize>);
+impl_range_arrays!(RangeTo<usize>);
+impl_range_arrays!(Range<usize>);
 
 #[cfg(feature = "alloc")]
 mod alloc_impls {
@@ -349,24 +358,32 @@ mod alloc_impls {
     impl<'a, T: Clone> SBVRL<'a> for Vec<T> {
         type SliceRange = &'a [T];
     }
+    macro_rules! impl_range_vecs {
+        ($range:ty) => {
+            impl<T: Clone> SliceByValueRange<$range> for Vec<T> {
+                #[inline]
+                fn get_range(&self, index: $range) -> Option<SliceRange<'_, Self>> {
+                    // slice.get returns Option<&T>, .copied() converts to Option<T>
+                    (*self).get(index)
+                }
 
-    impl<T: Clone> SliceByValueRange<Range<usize>> for Vec<T> {
-        #[inline]
-        fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Self>> {
-            // slice.get returns Option<&T>, .copied() converts to Option<T>
-            (*self).get(index)
-        }
+                #[inline]
+                fn index_range(&self, index: $range) -> SliceRange<'_, Self> {
+                    &self[index]
+                }
 
-        #[inline]
-        fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Self> {
-            &self[index]
-        }
-
-        #[inline]
-        unsafe fn get_range_unchecked(&self, index: Range<usize>) -> SliceRange<'_, Self> {
-            unsafe { (*self).get_unchecked(index) }
-        }
+                #[inline]
+                unsafe fn get_range_unchecked(&self, index: $range) -> SliceRange<'_, Self> {
+                    unsafe { (*self).get_unchecked(index) }
+                }
+            }
+        };
     }
+
+    impl_range_vecs!(RangeFull);
+    impl_range_vecs!(RangeFrom<usize>);
+    impl_range_vecs!(RangeTo<usize>);
+    impl_range_vecs!(Range<usize>);
 }
 
 #[cfg(feature = "std")]
