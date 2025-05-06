@@ -78,8 +78,8 @@ impl<T: Clone> SliceByValueRepl for [T] {
     }
 }
 
-impl<'lend, T: Clone> SBVRL<'lend, Range<usize>> for [T] {
-    type SliceRange = &'lend [T];
+impl<'a, T: Clone> SBVRL<'a, Range<usize>> for [T] {
+    type SliceRange = &'a [T];
 }
 
 impl<T: Clone> SliceByValueRange<Range<usize>> for [T] {
@@ -102,8 +102,8 @@ impl<T: Clone> SliceByValueRange<Range<usize>> for [T] {
     }
 }
 
-impl<'lend, T: Clone> SBVRML<'lend, Range<usize>> for [T] {
-    type SliceRangeMut = &'lend mut [T];
+impl<'a, T: Clone> SBVRML<'a, Range<usize>> for [T] {
+    type SliceRangeMut = &'a mut [T];
 }
 
 impl<T: Clone> SliceByValueRangeMut<Range<usize>> for [T] {
@@ -196,8 +196,8 @@ impl<T: Clone, const N: usize> SliceByValueRepl for [T; N] {
     }
 }
 
-impl<'lend, T: Clone, const N: usize> SBVRL<'lend, Range<usize>> for [T; N] {
-    type SliceRange = &'lend [T];
+impl<'a, T: Clone, const N: usize> SBVRL<'a, Range<usize>> for [T; N] {
+    type SliceRange = &'a [T];
 }
 
 impl<T: Clone, const N: usize> SliceByValueRange<Range<usize>> for [T; N] {
@@ -340,8 +340,8 @@ mod alloc_impls {
         }
     }
 
-    impl<'lend, T: Clone> SBVRL<'lend, Range<usize>> for Vec<T> {
-        type SliceRange = &'lend [T];
+    impl<'a, T: Clone> SBVRL<'a, Range<usize>> for Vec<T> {
+        type SliceRange = &'a [T];
     }
 
     impl<T: Clone> SliceByValueRange<Range<usize>> for Vec<T> {

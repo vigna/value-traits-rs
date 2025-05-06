@@ -104,23 +104,22 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
     }
 }
 
-pub trait SBVRL<'lend, R, __Implicit = &'lend Self>: LengthValue {
-    type SliceRange: 'lend
+pub trait SBVRL<'a, R, __Implicit = &'a Self>: LengthValue {
+    type SliceRange: 'a
         + SliceByValueGet<Value = Self::Value>
-        + SBVRL<'lend, R, SliceRange = Self::SliceRange> // recursion
+        + SBVRL<'a, R, SliceRange = Self::SliceRange> // recursion
         + SliceByValueRange<R>;
 }
 
-impl<'lend, R, T: LengthValue + SBVRL<'lend, R> + ?Sized> SBVRL<'lend, R> for &T {
-    type SliceRange = <T as SBVRL<'lend, R>>::SliceRange;
+impl<'a, R, T: LengthValue + SBVRL<'a, R> + ?Sized> SBVRL<'a, R> for &T {
+    type SliceRange = <T as SBVRL<'a, R>>::SliceRange;
 }
-impl<'lend, R, T: LengthValue + SBVRL<'lend, R> + ?Sized> SBVRL<'lend, R> for &mut T {
-    type SliceRange = <T as SBVRL<'lend, R>>::SliceRange;
+impl<'a, R, T: LengthValue + SBVRL<'a, R> + ?Sized> SBVRL<'a, R> for &mut T {
+    type SliceRange = <T as SBVRL<'a, R>>::SliceRange;
 }
 
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type SliceRange<'lend, R, T: LengthValue + SBVRL<'lend, R>> =
-    <T as SBVRL<'lend, R>>::SliceRange;
+pub type SliceRange<'a, R, T: LengthValue + SBVRL<'a, R>> = <T as SBVRL<'a, R>>::SliceRange;
 
 pub trait SliceByValueRange<R>: LengthValue + for<'a> SBVRL<'a, R> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -158,21 +157,20 @@ impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &mut S {
     }
 }
 
-pub trait SBVRML<'lend, R, __Implicit = &'lend Self>: LengthValue {
-    type SliceRangeMut: 'lend
+pub trait SBVRML<'a, R, __Implicit = &'a Self>: LengthValue {
+    type SliceRangeMut: 'a
         + SliceByValueSet<Value = Self::Value>
         + SliceByValueRepl<Value = Self::Value>
-        + SBVRML<'lend, R, SliceRangeMut = Self::SliceRangeMut> // recursion
+        + SBVRML<'a, R, SliceRangeMut = Self::SliceRangeMut> // recursion
         + SliceByValueRangeMut<R>;
 }
 
-impl<'lend, R, T: LengthValue + SBVRML<'lend, R> + ?Sized> SBVRML<'lend, R> for &mut T {
-    type SliceRangeMut = <T as SBVRML<'lend, R>>::SliceRangeMut;
+impl<'a, R, T: LengthValue + SBVRML<'a, R> + ?Sized> SBVRML<'a, R> for &mut T {
+    type SliceRangeMut = <T as SBVRML<'a, R>>::SliceRangeMut;
 }
 
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type SliceRangeMut<'lend, R, T: LengthValue + SBVRML<'lend, R>> =
-    <T as SBVRML<'lend, R>>::SliceRangeMut;
+pub type SliceRangeMut<'a, R, T: LengthValue + SBVRML<'a, R>> = <T as SBVRML<'a, R>>::SliceRangeMut;
 
 pub trait SliceByValueRangeMut<R>: LengthValue + for<'a> SBVRML<'a, R> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
