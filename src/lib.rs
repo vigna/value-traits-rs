@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unconditional_recursion)]
 
-use core::ops::Range;
+use core::ops::{Range, RangeFrom, RangeFull, RangeTo};
 use slices::{
     LengthValue, SliceByValueGet, SliceByValueRange, SliceByValueRangeMut, SliceByValueRepl,
     SliceByValueSet, SliceRange, SliceRangeMut, SBVRL, SBVRML,
@@ -82,43 +82,61 @@ impl<'a, T: Clone> SBVRL<'a> for [T] {
     type SliceRange = &'a [T];
 }
 
-impl<T: Clone> SliceByValueRange<Range<usize>> for [T] {
-    #[inline]
-    fn get_range(&self, index: Range<usize>) -> Option<SliceRange<'_, Self>> {
-        (*self).get(index)
-    }
+macro_rules! impl_range_slices {
+    ($range:ty) => {
+        impl<T: Clone> SliceByValueRange<$range> for [T] {
+            #[inline]
+            fn get_range(&self, index: $range) -> Option<SliceRange<'_, Self>> {
+                (*self).get(index)
+            }
 
-    #[inline]
-    fn index_range(&self, index: Range<usize>) -> SliceRange<'_, Self> {
-        &self[index]
-    }
+            #[inline]
+            fn index_range(&self, index: $range) -> SliceRange<'_, Self> {
+                &self[index]
+            }
 
-    #[inline]
-    unsafe fn get_range_unchecked(&self, index: Range<usize>) -> SliceRange<'_, Self> {
-        unsafe { (*self).get_unchecked(index) }
-    }
+            #[inline]
+            unsafe fn get_range_unchecked(&self, index: $range) -> SliceRange<'_, Self> {
+                unsafe { (*self).get_unchecked(index) }
+            }
+        }
+    };
 }
+
+impl_range_slices!(RangeFull);
+impl_range_slices!(RangeFrom<usize>);
+impl_range_slices!(RangeTo<usize>);
+impl_range_slices!(Range<usize>);
 
 impl<'a, T: Clone> SBVRML<'a> for [T] {
     type SliceRangeMut = &'a mut [T];
 }
 
-impl<T: Clone> SliceByValueRangeMut<Range<usize>> for [T] {
-    #[inline]
-    fn get_range_mut(&mut self, index: Range<usize>) -> Option<SliceRangeMut<'_, Self>> {
-        (*self).get_mut(index)
-    }
+macro_rules! impl_range_slices_mut {
+    ($range:ty) => {
+        impl<T: Clone> SliceByValueRangeMut<$range> for [T] {
+            #[inline]
+            fn get_range_mut(&mut self, index: $range) -> Option<SliceRangeMut<'_, Self>> {
+                (*self).get_mut(index)
+            }
 
-    #[inline]
-    fn index_range_mut(&mut self, index: Range<usize>) -> SliceRangeMut<'_, Self> {
-        &mut self[index]
-    }
+            #[inline]
+            fn index_range_mut(&mut self, index: $range) -> SliceRangeMut<'_, Self> {
+                &mut self[index]
+            }
 
-    #[inline]
-    unsafe fn get_range_unchecked_mut(&mut self, index: Range<usize>) -> SliceRangeMut<'_, Self> {
-        unsafe { (*self).get_unchecked_mut(index) }
-    }
+            #[inline]
+            unsafe fn get_range_unchecked_mut(&mut self, index: $range) -> SliceRangeMut<'_, Self> {
+                unsafe { (*self).get_unchecked_mut(index) }
+            }
+        }
+    };
 }
+
+impl_range_slices_mut!(RangeFull);
+impl_range_slices_mut!(RangeFrom<usize>);
+impl_range_slices_mut!(RangeTo<usize>);
+impl_range_slices_mut!(Range<usize>);
 
 impl<T, const N: usize> LengthValue for [T; N] {
     type Value = T;
