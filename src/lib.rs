@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unconditional_recursion)]
 
-use core::ops::{Range, RangeFrom, RangeFull, RangeTo};
+use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use slices::{
     LengthValue, SliceByValueGet, SliceByValueRange, SliceByValueRangeMut, SliceByValueRepl,
     SliceByValueSet, SliceRange, SliceRangeMut, SBVRL, SBVRML,
@@ -131,6 +131,8 @@ impl_range_slices!(RangeFull);
 impl_range_slices!(RangeFrom<usize>);
 impl_range_slices!(RangeTo<usize>);
 impl_range_slices!(Range<usize>);
+impl_range_slices!(RangeInclusive<usize>);
+impl_range_slices!(RangeToInclusive<usize>);
 
 impl<T, const N: usize> LengthValue for [T; N] {
     type Value = T;
@@ -228,6 +230,8 @@ impl_range_arrays!(RangeFull);
 impl_range_arrays!(RangeFrom<usize>);
 impl_range_arrays!(RangeTo<usize>);
 impl_range_arrays!(Range<usize>);
+impl_range_arrays!(RangeInclusive<usize>);
+impl_range_arrays!(RangeToInclusive<usize>);
 
 #[cfg(feature = "alloc")]
 mod alloc_impls {
@@ -382,6 +386,8 @@ mod alloc_impls {
     impl_range_vecs!(RangeFrom<usize>);
     impl_range_vecs!(RangeTo<usize>);
     impl_range_vecs!(Range<usize>);
+    impl_range_vecs!(RangeInclusive<usize>);
+    impl_range_vecs!(RangeToInclusive<usize>);
 }
 
 #[cfg(feature = "std")]

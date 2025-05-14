@@ -1,3 +1,5 @@
+use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+
 pub trait LengthValue {
     type Value;
     /// See [`slice::len`].
@@ -195,4 +197,39 @@ impl<S: SliceByValueRangeMut<R> + ?Sized, R> SliceByValueRangeMut<R> for &mut S 
     unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SliceRangeMut<'_, R, Self> {
         (**self).get_range_unchecked_mut(range)
     }
+}
+
+/// Helper trait for requesting all common range types, and enforce that they all
+/// return the same type of slice.
+pub trait SliceByValueRangeAll<T = usize>:
+    SliceByValueRange<Range<T>>
+    + SliceByValueRange<RangeFrom<T>>
+    + SliceByValueRange<RangeFull>
+    + SliceByValueRange<RangeInclusive<T>>
+    + SliceByValueRange<RangeTo<T>>
+    + SliceByValueRange<RangeToInclusive<T>>
+    + for<'a> SBVRL<'a, Range<T>>
+    + for<'a> SBVRL<'a, RangeFrom<T>, SliceRange = <Self as SBVRL<'a, Range<T>>>::SliceRange>
+    + for<'a> SBVRL<'a, RangeFull, SliceRange = <Self as SBVRL<'a, Range<T>>>::SliceRange>
+    + for<'a> SBVRL<'a, RangeInclusive<T>, SliceRange = <Self as SBVRL<'a, Range<T>>>::SliceRange>
+    + for<'a> SBVRL<'a, RangeTo<T>, SliceRange = <Self as SBVRL<'a, Range<T>>>::SliceRange>
+    + for<'a> SBVRL<'a, RangeToInclusive<T>, SliceRange = <Self as SBVRL<'a, Range<T>>>::SliceRange>
+{
+}
+
+impl<U, T> SliceByValueRangeAll<T> for U
+where
+    U: SliceByValueRange<Range<T>>,
+    U: SliceByValueRange<RangeFrom<T>>,
+    U: SliceByValueRange<RangeFull>,
+    U: SliceByValueRange<RangeInclusive<T>>,
+    U: SliceByValueRange<RangeTo<T>>,
+    U: SliceByValueRange<RangeToInclusive<T>>,
+    U: for<'a> SBVRL<'a, Range<T>>,
+    U: for<'a> SBVRL<'a, RangeFrom<T>, SliceRange = <U as SBVRL<'a, Range<T>>>::SliceRange>,
+    U: for<'a> SBVRL<'a, RangeFull, SliceRange = <U as SBVRL<'a, Range<T>>>::SliceRange>,
+    U: for<'a> SBVRL<'a, RangeInclusive<T>, SliceRange = <U as SBVRL<'a, Range<T>>>::SliceRange>,
+    U: for<'a> SBVRL<'a, RangeTo<T>, SliceRange = <U as SBVRL<'a, Range<T>>>::SliceRange>,
+    U: for<'a> SBVRL<'a, RangeToInclusive<T>, SliceRange = <U as SBVRL<'a, Range<T>>>::SliceRange>,
+{
 }
