@@ -7,7 +7,7 @@ fn test() {
 }
 
 // Compile-time check that all ranges can be forced to the same type
-fn test_bounds(s: &impl SliceByValueRangeAll<usize>) {
+fn test_bounds(s: &impl SliceByValueRangeAll) {
     let mut _r = s.index_range(0..2);
     _r = s.index_range(0..);
     _r = s.index_range(..2);

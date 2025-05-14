@@ -233,3 +233,37 @@ where
     U: for<'a> SBVRL<'a, RangeToInclusive<T>, SliceRange = <U as SBVRL<'a, Range<T>>>::SliceRange>,
 {
 }
+
+/// Mutable version of [`SliceByValueRangeAll`].
+pub trait SliceByValueRangeAllMut<T = usize>:
+    SliceByValueRangeMut<Range<T>>
+    + SliceByValueRangeMut<RangeFrom<T>>
+    + SliceByValueRangeMut<RangeFull>
+    + SliceByValueRangeMut<RangeInclusive<T>>
+    + SliceByValueRangeMut<RangeTo<T>>
+    + SliceByValueRangeMut<RangeToInclusive<T>>
+    + for<'a> SBVRML<'a, Range<T>>
+    + for<'a> SBVRML<'a, RangeFrom<T>, SliceRangeMut = <Self as SBVRML<'a, Range<T>>>::SliceRangeMut>
+    + for<'a> SBVRML<'a, RangeFull, SliceRangeMut = <Self as SBVRML<'a, Range<T>>>::SliceRangeMut>
+    + for<'a> SBVRML<'a, RangeInclusive<T>, SliceRangeMut = <Self as SBVRML<'a, Range<T>>>::SliceRangeMut>
+    + for<'a> SBVRML<'a, RangeTo<T>, SliceRangeMut = <Self as SBVRML<'a, Range<T>>>::SliceRangeMut>
+    + for<'a> SBVRML<'a, RangeToInclusive<T>, SliceRangeMut = <Self as SBVRML<'a, Range<T>>>::SliceRangeMut>
+{
+}
+
+impl<U, T> SliceByValueRangeAllMut<T> for U
+where
+    U: SliceByValueRangeMut<Range<T>>,
+    U: SliceByValueRangeMut<RangeFrom<T>>,
+    U: SliceByValueRangeMut<RangeFull>,
+    U: SliceByValueRangeMut<RangeInclusive<T>>,
+    U: SliceByValueRangeMut<RangeTo<T>>,
+    U: SliceByValueRangeMut<RangeToInclusive<T>>,
+    U: for<'a> SBVRML<'a, Range<T>>,
+    U: for<'a> SBVRML<'a, RangeFrom<T>, SliceRangeMut = <U as SBVRML<'a, Range<T>>>::SliceRangeMut>,
+    U: for<'a> SBVRML<'a, RangeFull, SliceRangeMut = <U as SBVRML<'a, Range<T>>>::SliceRangeMut>,
+    U: for<'a> SBVRML<'a, RangeInclusive<T>, SliceRangeMut = <U as SBVRML<'a, Range<T>>>::SliceRangeMut>,
+    U: for<'a> SBVRML<'a, RangeTo<T>, SliceRangeMut = <U as SBVRML<'a, Range<T>>>::SliceRangeMut>,
+    U: for<'a> SBVRML<'a, RangeToInclusive<T>, SliceRangeMut = <U as SBVRML<'a, Range<T>>>::SliceRangeMut>,
+{
+}
