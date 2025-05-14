@@ -6,11 +6,11 @@ use value_traits_rs::slices::*;
 #[test]
 fn test() {
     let s = vec![1_i32, 2, 3, 4, 5];
-    assert_eq!(s.index_range(1..).index_range(..3), [2, 3, 4].as_ref());
+    test_bounds(&s);
 }
 
 // Compile-time check that all ranges can be forced to the same type
-fn _test_bounds<'a, S>(s: &S)
+fn test_bounds<'a, S>(s: &S)
 where
     S: SliceByValueGet<Value = i32>,
     S: SliceByValueRange<Range<usize>>,
