@@ -36,7 +36,9 @@
 //!     // We can get a subslice
 //!     let mut s = slice.index_range(0..5);
 //!     // And subslice it again with another range, getting the same type
-//!     let t = s.index_range(1..2);
+//!     let mut t = s.index_range(1..2);
+//!     let mut z = t.index_range(..);
+//!     z = s;
 //! }
 //! ```
 //!
