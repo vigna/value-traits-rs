@@ -88,49 +88,46 @@ impl<T: Clone> SliceByValueRepl for [T] {
     }
 }
 
+impl<'a, T: Clone> SliceByValueGat<'a> for [T] {
+    type Subslice = &'a [T];
+}
+
+impl<'a, T: Clone> SliceByValueGatMut<'a> for [T] {
+    type Subslice = &'a mut [T];
+}
+
 macro_rules! impl_range_slices {
     ($range:ty) => {
-        impl<'a, T: Clone> SliceByValueGat<'a, $range> for [T] {
-            type Subslice = &'a [T];
-        }
-
         impl<T: Clone> SliceByValueRange<$range> for [T] {
             #[inline]
-            fn get_range(&self, index: $range) -> Option<Subslice<'_, $range, Self>> {
+            fn get_range(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
             }
 
             #[inline]
-            fn index_range(&self, index: $range) -> Subslice<'_, $range, Self> {
+            fn index_range(&self, index: $range) -> Subslice<'_, Self> {
                 &self[index]
             }
 
             #[inline]
-            unsafe fn get_range_unchecked(&self, index: $range) -> Subslice<'_, $range, Self> {
+            unsafe fn get_range_unchecked(&self, index: $range) -> Subslice<'_, Self> {
                 unsafe { (*self).get_unchecked(index) }
             }
         }
 
-        impl<'a, T: Clone> SliceByValueGatMut<'a, $range> for [T] {
-            type Subslice = &'a mut [T];
-        }
-
         impl<T: Clone> SliceByValueRangeMut<$range> for [T] {
             #[inline]
-            fn get_range_mut(&mut self, index: $range) -> Option<SubsliceMut<'_, $range, Self>> {
+            fn get_range_mut(&mut self, index: $range) -> Option<SubsliceMut<'_, Self>> {
                 (*self).get_mut(index)
             }
 
             #[inline]
-            fn index_range_mut(&mut self, index: $range) -> SubsliceMut<'_, $range, Self> {
+            fn index_range_mut(&mut self, index: $range) -> SubsliceMut<'_, Self> {
                 &mut self[index]
             }
 
             #[inline]
-            unsafe fn get_range_unchecked_mut(
-                &mut self,
-                index: $range,
-            ) -> SubsliceMut<'_, $range, Self> {
+            unsafe fn get_range_unchecked_mut(&mut self, index: $range) -> SubsliceMut<'_, Self> {
                 unsafe { (*self).get_unchecked_mut(index) }
             }
         }
@@ -211,25 +208,25 @@ impl<T: Clone, const N: usize> SliceByValueRepl for [T; N] {
     }
 }
 
+impl<'a, T: Clone, const N: usize> SliceByValueGat<'a> for [T; N] {
+    type Subslice = &'a [T];
+}
+
 macro_rules! impl_range_arrays {
     ($range:ty) => {
-        impl<'a, T: Clone, const N: usize> SliceByValueGat<'a, $range> for [T; N] {
-            type Subslice = &'a [T];
-        }
-
         impl<T: Clone, const N: usize> SliceByValueRange<$range> for [T; N] {
             #[inline]
-            fn get_range(&self, index: $range) -> Option<Subslice<'_, $range, Self>> {
+            fn get_range(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
             }
 
             #[inline]
-            fn index_range(&self, index: $range) -> Subslice<'_, $range, Self> {
+            fn index_range(&self, index: $range) -> Subslice<'_, Self> {
                 &self[index]
             }
 
             #[inline]
-            unsafe fn get_range_unchecked(&self, index: $range) -> Subslice<'_, $range, Self> {
+            unsafe fn get_range_unchecked(&self, index: $range) -> Subslice<'_, Self> {
                 unsafe { (*self).get_unchecked(index) }
             }
         }
@@ -363,26 +360,26 @@ mod alloc_impls {
         }
     }
 
+    impl<'a, T: Clone> SliceByValueGat<'a> for Vec<T> {
+        type Subslice = &'a [T];
+    }
+
     macro_rules! impl_range_vecs {
         ($range:ty) => {
-            impl<'a, T: Clone> SliceByValueGat<'a, $range> for Vec<T> {
-                type Subslice = &'a [T];
-            }
-
             impl<T: Clone> SliceByValueRange<$range> for Vec<T> {
                 #[inline]
-                fn get_range(&self, index: $range) -> Option<Subslice<'_, $range, Self>> {
+                fn get_range(&self, index: $range) -> Option<Subslice<'_, Self>> {
                     // slice.get returns Option<&T>, .copied() converts to Option<T>
                     (*self).get(index)
                 }
 
                 #[inline]
-                fn index_range(&self, index: $range) -> Subslice<'_, $range, Self> {
+                fn index_range(&self, index: $range) -> Subslice<'_, Self> {
                     &self[index]
                 }
 
                 #[inline]
-                unsafe fn get_range_unchecked(&self, index: $range) -> Subslice<'_, $range, Self> {
+                unsafe fn get_range_unchecked(&self, index: $range) -> Subslice<'_, Self> {
                     unsafe { (*self).get_unchecked(index) }
                 }
             }
