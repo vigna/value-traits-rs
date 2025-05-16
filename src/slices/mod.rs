@@ -189,7 +189,8 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
 pub trait SliceByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByValue {
     type Subslice: 'a
         + SliceByValueGet<Value = Self::Value>
-        + SliceByValueGat<'a, Subslice = Self::Subslice>; // recursion
+        + SliceByValueGat<'a, Subslice = Self::Subslice> // recursion
+        + SliceByValueSubslice<usize>;
 }
 
 impl<'a, T: SliceByValue + SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &T {
@@ -243,7 +244,8 @@ pub trait SliceByValueGatMut<'a, __Implicit = &'a Self>: SliceByValue {
     type Subslice: 'a
         + SliceByValueSet<Value = Self::Value>
         + SliceByValueRepl<Value = Self::Value>
-        + SliceByValueGatMut<'a, Subslice = Self::Subslice>; // recursion
+        + SliceByValueGatMut<'a, Subslice = Self::Subslice> // recursion
+        + SliceByValueSubsliceMut<usize>;
 }
 
 impl<'a, T: SliceByValue + SliceByValueGatMut<'a> + ?Sized> SliceByValueGatMut<'a> for &mut T {
