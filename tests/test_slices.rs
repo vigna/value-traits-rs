@@ -1,5 +1,5 @@
 use core::ops::Range;
-use value_traits_rs::slices::*;
+use value_traits::slices::*;
 
 #[test]
 fn test_slices() {

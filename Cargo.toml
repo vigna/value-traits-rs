@@ -1,5 +1,5 @@
 [package]
-name = "value-traits-rs"
+name = "value-traits"
 version = "0.1.0"
 edition = "2021"
 description = "Traits for implicit collections"

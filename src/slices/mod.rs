@@ -30,8 +30,17 @@
 //! ```rust
 //! use value_traits::slices::*;
 //!
-//! fn takes_slice_of_uint64(slice: &impl SliceByValue<Value = u64> + SliceByValueGet) {
+//! fn takes_slice_of_uint64(slice: &(impl SliceByValue<Value = u64> + SliceByValueGet + SliceByValueSubslice)) {
+//!     // We can access values
+//!     let a = slice.index_value(0);
+//!     // We can get a subslice
+//!     let mut s = slice.index_range(0..5);
+//!     // And subslice it again with another range, getting the same type
+//!     let t = s.index_range(1..2);
 //! }
+//! ```
+//!
+//!
 
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
@@ -379,7 +388,7 @@ pub trait SliceByValueSubsliceMut<T = usize>:
 {
 }
 
-impl<U, T> SliceByValueRangeMut<T> for U
+impl<U, T> SliceByValueSubsliceMut<T> for U
 where
     U: SliceByValueRangeMut<Range<T>>,
     U: SliceByValueRangeMut<RangeFrom<T>>,
