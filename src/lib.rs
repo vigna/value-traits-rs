@@ -263,7 +263,7 @@ mod alloc_impls {
             (**self).index_value(index)
         }
         unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-            (**self).get_value_unchecked(index)
+            unsafe { (**self).get_value_unchecked(index) }
         }
     }
 
@@ -276,7 +276,7 @@ mod alloc_impls {
             index: usize,
             value: Self::Value,
         ) -> Self::Value {
-            (**self).replace_value_unchecked(index, value)
+            unsafe { (**self).replace_value_unchecked(index, value) }
         }
     }
 
@@ -285,7 +285,7 @@ mod alloc_impls {
             (**self).set_value(index, value)
         }
         unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-            (**self).set_value_unchecked(index, value)
+            unsafe { (**self).set_value_unchecked(index, value) }
         }
     }
 

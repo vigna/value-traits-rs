@@ -303,12 +303,6 @@ where
     U: SliceByValueRange<RangeInclusive<T>>,
     U: SliceByValueRange<RangeTo<T>>,
     U: SliceByValueRange<RangeToInclusive<T>>,
-    for<'a> <Self as SliceByValueGat<'a>>::Subslice: SliceByValueRange<Range<T>>
-        + SliceByValueRange<RangeFrom<T>>
-        + SliceByValueRange<RangeFull>
-        + SliceByValueRange<RangeInclusive<T>>
-        + SliceByValueRange<RangeTo<T>>
-        + SliceByValueRange<RangeToInclusive<T>>,
 {
 }
 
@@ -331,11 +325,5 @@ where
     U: SliceByValueRangeMut<RangeInclusive<T>>,
     U: SliceByValueRangeMut<RangeTo<T>>,
     U: SliceByValueRangeMut<RangeToInclusive<T>>,
-    for<'a> <Self as SliceByValueGatMut<'a>>::Subslice: SliceByValueRangeMut<Range<T>>
-        + SliceByValueRange<RangeFrom<T>>
-        + SliceByValueRange<RangeFull>
-        + SliceByValueRange<RangeInclusive<T>>
-        + SliceByValueRange<RangeTo<T>>
-        + SliceByValueRange<RangeToInclusive<T>>,
 {
 }
