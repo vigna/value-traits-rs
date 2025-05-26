@@ -4,7 +4,7 @@
 use core::ops::{Deref, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 use slices::{
     SliceByValue, SliceByValueGet, SliceByValueRange,
-    /*SliceByValueRangeMut, */SliceByValueRepl, SliceByValueSet,
+    SliceByValueRangeMut, SliceByValueRepl, SliceByValueSet,
 };
 
 pub mod iter;
@@ -104,6 +104,23 @@ macro_rules! impl_range_slices {
             #[inline]
             unsafe fn get_range_unchecked(&self, index: $range) -> Self {
                 unsafe { self.get_unchecked(index) }
+            }
+        }
+
+        impl<'a, U: Clone> SliceByValueRangeMut<'a, $range> for &'a mut [U] where &'a mut [U]: SliceByValue<Value=U> {
+            #[inline]
+            fn get_range_mut(&'a mut self, index: $range) -> Option<Self> {
+                self.get_mut(index)
+            }
+
+            #[inline]
+            fn index_range_mut(&'a mut self, index: $range) -> Self {
+                &mut self[index]
+            }
+
+            #[inline]
+            unsafe fn get_range_unchecked_mut(&'a mut self, index: $range) -> Self {
+                unsafe { self.get_unchecked_mut(index) }
             }
         }
     }

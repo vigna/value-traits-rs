@@ -10,8 +10,8 @@ fn test_slices() {
     assert_eq!(test_usize_range(&t), (1, [1, 2].as_ref()));
     assert_eq!(test_len(&t), 3);
 
-    let t = s.as_mut_slice();
-    //assert_eq!(test_range_mut(t), &mut [1, 2]);
+    let mut t = s.as_mut_slice();
+    assert_eq!(test_range_mut(&mut t), &mut [1, 2]);
 }
 
 fn test_usize(s: impl SliceByValueGet<Value = i32>) -> i32 {
@@ -27,8 +27,7 @@ where
     a
 }
 
-/*
-fn test_range_mut<'a, S>(s: &'a mut S) -> &mut [i32]
+fn test_range_mut<'a, S>(s: &'a mut S) -> S
 where
     S: SliceByValueRangeMut<'a, Range<usize>> + ?Sized,
 {
@@ -36,7 +35,6 @@ where
     // let _ = s.index_range_mut(0..2); // this instead should not compile
     a
 }
-*/
 
 fn test_usize_range<'a, S>(s: &'a S) -> (i32, S)
 where

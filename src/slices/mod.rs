@@ -42,6 +42,21 @@
 //! }
 //! ```
 //!
+//! This signature is for a function that takes a mutable value-based slice of `u64`:
+//! ```rust
+//! use value_traits::slices::*;
+//!
+//! fn takes_mut_slice_of_uint64<'a> (slice: &'a mut (impl SliceByValue<Value = u64> + SliceByValueSet + SliceByValueSubsliceMut<'a>)) {
+//!     // We can write values
+//!     slice.set_value(0, 42);
+//!     // We can get a mutable subslice
+//!     let mut s = slice.index_range_mut(0..5);
+//!     // And subslice it again with another range, getting the same type
+//!     let mut t = s.index_range_mut(1..2);
+//!     // let mut z = t.index_range_mut(..); // does not compile (can't mutable borrow twice)
+//! }
+//! ```
+//!
 //!
 
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
@@ -119,58 +134,19 @@ pub trait SliceByValueRange<'a, R>: SliceByValue + Sized + 'a {
     fn get_range(&self, range: R) -> Option<Self>;
 }
 
-/*
-impl<'a, S: SliceByValueRange<'a, R> + ?Sized + 'a, R> SliceByValueRange<'a, R> for &'a S {
-    fn get_range(&'a self, range: R) -> Option<Self> {
-        (**self).get_range(range).as_ref()
-    }
-    fn index_range(&'a self, range: R) -> Self {
-        &(**self).index_range(range)
-    }
-    unsafe fn get_range_unchecked(&'a self, range: R) -> Self {
-        &(**self).get_range_unchecked(range)
-    }
-}
-impl<'a, S: SliceByValueRange<'a, R> + ?Sized, R> SliceByValueRange<'a, R> for &'a mut S {
-    fn get_range(&self, range: R) -> Option<Self> {
-        (**self).get_range(range).as_mut()
-    }
-    fn index_range(&self, range: R) -> Self {
-        &mut (**self).index_range(range)
-    }
-    unsafe fn get_range_unchecked(&self, range: R) -> Self {
-        &mut (**self).get_range_unchecked(range)
-    }
-}
-*/
-
-
-/*
-pub trait SliceByValueRangeMut<R>: SliceByValue + Sized {
+pub trait SliceByValueRangeMut<'a, R>: SliceByValue + Sized + 'a {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range_mut(&mut self, range: R) -> Self;
+    fn index_range_mut(&'a mut self, range: R) -> Self;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> Self;
+    unsafe fn get_range_unchecked_mut(&'a mut self, range: R) -> Self;
 
     /// See [`slice::get`].
-    fn get_range_mut(&mut self, range: R) -> Option<Self>;
+    fn get_range_mut(&'a mut self, range: R) -> Option<Self>;
 }
 
-impl<S: SliceByValueRangeMut<R> + ?Sized, R> SliceByValueRangeMut<R> for &mut S {
-    fn get_range_mut(&mut self, range: R) -> Option<Self> {
-        (**self).get_range_mut(range).as_mut()
-    }
-    fn index_range_mut(&mut self, range: R) -> Self {
-        &mut (**self).index_range_mut(range)
-    }
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> Self {
-        &mut (**self).get_range_unchecked_mut(range)
-    }
-}
-*/
 
 /// Helper trait for requesting all common range types, and enforce that they all
 /// return the same type of slice.
@@ -195,26 +171,24 @@ where
 {
 }
 
-/*
 /// Mutable version of [`SliceByValueRangeAll`].
-pub trait SliceByValueSubsliceMut<T = usize>:
-    SliceByValueRangeMut<Range<T>>
-    + SliceByValueRangeMut<RangeFrom<T>>
-    + SliceByValueRangeMut<RangeFull>
-    + SliceByValueRangeMut<RangeInclusive<T>>
-    + SliceByValueRangeMut<RangeTo<T>>
-    + SliceByValueRangeMut<RangeToInclusive<T>>
+pub trait SliceByValueSubsliceMut<'a, T = usize>:
+    SliceByValueRangeMut<'a, Range<T>>
+    + SliceByValueRangeMut<'a, RangeFrom<T>>
+    + SliceByValueRangeMut<'a, RangeFull>
+    + SliceByValueRangeMut<'a, RangeInclusive<T>>
+    + SliceByValueRangeMut<'a, RangeTo<T>>
+    + SliceByValueRangeMut<'a, RangeToInclusive<T>>
 {
 }
 
-impl<U, T> SliceByValueSubsliceMut<T> for U
+impl<'a, U, T> SliceByValueSubsliceMut<'a, T> for U
 where
-    U: SliceByValueRangeMut<Range<T>>,
-    U: SliceByValueRangeMut<RangeFrom<T>>,
-    U: SliceByValueRangeMut<RangeFull>,
-    U: SliceByValueRangeMut<RangeInclusive<T>>,
-    U: SliceByValueRangeMut<RangeTo<T>>,
-    U: SliceByValueRangeMut<RangeToInclusive<T>>,
+    U: SliceByValueRangeMut<'a, Range<T>>,
+    U: SliceByValueRangeMut<'a, RangeFrom<T>>,
+    U: SliceByValueRangeMut<'a, RangeFull>,
+    U: SliceByValueRangeMut<'a, RangeInclusive<T>>,
+    U: SliceByValueRangeMut<'a, RangeTo<T>>,
+    U: SliceByValueRangeMut<'a, RangeToInclusive<T>>,
 {
 }
-*/
