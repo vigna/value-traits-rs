@@ -62,22 +62,6 @@ pub trait SliceByValue {
     }
 }
 
-impl<S: SliceByValue + ?Sized> SliceByValue for &S {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
-impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
 /// Read-only slice-by-value trait.
 pub trait SliceByValueGet: SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -90,30 +74,6 @@ pub trait SliceByValueGet: SliceByValue {
 
     /// See [`slice::get`].
     fn get_value(&self, index: usize) -> Option<Self::Value>;
-}
-
-impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &S {
-    fn get_value(&self, index: usize) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: usize) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        unsafe { (**self).get_value_unchecked(index) }
-    }
-}
-
-impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &mut S {
-    fn get_value(&self, index: usize) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: usize) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        unsafe { (**self).get_value_unchecked(index) }
-    }
 }
 
 /// Mutable slice-by-value trait, providing setting methods.
@@ -131,15 +91,6 @@ pub trait SliceByValueSet: SliceByValue {
     fn set_value(&mut self, index: usize, value: Self::Value);
 }
 
-impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
-    fn set_value(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value(index, value)
-    }
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-        unsafe { (**self).set_value_unchecked(index, value) }
-    }
-}
-
 /// Mutable slice-by-value trait, providing replacement methods.
 ///
 /// If you just need to set a value, use [`SliceByValueSet`] instead.
@@ -153,15 +104,6 @@ pub trait SliceByValueRepl: SliceByValue {
     /// Sets the value at the given index to the given value and
     /// returns the previous value.
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value;
-}
-
-impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
-    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        (**self).replace_value(index, value)
-    }
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        unsafe { (**self).replace_value_unchecked(index, value) }
-    }
 }
 
 pub trait SliceByValueRange<'a, R>: SliceByValue + Sized + 'a {
