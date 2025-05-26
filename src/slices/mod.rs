@@ -30,7 +30,7 @@
 //! ```rust
 //! use value_traits::slices::*;
 //!
-//! fn takes_slice_of_uint64(slice: &(impl SliceByValue<Value = u64> + SliceByValueGet + SliceByValueSubslice)) {
+//! fn takes_slice_of_uint64<'a> (slice: &'a (impl SliceByValue<Value = u64> + SliceByValueGet + SliceByValueSubslice<'a>)) {
 //!     // We can access values
 //!     let a = slice.index_value(0);
 //!     // We can get a subslice
@@ -39,6 +39,21 @@
 //!     let mut t = s.index_range(1..2);
 //!     let mut z = t.index_range(..);
 //!     z = s;
+//! }
+//! ```
+//!
+//! This signature is for a function that takes a mutable value-based slice of `u64`:
+//! ```rust
+//! use value_traits::slices::*;
+//!
+//! fn takes_mut_slice_of_uint64<'a> (slice: &'a mut (impl SliceByValue<Value = u64> + SliceByValueSet + SliceByValueSubsliceMut<'a>)) {
+//!     // We can write values
+//!     slice.set_value(0, 42);
+//!     // We can get a mutable subslice
+//!     let mut s = slice.index_range_mut(0..5);
+//!     // And subslice it again with another range, getting the same type
+//!     let mut t = s.index_range_mut(1..2);
+//!     // let mut z = t.index_range_mut(..); // does not compile (can't mutable borrow twice)
 //! }
 //! ```
 //!
@@ -62,22 +77,6 @@ pub trait SliceByValue {
     }
 }
 
-impl<S: SliceByValue + ?Sized> SliceByValue for &S {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
-impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
 /// Read-only slice-by-value trait.
 pub trait SliceByValueGet: SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -90,30 +89,6 @@ pub trait SliceByValueGet: SliceByValue {
 
     /// See [`slice::get`].
     fn get_value(&self, index: usize) -> Option<Self::Value>;
-}
-
-impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &S {
-    fn get_value(&self, index: usize) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: usize) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        (**self).get_value_unchecked(index)
-    }
-}
-
-impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &mut S {
-    fn get_value(&self, index: usize) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: usize) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        (**self).get_value_unchecked(index)
-    }
 }
 
 /// Mutable slice-by-value trait, providing setting methods.
@@ -131,15 +106,6 @@ pub trait SliceByValueSet: SliceByValue {
     fn set_value(&mut self, index: usize, value: Self::Value);
 }
 
-impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
-    fn set_value(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value(index, value)
-    }
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value_unchecked(index, value)
-    }
-}
-
 /// Mutable slice-by-value trait, providing replacement methods.
 ///
 /// If you just need to set a value, use [`SliceByValueSet`] instead.
@@ -155,175 +121,74 @@ pub trait SliceByValueRepl: SliceByValue {
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value;
 }
 
-impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
-    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        (**self).replace_value(index, value)
-    }
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        (**self).replace_value_unchecked(index, value)
-    }
-}
-
-/// A GAT-like trait specifying the subslice type for a given range.
-///
-/// It implicitly restricts the lifetime `'a` used in `SliceByValueRange`
-/// to be `where Self: 'a`.
-///
-/// As in other theoretical applications of GATs, like
-/// [lenders](https://crates.io/crates/lender), using a GAT to express the type
-/// of a subslice is problematic because when bounding the type itself in a
-/// where clause using Higher-Ranked Trait Bounds (HRTBs) the bound must be true
-/// for all lifetimes, including `'static`, resulting in the sliced type having
-/// to be `'static` as well.
-///
-/// This is a result of HRTBs not having a way to express qualifiers (`for<'any
-/// where Self: 'any> Self: Trait`) and effectively making HRTBs only useful
-/// when you want to express a trait constraint on ALL lifetimes, including
-/// 'static (`for<'all> Self: trait`)
-///
-/// Please see [Sabrina's Blog][1] for more information, and how a trait
-/// like this can be used to solve it by implicitly restricting HRTBs.
-///
-/// # I
-///
-/// [1]:
-///     <https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats>
-pub trait SliceByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByValue {
-    type Subslice: 'a
-        + SliceByValueGet<Value = Self::Value>
-        + SliceByValueGat<'a, Subslice = Self::Subslice> // recursion
-        + SliceByValueSubslice<usize>;
-}
-
-impl<'a, T: SliceByValue + SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &T {
-    type Subslice = <T as SliceByValueGat<'a>>::Subslice;
-}
-
-impl<'a, T: SliceByValue + SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &mut T {
-    type Subslice = <T as SliceByValueGat<'a>>::Subslice;
-}
-
-#[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type Subslice<'a, T: SliceByValue + SliceByValueGat<'a>> = <T as SliceByValueGat<'a>>::Subslice;
-
-pub trait SliceByValueRange<R>: SliceByValue + for<'a> SliceByValueGat<'a> {
+pub trait SliceByValueRange<'a, R>: SliceByValue + Sized + 'a {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range(&self, range: R) -> Subslice<'_, Self>;
+    fn index_range(&self, range: R) -> Self;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked(&self, range: R) -> Subslice<'_, Self>;
+    unsafe fn get_range_unchecked(&self, range: R) -> Self;
 
     /// See [`slice::get`].
-    fn get_range(&self, range: R) -> Option<Subslice<'_, Self>>;
+    fn get_range(&self, range: R) -> Option<Self>;
 }
 
-impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &S {
-    fn get_range(&self, range: R) -> Option<Subslice<'_, Self>> {
-        (**self).get_range(range)
-    }
-    fn index_range(&self, range: R) -> Subslice<'_, Self> {
-        (**self).index_range(range)
-    }
-    unsafe fn get_range_unchecked(&self, range: R) -> Subslice<'_, Self> {
-        (**self).get_range_unchecked(range)
-    }
-}
-impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &mut S {
-    fn get_range(&self, range: R) -> Option<Subslice<'_, Self>> {
-        (**self).get_range(range)
-    }
-    fn index_range(&self, range: R) -> Subslice<'_, Self> {
-        (**self).index_range(range)
-    }
-    unsafe fn get_range_unchecked(&self, range: R) -> Subslice<'_, Self> {
-        (**self).get_range_unchecked(range)
-    }
-}
-
-pub trait SliceByValueGatMut<'a, __Implicit = &'a Self>: SliceByValue {
-    type Subslice: 'a
-        + SliceByValueSet<Value = Self::Value>
-        + SliceByValueRepl<Value = Self::Value>
-        + SliceByValueGatMut<'a, Subslice = Self::Subslice> // recursion
-        + SliceByValueSubsliceMut<usize>;
-}
-
-impl<'a, T: SliceByValue + SliceByValueGatMut<'a> + ?Sized> SliceByValueGatMut<'a> for &mut T {
-    type Subslice = <T as SliceByValueGatMut<'a>>::Subslice;
-}
-
-#[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type SubsliceMut<'a, T: SliceByValue + SliceByValueGatMut<'a>> =
-    <T as SliceByValueGatMut<'a>>::Subslice;
-
-pub trait SliceByValueRangeMut<R>: SliceByValue + for<'a> SliceByValueGatMut<'a> {
+pub trait SliceByValueRangeMut<'a, R>: SliceByValue + Sized + 'a {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
+    fn index_range_mut(&'a mut self, range: R) -> Self;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
+    unsafe fn get_range_unchecked_mut(&'a mut self, range: R) -> Self;
 
     /// See [`slice::get`].
-    fn get_range_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>>;
+    fn get_range_mut(&'a mut self, range: R) -> Option<Self>;
 }
 
-impl<S: SliceByValueRangeMut<R> + ?Sized, R> SliceByValueRangeMut<R> for &mut S {
-    fn get_range_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
-        (**self).get_range_mut(range)
-    }
-    fn index_range_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
-        (**self).index_range_mut(range)
-    }
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
-        (**self).get_range_unchecked_mut(range)
-    }
-}
 
 /// Helper trait for requesting all common range types, and enforce that they all
 /// return the same type of slice.
-pub trait SliceByValueSubslice<T = usize>:
-    SliceByValueRange<Range<T>>
-    + SliceByValueRange<RangeFrom<T>>
-    + SliceByValueRange<RangeFull>
-    + SliceByValueRange<RangeInclusive<T>>
-    + SliceByValueRange<RangeTo<T>>
-    + SliceByValueRange<RangeToInclusive<T>>
+pub trait SliceByValueSubslice<'a, T = usize>:
+    SliceByValueRange<'a, Range<T>>
+    + SliceByValueRange<'a, RangeFrom<T>>
+    + SliceByValueRange<'a, RangeFull>
+    + SliceByValueRange<'a, RangeInclusive<T>>
+    + SliceByValueRange<'a, RangeTo<T>>
+    + SliceByValueRange<'a, RangeToInclusive<T>>
 {
 }
 
-impl<U, T> SliceByValueSubslice<T> for U
+impl<'a, U, T> SliceByValueSubslice<'a, T> for U
 where
-    U: SliceByValueRange<Range<T>>,
-    U: SliceByValueRange<RangeFrom<T>>,
-    U: SliceByValueRange<RangeFull>,
-    U: SliceByValueRange<RangeInclusive<T>>,
-    U: SliceByValueRange<RangeTo<T>>,
-    U: SliceByValueRange<RangeToInclusive<T>>,
+    U: SliceByValueRange<'a, Range<T>>,
+    U: SliceByValueRange<'a, RangeFrom<T>>,
+    U: SliceByValueRange<'a, RangeFull>,
+    U: SliceByValueRange<'a, RangeInclusive<T>>,
+    U: SliceByValueRange<'a, RangeTo<T>>,
+    U: SliceByValueRange<'a, RangeToInclusive<T>>,
 {
 }
 
 /// Mutable version of [`SliceByValueRangeAll`].
-pub trait SliceByValueSubsliceMut<T = usize>:
-    SliceByValueRangeMut<Range<T>>
-    + SliceByValueRangeMut<RangeFrom<T>>
-    + SliceByValueRangeMut<RangeFull>
-    + SliceByValueRangeMut<RangeInclusive<T>>
-    + SliceByValueRangeMut<RangeTo<T>>
-    + SliceByValueRangeMut<RangeToInclusive<T>>
+pub trait SliceByValueSubsliceMut<'a, T = usize>:
+    SliceByValueRangeMut<'a, Range<T>>
+    + SliceByValueRangeMut<'a, RangeFrom<T>>
+    + SliceByValueRangeMut<'a, RangeFull>
+    + SliceByValueRangeMut<'a, RangeInclusive<T>>
+    + SliceByValueRangeMut<'a, RangeTo<T>>
+    + SliceByValueRangeMut<'a, RangeToInclusive<T>>
 {
 }
 
-impl<U, T> SliceByValueSubsliceMut<T> for U
+impl<'a, U, T> SliceByValueSubsliceMut<'a, T> for U
 where
-    U: SliceByValueRangeMut<Range<T>>,
-    U: SliceByValueRangeMut<RangeFrom<T>>,
-    U: SliceByValueRangeMut<RangeFull>,
-    U: SliceByValueRangeMut<RangeInclusive<T>>,
-    U: SliceByValueRangeMut<RangeTo<T>>,
-    U: SliceByValueRangeMut<RangeToInclusive<T>>,
+    U: SliceByValueRangeMut<'a, Range<T>>,
+    U: SliceByValueRangeMut<'a, RangeFrom<T>>,
+    U: SliceByValueRangeMut<'a, RangeFull>,
+    U: SliceByValueRangeMut<'a, RangeInclusive<T>>,
+    U: SliceByValueRangeMut<'a, RangeTo<T>>,
+    U: SliceByValueRangeMut<'a, RangeToInclusive<T>>,
 {
 }
