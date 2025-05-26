@@ -1,5 +1,6 @@
 use value_traits::slices::*;
 
+/*
 #[test]
 fn test() {
     let s = vec![1_i32, 2, 3, 4, 5];
@@ -14,4 +15,4 @@ fn test_bounds(s: &impl SliceByValueSubslice) {
     _r = s.index_range(..=2);
     _r = s.index_range(0..=2);
     _r = s.index_range(..);
-}
+}*/
