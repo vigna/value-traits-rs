@@ -1,3 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Tommaso Fontana
+ * SPDX-FileCopyrightText: 2025 Sebastiano Vigna
+ * SPDX-FileCopyrightText: 2025 Inria
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
+ */
+
+//! Traits for value-based iterators.
+
 pub trait IterableByValue {
     type Item;
     type Iter<'a>: Iterator<Item = Self::Item>

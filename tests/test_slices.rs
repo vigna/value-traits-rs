@@ -1,3 +1,11 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Tommaso Fontana
+ * SPDX-FileCopyrightText: 2025 Sebastiano Vigna
+ * SPDX-FileCopyrightText: 2025 Inria
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
+ */
+
 use core::ops::Range;
 use value_traits::slices::*;
 
@@ -23,8 +31,8 @@ where
     S: SliceByValueRange<Range<usize>>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
-    let a = s.index_range(0..2);
-    let _ = s.index_range(0..3); // it can be borrowed multiple times
+    let a = s.index_subslice(0..2);
+    let _ = s.index_subslice(0..3); // it can be borrowed multiple times
     a
 }
 
@@ -33,8 +41,8 @@ where
     S: SliceByValueRangeMut<Range<usize>> + ?Sized,
     S: for<'b> SliceByValueGatMut<'b, Subslice = &'b mut [i32]>,
 {
-    let a = s.index_range_mut(0..2);
-    // let _ = s.index_range_mut(0..2); // this instead should not compile
+    let a = s.index_subslice_mut(0..2);
+    // let _ = s.index_subslice_mut(0..2); // this instead should not compile
     a
 }
 
@@ -44,7 +52,7 @@ where
     S: SliceByValueRange<Range<usize>>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
-    (s.index_value(0_usize), s.index_range(0..2))
+    (s.index_value(0_usize), s.index_subslice(0..2))
 }
 
 fn test_len<'a, S>(s: &S) -> usize

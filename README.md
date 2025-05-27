@@ -1,4 +1,5 @@
-# value-traits-rs
+# Traits By Value
+
 [![downloads](https://img.shields.io/crates/d/value-traits)](https://crates.io/crates/value-traits)
 [![dependents](https://img.shields.io/librariesio/dependents/cargo/value-traits)](https://crates.io/crates/value-traits/reverse_dependencies)
 ![GitHub CI](https://github.com/vigna/value-traits-rs/actions/workflows/rust.yml/badge.svg)
@@ -7,4 +8,62 @@
 [![Documentation](https://docs.rs/value-traits/badge.svg)](https://docs.rs/value-traits)
 [![Coverage Status](https://coveralls.io/repos/github/vigna/value-traits-rs/badge.svg?branch=main)](https://coveralls.io/github/vigna/value-traits-rs?branch=main)
 
-Traits for implicit collections
+## Why
+
+Slices are one of the most pervasive types in Rust—and with good reasons. They
+are lightweight, flexible, and represent a basic data structure, the _sequence_,
+AKA _random-access list_.
+
+The problem with slices is that, by design, they are accessed by _reference_:
+the most used slice trait, `Index`, gives a reference to an element of the
+slice. While this approach is elegant and makes several compiler optimizations
+possible, it also means that slices cannot be used as generic random-access
+lists, as access by reference means there must be an actual continuous segment
+of memory locations containing explicit representations
+of the elements of the lists. However, there are also different list
+representations, such as compressed, succinct, functional, implicit, and so on.
+
+For this reason, this crate provides traits parallel to slices and iterators,
+but by value, rather than by reference. [`SliceByValue`] simply specify the type
+of values of the slice by value and its length. A [`SliceByValueGet`] provides
+methods that are exactly analogous of [`std::slice::get`] and [`Index::index`],
+but return values, rather than references, and are named [`get_value`] and
+[`index_value`] instead. The longer names are necessary to avoid ambiguity, as
+all slices of cloneable elements implement our by-value traits. It might argued
+[`RandomAccessList`] or [`Sequence`] might be more standard name, but we want to
+underline the fact that the read access is closely modeled after slices. Note
+that we cannot overload the `[]` operator, as `Index` methods must necessarily
+return references.
+
+Write access is a different issue because [`SliceByValueSet`] has necessarily a
+completely different setup than [`IndexMut::index_mut`]. We also have a
+[`SliceByValueReplace`] trait whose setter return the original value, which
+might be more efficient in some circumstances.
+
+Finally, like slices, slices by value can provide
+[subslicing](SliceByValueSubslice). Subslicing traits are distinct traits, as you
+might be contented, for your application, of (possibly read-only) access to
+single elements. Similarly to the access to single elements, you have methods
+such as [`get_subslice`] and [`index_subslice`], which have the same semantics
+as the corresponding methods of slices, but return, once again, values. We also
+let the subslice type be possibly distinct from the original slice type, to make
+room for types in which subslicing cannot be implemented directly, but through
+a supporting structure. [`SubsliceImpl`] is a ready-made implementation that
+keeps track of a reference to the original slice, and of delimiters.
+
+One important difference with slices is that iterating subslicing will lead
+to different types. We could not find any way to express in the current Rust
+type system the recursive bound that subslices of a subslice should be of
+the same type. You can enforce this bound in `where` clauses for a finite
+number of level, though, as well as enforce that subslices have the same
+type of the slice.
+
+The other missing trait contained in this crate is [`IterableByValue`], which
+has the same logic for iterators. Rust has presently no trait specifying
+that you can iterate by value on some structure without consuming it
+as [`IntoIterator`] does. What one usually does is to implement [`IntoIterator`]
+on a reference, providing an iterator on references on the element, which
+brings back the problem of constraining such implementations to explicit
+representations. While it is possible to implement [`IntoIterator`] in such
+a way to return values, slices, vectors, etc., already have implementations
+returning references, so a different trait is necessary.

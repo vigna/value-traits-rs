@@ -1,3 +1,11 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Tommaso Fontana
+ * SPDX-FileCopyrightText: 2025 Sebastiano Vigna
+ * SPDX-FileCopyrightText: 2025 Inria
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
+ */
+
 //! Traits for value-based slices.
 //!
 //! Value-based slices are analogous to Rust's built-in slices, but they operate
@@ -24,20 +32,48 @@
 //! the intended usage, these traits are interesting only for implementors, or
 //! in the case an implementation does not provide the full set of ranges.
 //!
-//! # Examples
+//! ## An Example
 //!
-//! This signature is for a function that takes a value-based slice of `u64`:
+//! As a very simple worked-out example, let us a by-value read-only slice of
+//! `usize` using a vector of `u8` as a basic form of compression:
+//!
 //! ```rust
 //! use value_traits::slices::*;
 //!
-//! fn takes_slice_of_uint64(slice: &(impl SliceByValue<Value = u64> + SliceByValueGet + SliceByValueSubslice)) {
+//! struct CompSlice<'a>(&'a [u8]);
+//!
+//! impl<'a> SliceByValue for CompSlice<'a> {
+//!     type Value = usize;
+//!     fn len(&self) -> usize {
+//!         self.0.len()
+//!     }
+//! }
+//!
+//! impl<'a> SliceByValueGet for CompSlice<'a> {
+//!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
+//!         self.0.get_value_unchecked(index) as usize
+//!     }
+//!
+//!     fn index_value(&self, index: usize) -> usize {
+//!         self.0[index] as usize
+//!     }
+//! }
+//! ```
+//! # Examples
+//!
+//! This signature is for a function that takes a value-based slice of `u64`:
+//! ```ignore
+//! use value_traits::slices::*;
+//!
+//! fn takes_slice_of_uint64(slice: &(impl SliceByValue<Value = u64> + SliceByValueGet + SliceByValueSubslice))
+//!     where <<SliceByValueSubslice::Subslice as SliceByValueSubslice>::Subslice = SliceByValueSubslice::Subslice> {
 //!     // We can access values
 //!     let a = slice.index_value(0);
 //!     // We can get a subslice
-//!     let mut s = slice.index_range(0..5);
+//!     let mut s = slice.index_subslice(0..5);
 //!     // And subslice it again with another range, getting the same type
-//!     let mut t = s.index_range(1..2);
-//!     let mut z = t.index_range(..);
+//!     let mut t = s.index_subslice(1..2);
+//!     let mut z = t.index_subslice(..);
 //!     z = s;
 //! }
 //! ```
@@ -89,7 +125,14 @@ pub trait SliceByValueGet: SliceByValue {
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value;
 
     /// See [`slice::get`].
-    fn get_value(&self, index: usize) -> Option<Self::Value>;
+    fn get_value(&self, index: usize) -> Option<Self::Value> {
+        if index < self.len() {
+            None
+        } else {
+            // SAFETY: index is within allowed range
+            unsafe { Some(self.get_value_unchecked(index)) }
+        }
+    }
 }
 
 impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &S {
@@ -188,11 +231,8 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
 ///
 /// [1]:
 ///     <https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats>
-pub trait SliceByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByValue {
-    type Subslice: 'a
-        + SliceByValueGet<Value = Self::Value>
-        + SliceByValueGat<'a, Subslice = Self::Subslice> // recursion
-        + SliceByValueSubslice<usize>;
+pub trait SliceByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByValueGet {
+    type Subslice: 'a + SliceByValueGet<Value = Self::Value> + SliceByValueSubslice<usize>;
 }
 
 impl<'a, T: SliceByValue + SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &T {
@@ -208,41 +248,46 @@ pub type Subslice<'a, T: SliceByValue + SliceByValueGat<'a>> = <T as SliceByValu
 
 pub trait SliceByValueRange<R>: SliceByValue + for<'a> SliceByValueGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range(&self, range: R) -> Subslice<'_, Self>;
+    fn index_subslice(&self, range: R) -> Subslice<'_, Self>;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked(&self, range: R) -> Subslice<'_, Self>;
+    unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self>;
 
     /// See [`slice::get`].
-    fn get_range(&self, range: R) -> Option<Subslice<'_, Self>>;
+    fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>>;
 }
 
 impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &S {
-    fn get_range(&self, range: R) -> Option<Subslice<'_, Self>> {
-        (**self).get_range(range)
+    fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
+        (**self).get_subslice(range)
     }
-    fn index_range(&self, range: R) -> Subslice<'_, Self> {
-        (**self).index_range(range)
+    fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
+        (**self).index_subslice(range)
     }
-    unsafe fn get_range_unchecked(&self, range: R) -> Subslice<'_, Self> {
-        (**self).get_range_unchecked(range)
+    unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self> {
+        (**self).get_subslice_unchecked(range)
     }
 }
 impl<S: SliceByValueRange<R> + ?Sized, R> SliceByValueRange<R> for &mut S {
-    fn get_range(&self, range: R) -> Option<Subslice<'_, Self>> {
-        (**self).get_range(range)
+    fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
+        (**self).get_subslice(range)
     }
-    fn index_range(&self, range: R) -> Subslice<'_, Self> {
-        (**self).index_range(range)
+    fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
+        (**self).index_subslice(range)
     }
-    unsafe fn get_range_unchecked(&self, range: R) -> Subslice<'_, Self> {
-        (**self).get_range_unchecked(range)
+    unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self> {
+        (**self).get_subslice_unchecked(range)
     }
 }
 
-pub trait SliceByValueGatMut<'a, __Implicit = &'a Self>: SliceByValue {
+// TODO: can we implement traits conditionally on the associated type? Like,
+// replace only if it present in the root slice?
+
+pub trait SliceByValueGatMut<'a, __Implicit = &'a Self>:
+    SliceByValueSet + SliceByValueRepl
+{
     type Subslice: 'a
         + SliceByValueSet<Value = Self::Value>
         + SliceByValueRepl<Value = Self::Value>
@@ -260,26 +305,26 @@ pub type SubsliceMut<'a, T: SliceByValue + SliceByValueGatMut<'a>> =
 
 pub trait SliceByValueRangeMut<R>: SliceByValue + for<'a> SliceByValueGatMut<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_range_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
+    fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValue::get_value`].
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
+    unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
     /// See [`slice::get`].
-    fn get_range_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>>;
+    fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>>;
 }
 
 impl<S: SliceByValueRangeMut<R> + ?Sized, R> SliceByValueRangeMut<R> for &mut S {
-    fn get_range_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
-        (**self).get_range_mut(range)
+    fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
+        (**self).get_subslice_mut(range)
     }
-    fn index_range_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
-        (**self).index_range_mut(range)
+    fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
+        (**self).index_subslice_mut(range)
     }
-    unsafe fn get_range_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
-        (**self).get_range_unchecked_mut(range)
+    unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
+        (**self).get_subslice_unchecked_mut(range)
     }
 }
 
