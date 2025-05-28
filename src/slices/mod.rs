@@ -32,7 +32,7 @@
 //! the intended usage, these traits are interesting only for implementors, or
 //! in the case an implementation does not provide the full set of ranges.
 //!
-//! ## An Example
+//! ## Examples
 //!
 //! As a very simple worked-out example, let us a by-value read-only slice of
 //! `usize` using a vector of `u8` as a basic form of compression:
@@ -53,32 +53,74 @@
 //!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
 //!         self.0.get_value_unchecked(index) as usize
 //!     }
+//! }
 //!
-//!     fn index_value(&self, index: usize) -> usize {
-//!         self.0[index] as usize
+//! fn f(slice_by_value: impl SliceByValueGet<Value = usize>, index: usize) -> usize {
+//!     slice_by_value.index_value(index)
+//! }
+//!
+//! fn main() {
+//!     let vec = vec![0_u8, 1, 2, 3];
+//!     let slice_by_value = CompSlice(&vec);
+//!     // Note that we can pass a reference
+//!     assert_eq!(f(&slice_by_value, 0), 0);
+//!     assert_eq!(f(&slice_by_value, 1), 1);
+//!     assert_eq!(f(&slice_by_value, 2), 2);
+//!     assert_eq!(f(&slice_by_value, 3), 3);
+//! }
+//!
+//! ```
+//! In this example, instead, we define functionally a slice containing the
+//! first 100 squares:
+//!
+//! ```rust
+//! use value_traits::slices::*;
+//!
+//! struct Squares();
+//!
+//! impl<'a> SliceByValue for Squares {
+//!     type Value = usize;
+//!     fn len(&self) -> usize {
+//!         100
+//!     }
+//! }
+//!
+//! impl<'a> SliceByValueGet for Squares {
+//!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
+//!         index * index
+//!     }
+//! }
+//!
+//! fn f(slice_by_value: &impl SliceByValueGet<Value = usize>, index: usize) -> usize {
+//!     slice_by_value.index_value(index)
+//! }
+//!
+//! fn main() {
+//!     let squares = Squares();
+//!     for i in 0..100 {
+//!         assert_eq!(squares.index_value(i), i * i);
 //!     }
 //! }
 //! ```
-//! # Examples
 //!
-//! This signature is for a function that takes a value-based slice of `u64`:
-//! ```ignore
+//! In this example we define a function with a signature that enforces
+//! subslices to be all of the same type of the original slice:
+//! ```rust
 //! use value_traits::slices::*;
 //!
-//! fn takes_slice_of_uint64(slice: &(impl SliceByValue<Value = u64> + SliceByValueGet + SliceByValueSubslice))
-//!     where <<SliceByValueSubslice::Subslice as SliceByValueSubslice>::Subslice = SliceByValueSubslice::Subslice> {
+//! fn f<S: SliceByValueGet<Value = u64> + SliceByValueSubslice<Subslice = S>>(slice: S) {
 //!     // We can access values
 //!     let a = slice.index_value(0);
 //!     // We can get a subslice
 //!     let mut s = slice.index_subslice(0..5);
-//!     // And subslice it again with another range, getting the same type
+//!     // And subslice it again with another range, getting the same type...
 //!     let mut t = s.index_subslice(1..2);
-//!     let mut z = t.index_subslice(..);
-//!     z = s;
+//!     // ...and indeed we can assign s to t...
+//!     t = s;
+//!     // ...or even slice to t.
+//!     t = slice;
 //! }
 //! ```
-//!
-//!
 
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
@@ -115,22 +157,36 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
 }
 
 /// Read-only slice-by-value trait.
+///
+/// The only method that must be implement is
+/// [`get_value_unchecked`](`SliceByValueGet::get_value_unchecked`).
 pub trait SliceByValueGet: SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_value(&self, index: usize) -> Self::Value;
+    fn index_value(&self, index: usize) -> Self::Value {
+        if index < self.len() {
+            // SAFETY: index is without bounds
+            return unsafe { self.get_value_unchecked(index) };
+        }
+
+        panic!("Index is out of range"); // TODO: equal to slices
+    }
 
     /// See [`slice::get_unchecked`].
     ///
     /// For a safe alternative see [`SliceByValueGet::get_value`].
+    ///
+    /// # Safety
+    ///
+    /// The index must be within bounds.
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value;
 
     /// See [`slice::get`].
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         if index < self.len() {
-            None
-        } else {
-            // SAFETY: index is within allowed range
+            // SAFETY: index is without bounds
             unsafe { Some(self.get_value_unchecked(index)) }
+        } else {
+            None
         }
     }
 }
@@ -159,7 +215,10 @@ impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &mut S {
     }
 }
 
-/// Mutable slice-by-value trait, providing setting methods.
+/// Mutable slice-by-value trait providing setting methods.
+///
+/// The only method that must be implement is
+/// [`set_value_unchecked`](`SliceByValueSet::set_value_unchecked`).
 ///
 /// If you need to set a value and get the previous value, use
 /// [`SliceByValueRepl`] instead.
@@ -168,10 +227,27 @@ pub trait SliceByValueSet: SliceByValue {
     /// bounds checking.
     ///
     /// For a safe alternative see [`SliceByValueMut::set_value`].
+    ///
+    /// # Safety
+    ///
+    /// The index must be within bounds.
     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value);
 
     /// Sets the value at the given index to the given value.
-    fn set_value(&mut self, index: usize, value: Self::Value);
+    ///
+    /// # Panics
+    ///
+    /// This method will panic is the index is not within bounds.
+    fn set_value(&mut self, index: usize, value: Self::Value) {
+        if index < self.len() {
+            // SAFETY: index is without bounds
+            unsafe {
+                self.set_value_unchecked(index, value);
+            }
+        }
+
+        panic!("Index is out of range"); // TODO: equal to slices
+    }
 }
 
 impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
@@ -183,7 +259,7 @@ impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     }
 }
 
-/// Mutable slice-by-value trait, providing replacement methods.
+/// Mutable slice-by-value trait providing replacement methods.
 ///
 /// If you just need to set a value, use [`SliceByValueSet`] instead.
 pub trait SliceByValueRepl: SliceByValue {
@@ -191,11 +267,26 @@ pub trait SliceByValueRepl: SliceByValue {
     /// returns the previous value, without doing bounds checking.
     ///
     /// For a safe alternative see [`SliceByValueRepl::replace_value`].
+    ///
+    /// # Safety
+    ///
+    /// The index must be within bounds.
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value;
 
     /// Sets the value at the given index to the given value and
     /// returns the previous value.
-    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value;
+    ///
+    /// # Panics
+    ///
+    /// This method will panic is the index is not within bounds.
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        if index < self.len() {
+            // SAFETY: index is without bounds
+            return unsafe { self.replace_value_unchecked(index, value) };
+        }
+
+        panic!("Index is out of range"); // TODO: equal to slices
+    }
 }
 
 impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {

@@ -28,7 +28,7 @@ fn test_usize(s: impl SliceByValueGet<Value = i32>) -> i32 {
 
 fn test_range<'a, S>(s: &S) -> &[i32]
 where
-    S: SliceByValueRange<Range<usize>>,
+    S: SliceByValueSubslice<Range<usize>>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
     let a = s.index_subslice(0..2);
@@ -49,7 +49,7 @@ where
 fn test_usize_range<'a, S>(s: &S) -> (i32, &[i32])
 where
     S: SliceByValueGet<Value = i32>,
-    S: SliceByValueRange<Range<usize>>,
+    S: SliceByValueSubslice<Range<usize>>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
     (s.index_value(0_usize), s.index_subslice(0..2))
@@ -57,7 +57,7 @@ where
 
 fn test_len<'a, S>(s: &S) -> usize
 where
-    S: SliceByValueRange<Range<usize>>,
+    S: SliceByValueSubslice<Range<usize>>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
     s.len()
