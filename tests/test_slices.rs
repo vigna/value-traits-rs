@@ -57,7 +57,7 @@ where
 
 fn test_len<'a, S>(s: &S) -> usize
 where
-    S: SliceByValueSubslice<Range<usize>>,
+    S: SliceByValueSubslice<usize>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
     s.len()
