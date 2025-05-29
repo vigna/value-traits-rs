@@ -7,7 +7,10 @@
  */
 
 use core::ops::Range;
-use value_traits::slices::*;
+use value_traits::{
+    iter::{IterableByValue, IterableByValueFrom},
+    slices::*,
+};
 
 #[test]
 fn test_slices() {
@@ -61,4 +64,18 @@ where
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
     s.len()
+}
+
+#[test]
+fn test_iter() {
+    let s = vec![1_i32, 2, 3];
+    let mut i = s.iter_value();
+    assert_eq!(i.next(), Some(1));
+    assert_eq!(i.next(), Some(2));
+    assert_eq!(i.next(), Some(3));
+    assert_eq!(i.next(), None);
+    let mut i = s.iter_value_from(1);
+    assert_eq!(i.next(), Some(2));
+    assert_eq!(i.next(), Some(3));
+    assert_eq!(i.next(), None);
 }

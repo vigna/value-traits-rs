@@ -9,7 +9,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unconditional_recursion)]
 #![doc = include_str!("../README.md")]
-use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use core::{
+    iter::{Cloned, Skip},
+    ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
+};
+use iter::{IterableByValue, IterableByValueFrom};
 use slices::{
     SliceByValue, SliceByValueGat, SliceByValueGatMut, SliceByValueGet, SliceByValueRange,
     SliceByValueRangeMut, SliceByValueRepl, SliceByValueSet, Subslice, SubsliceMut,
@@ -251,6 +255,52 @@ impl_range_arrays!(Range<usize>);
 impl_range_arrays!(RangeInclusive<usize>);
 impl_range_arrays!(RangeToInclusive<usize>);
 
+impl<T: Clone> IterableByValue for [T] {
+    type Item = T;
+    type Iter<'a>
+        = Cloned<std::slice::Iter<'a, T>>
+    where
+        T: 'a;
+
+    fn iter_value(&self) -> Self::Iter<'_> {
+        self.iter().cloned()
+    }
+}
+
+impl<T: Clone> IterableByValueFrom for [T] {
+    type IterFrom<'a>
+        = Cloned<Skip<std::slice::Iter<'a, T>>>
+    where
+        T: 'a;
+
+    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+        self.iter().skip(from).cloned()
+    }
+}
+
+impl<T: Clone, const N: usize> IterableByValue for [T; N] {
+    type Item = T;
+    type Iter<'a>
+        = Cloned<std::slice::Iter<'a, T>>
+    where
+        T: 'a;
+
+    fn iter_value(&self) -> Self::Iter<'_> {
+        self.iter().cloned()
+    }
+}
+
+impl<T: Clone, const N: usize> IterableByValueFrom for [T; N] {
+    type IterFrom<'a>
+        = Cloned<Skip<std::slice::Iter<'a, T>>>
+    where
+        T: 'a;
+
+    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+        self.iter().skip(from).cloned()
+    }
+}
+
 #[cfg(feature = "alloc")]
 mod alloc_impls {
     use super::*;
@@ -447,6 +497,52 @@ mod std_impls {
         }
         unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
             (**self).get_value_unchecked(index)
+        }
+    }
+
+    impl<T: Clone> IterableByValue for Vec<T> {
+        type Item = T;
+        type Iter<'a>
+            = Cloned<std::slice::Iter<'a, T>>
+        where
+            T: 'a;
+
+        fn iter_value(&self) -> Self::Iter<'_> {
+            self.iter().cloned()
+        }
+    }
+
+    impl<T: Clone> IterableByValueFrom for Vec<T> {
+        type IterFrom<'a>
+            = Cloned<Skip<std::slice::Iter<'a, T>>>
+        where
+            T: 'a;
+
+        fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+            self.iter().skip(from).cloned()
+        }
+    }
+
+    impl<T: Clone> IterableByValue for Box<[T]> {
+        type Item = T;
+        type Iter<'a>
+            = Cloned<std::slice::Iter<'a, T>>
+        where
+            T: 'a;
+
+        fn iter_value(&self) -> Self::Iter<'_> {
+            self.iter().cloned()
+        }
+    }
+
+    impl<T: Clone> IterableByValueFrom for Box<[T]> {
+        type IterFrom<'a>
+            = Cloned<Skip<std::slice::Iter<'a, T>>>
+        where
+            T: 'a;
+
+        fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+            self.iter().skip(from).cloned()
         }
     }
 }
