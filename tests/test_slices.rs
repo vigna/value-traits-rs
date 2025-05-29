@@ -34,14 +34,14 @@ where
     S: SliceByValueSubslice<usize>,
     S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
 {
-    let a = s.index_subslice(0..2_usize);
-    let _ = s.index_subslice(0..3_usize); // it can be borrowed multiple times
+    let a = &s.index_subslice(0..2);
+    let _ = s.index_subslice(0..3); // it can be borrowed multiple times
     a
 }
 
 fn test_range_mut<'a, S>(s: &mut S) -> &mut [i32]
 where
-    S: SliceByValueRangeMut<Range<usize>> + ?Sized,
+    S: SliceByValueSubsliceRangeMut<Range<usize>> + ?Sized,
     S: for<'b> SliceByValueGatMut<'b, Subslice = &'b mut [i32]>,
 {
     let a = s.index_subslice_mut(0..2);

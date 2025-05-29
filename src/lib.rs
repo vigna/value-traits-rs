@@ -15,8 +15,9 @@ use core::{
 };
 use iter::{IterableByValue, IterableByValueFrom};
 use slices::{
-    SliceByValue, SliceByValueGat, SliceByValueGatMut, SliceByValueGet, SliceByValueRange,
-    SliceByValueRangeMut, SliceByValueRepl, SliceByValueSet, Subslice, SubsliceMut,
+    SliceByValue, SliceByValueGat, SliceByValueGatMut, SliceByValueGet, SliceByValueRepl,
+    SliceByValueSet, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice,
+    SubsliceMut,
 };
 
 pub mod iter;
@@ -110,7 +111,7 @@ impl<'a, T: Clone> SliceByValueGatMut<'a> for [T] {
 
 macro_rules! impl_range_slices {
     ($range:ty) => {
-        impl<T: Clone> SliceByValueRange<$range> for [T] {
+        impl<T: Clone> SliceByValueSubsliceParam<$range> for [T] {
             #[inline]
             fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
@@ -229,7 +230,7 @@ impl<'a, T: Clone, const N: usize> SliceByValueGat<'a> for [T; N] {
 
 macro_rules! impl_range_arrays {
     ($range:ty) => {
-        impl<T: Clone, const N: usize> SliceByValueRange<$range> for [T; N] {
+        impl<T: Clone, const N: usize> SliceByValueSubsliceParam<$range> for [T; N] {
             #[inline]
             fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
@@ -427,7 +428,7 @@ mod alloc_impls {
 
     macro_rules! impl_range_vecs {
         ($range:ty) => {
-            impl<T: Clone> SliceByValueRange<$range> for Vec<T> {
+            impl<T: Clone> SliceByValueSubsliceParam<$range> for Vec<T> {
                 #[inline]
                 fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                     // slice.get returns Option<&T>, .copied() converts to Option<T>
