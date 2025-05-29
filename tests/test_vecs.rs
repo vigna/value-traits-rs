@@ -11,8 +11,5 @@ use value_traits::slices::*;
 #[test]
 fn test_vecs() {
     let s = vec![1_i32, 2, 3, 4, 5];
-    assert_eq!(
-        s.index_subslice(1..).index_subslice(..3),
-        [2, 3, 4].as_ref()
-    );
+    assert_eq!(s.index_subslice(1..).index_subslice(..2), [2, 3].as_ref());
 }

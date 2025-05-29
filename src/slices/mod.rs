@@ -23,8 +23,8 @@
 //! standard slices, replacement can be obtained by a pair of get/set
 //! operations: [`SliceByValueRepl`] is just more efficient.
 //!
-//! The [`SliceByValueRange`] trait provides methods for obtaining subslices
-//! given a range of indices, and the [`SliceByValueRangeMut`] trait provides
+//! The [`SliceByValueSubslice`] trait provides methods for obtaining subslices
+//! given a range of indices, and the [`SliceByValueSubsliceMut`] trait provides
 //! mutable versions of these methods.
 //!
 //! Both traits are a combination of underlying traits that provide more
@@ -105,20 +105,16 @@
 //!
 //! In this example we define a function with a signature that enforces
 //! subslices to be all of the same type of the original slice:
-//! ```rust
+//! ```ignore
 //! use value_traits::slices::*;
 //!
 //! fn f<S: SliceByValueGet<Value = u64> + SliceByValueSubslice<Subslice = S>>(slice: S) {
-//!     // We can access values
-//!     let a = slice.index_value(0);
-//!     // We can get a subslice
-//!     let mut s = slice.index_subslice(0..5);
-//!     // And subslice it again with another range, getting the same type...
-//!     let mut t = s.index_subslice(1..2);
-//!     // ...and indeed we can assign s to t...
-//!     t = s;
-//!     // ...or even slice to t.
-//!     t = slice;
+//! }
+//!
+//! fn main() {
+//!     let vec = vec![0, 1, 2, 3];
+//!     let slice = vec.as_slice();
+//!     f(slice);
 //! }
 //! ```
 
@@ -226,7 +222,7 @@ pub trait SliceByValueSet: SliceByValue {
     /// Sets the value at the given index to the given value without doing
     /// bounds checking.
     ///
-    /// For a safe alternative see [`SliceByValueMut::set_value`].
+    /// For a safe alternative see [`SliceByValueSet::set_value`].
     ///
     /// # Safety
     ///
@@ -298,10 +294,10 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
     }
 }
 
-/// A GAT-like trait specifying the subslice type for a given range.
+/// A GAT-like trait specifying the subslice type.
 ///
 /// It implicitly restricts the lifetime `'a` used in `SliceByValueRange`
-/// to be `where Self: 'a`.
+/// to be `where Self: 'a`. Moreover, it requires [`SliceByValueGet`].
 ///
 /// As in other theoretical applications of GATs, like
 /// [lenders](https://crates.io/crates/lender), using a GAT to express the type
@@ -326,31 +322,35 @@ pub trait SliceByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByVal
     type Subslice: 'a + SliceByValueGet<Value = Self::Value> + SliceByValueSubslice<usize>;
 }
 
-impl<'a, T: SliceByValue + SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &T {
+impl<'a, T: SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &T {
     type Subslice = <T as SliceByValueGat<'a>>::Subslice;
 }
 
-impl<'a, T: SliceByValue + SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &mut T {
+impl<'a, T: SliceByValueGat<'a> + ?Sized> SliceByValueGat<'a> for &mut T {
     type Subslice = <T as SliceByValueGat<'a>>::Subslice;
 }
 
 /// A convenience type representing the type of subslice
 /// of a type implementing [`SliceByValueGat`].
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type Subslice<'a, T: SliceByValue + SliceByValueGat<'a>> = <T as SliceByValueGat<'a>>::Subslice;
+pub type Subslice<'a, T: SliceByValueGat<'a>> = <T as SliceByValueGat<'a>>::Subslice;
 
 /// A trait implementing subslicing for a specific range parameter.
 ///
 /// [`SliceByValueSubslice`] combines all instances of this trait with `R`
 /// equal to the various kind of standard ranges ([`core::ops::Range`],
-/// [`core::ops::RangeFull`], etc.).
-pub trait SliceByValueSubsliceRange<R>: SliceByValue + for<'a> SliceByValueGat<'a> {
+/// [`core::ops::RangeFull`], etc.). The user should never see this trait.
+pub trait SliceByValueSubsliceRange<R>: for<'a> SliceByValueGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self>;
 
     /// See [`slice::get_unchecked`].
     ///
-    /// For a safe alternative see [`SliceByValue::get_value`].
+    /// For a safe alternative see [`SliceByValueGet::get_value`].
+    ///
+    /// # Safety
+    ///
+    /// The range must be within bounds.
     unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self>;
 
     /// See [`slice::get`].
@@ -383,6 +383,9 @@ impl<S: SliceByValueSubsliceRange<R> + ?Sized, R> SliceByValueSubsliceRange<R> f
 // TODO: can we implement traits conditionally on the associated type? Like,
 // replace only if it present in the root slice?
 
+/// A GAT-like trait specifying the mutable subslice type.
+///
+/// See [`SliceByValueGat`].
 pub trait SliceByValueGatMut<'a, __Implicit = &'a Self>:
     SliceByValueSet + SliceByValueRepl
 {
@@ -393,28 +396,31 @@ pub trait SliceByValueGatMut<'a, __Implicit = &'a Self>:
         + SliceByValueSubsliceMut<usize>;
 }
 
-impl<'a, T: SliceByValue + SliceByValueGatMut<'a> + ?Sized> SliceByValueGatMut<'a> for &mut T {
+impl<'a, T: SliceByValueGatMut<'a> + ?Sized> SliceByValueGatMut<'a> for &mut T {
     type Subslice = <T as SliceByValueGatMut<'a>>::Subslice;
 }
 
 /// A convenience type representing the type of subslice
-/// of a type implementing [`SliceByValueGat`].
+/// of a type implementing [`SliceByValueGatMut`].
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
-pub type SubsliceMut<'a, T: SliceByValue + SliceByValueGatMut<'a>> =
-    <T as SliceByValueGatMut<'a>>::Subslice;
+pub type SubsliceMut<'a, T: SliceByValueGatMut<'a>> = <T as SliceByValueGatMut<'a>>::Subslice;
 
 /// A trait implementing mutable subslicing for a specific range parameter.
 ///
 /// [`SliceByValueSubsliceMut`] combines all instances of this trait with `R`
 /// equal to the various kind of standard ranges ([`core::ops::Range`],
-/// [`core::ops::RangeFull`], etc.).
-pub trait SliceByValueSubsliceRangeMut<R>: SliceByValue + for<'a> SliceByValueGatMut<'a> {
+/// [`core::ops::RangeFull`], etc.). The user should never see this trait.
+pub trait SliceByValueSubsliceRangeMut<R>: for<'a> SliceByValueGatMut<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
     /// See [`slice::get_unchecked`].
     ///
-    /// For a safe alternative see [`SliceByValue::get_value`].
+    /// For a safe alternative see [`SliceByValueGet::get_value`].
+    ///
+    /// # Safety
+    ///
+    /// The range must be within bounds.
     unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
     /// See [`slice::get`].

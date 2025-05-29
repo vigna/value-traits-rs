@@ -111,7 +111,7 @@ impl<'a, T: Clone> SliceByValueGatMut<'a> for [T] {
 
 macro_rules! impl_range_slices {
     ($range:ty) => {
-        impl<T: Clone> SliceByValueSubsliceParam<$range> for [T] {
+        impl<T: Clone> SliceByValueSubsliceRange<$range> for [T] {
             #[inline]
             fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
@@ -128,7 +128,7 @@ macro_rules! impl_range_slices {
             }
         }
 
-        impl<T: Clone> SliceByValueRangeMut<$range> for [T] {
+        impl<T: Clone> SliceByValueSubsliceRangeMut<$range> for [T] {
             #[inline]
             fn get_subslice_mut(&mut self, index: $range) -> Option<SubsliceMut<'_, Self>> {
                 (*self).get_mut(index)
@@ -230,7 +230,7 @@ impl<'a, T: Clone, const N: usize> SliceByValueGat<'a> for [T; N] {
 
 macro_rules! impl_range_arrays {
     ($range:ty) => {
-        impl<T: Clone, const N: usize> SliceByValueSubsliceParam<$range> for [T; N] {
+        impl<T: Clone, const N: usize> SliceByValueSubsliceRange<$range> for [T; N] {
             #[inline]
             fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
@@ -428,7 +428,7 @@ mod alloc_impls {
 
     macro_rules! impl_range_vecs {
         ($range:ty) => {
-            impl<T: Clone> SliceByValueSubsliceParam<$range> for Vec<T> {
+            impl<T: Clone> SliceByValueSubsliceRange<$range> for Vec<T> {
                 #[inline]
                 fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                     // slice.get returns Option<&T>, .copied() converts to Option<T>
