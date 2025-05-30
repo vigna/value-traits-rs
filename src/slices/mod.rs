@@ -310,12 +310,10 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
 /// This is a result of HRTBs not having a way to express qualifiers (`for<'any
 /// where Self: 'any> Self: Trait`) and effectively making HRTBs only useful
 /// when you want to express a trait constraint on ALL lifetimes, including
-/// 'static (`for<'all> Self: trait`)
+/// `'static` (`for<'all> Self: trait`)
 ///
 /// Please see [Sabrina's Blog][1] for more information, and how a trait
 /// like this can be used to solve it by implicitly restricting HRTBs.
-///
-/// # I
 ///
 /// [1]:
 ///     <https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats>
@@ -341,9 +339,9 @@ pub type Subslice<'a, T: SliceByValueSubsliceGat<'a>> =
 
 /// A trait implementing subslicing for a specific range parameter.
 ///
-/// [`SliceByValueSubslice`] combines all instances of this trait with `R`
-/// equal to the various kind of standard ranges ([`core::ops::Range`],
-/// [`core::ops::RangeFull`], etc.). The user should never see this trait.
+/// The user should never see this trait. [`SliceByValueSubslice`] combines all
+/// instances of this trait with `R` equal to the various kind of standard
+/// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
 pub trait SliceByValueSubsliceRange<R>: for<'a> SliceByValueSubsliceGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self>;
@@ -414,9 +412,9 @@ pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
 
 /// A trait implementing mutable subslicing for a specific range parameter.
 ///
-/// [`SliceByValueSubsliceMut`] combines all instances of this trait with `R`
-/// equal to the various kind of standard ranges ([`core::ops::Range`],
-/// [`core::ops::RangeFull`], etc.). The user should never see this trait.
+///  The user should never see this trait. [`SliceByValueSubsliceMut`] combines
+/// all instances of this trait with `R` equal to the various kind of standard
+/// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
 pub trait SliceByValueSubsliceRangeMut<R>: for<'a> SliceByValueSubsliceGatMut<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
@@ -448,12 +446,12 @@ impl<S: SliceByValueSubsliceRangeMut<R> + ?Sized, R> SliceByValueSubsliceRangeMu
     }
 }
 
-/// A convenience trait combining all instances of this [`SliceByValueSubslice`]
+/// A convenience trait combining all instances of [`SliceByValueSubsliceRange`]
 /// with `R` equal to the various kind of standard ranges ([`core::ops::Range`],
 /// [`core::ops::RangeFull`], etc.).
 ///
-/// A blanket implementation automatically implements the trait if all
-/// necessary implementations of [`SliceByValueSubslice`] are available.
+/// A blanket implementation automatically implements the trait if all necessary
+/// implementations of [`SliceByValueSubsliceRange`] are available.
 pub trait SliceByValueSubslice<T = usize>:
     SliceByValueSubsliceRange<Range<T>>
     + SliceByValueSubsliceRange<RangeFrom<T>>
@@ -475,12 +473,12 @@ where
 {
 }
 
-/// A convenience trait combining all instances of this
-/// [`SliceByValueSubsliceMut`] with `R` equal to the various kind of standard
-/// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
+/// A convenience trait combining all instances of
+/// [`SliceByValueSubsliceRangeMut`] with `R` equal to the various kind of
+/// standard ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
 ///
-/// A blanket implementation automatically implements the trait if all
-/// necessary implementations of [`SliceByValueSubsliceMut`] are available.
+/// A blanket implementation automatically implements the trait if all necessary
+/// implementations of [`SliceByValueSubsliceMut`] are available.
 pub trait SliceByValueSubsliceMut<T = usize>:
     SliceByValueSubsliceRangeMut<Range<T>>
     + SliceByValueSubsliceRangeMut<RangeFrom<T>>
