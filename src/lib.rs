@@ -15,8 +15,8 @@ use core::{
 };
 use iter::{IterableByValue, IterableByValueFrom};
 use slices::{
-    SliceByValue, SliceByValueGat, SliceByValueGatMut, SliceByValueGet, SliceByValueRepl,
-    SliceByValueSet, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice,
+    SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
+    SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice,
     SubsliceMut,
 };
 
@@ -101,11 +101,11 @@ impl<T: Clone> SliceByValueRepl for [T] {
     }
 }
 
-impl<'a, T: Clone> SliceByValueGat<'a> for [T] {
+impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for [T] {
     type Subslice = &'a [T];
 }
 
-impl<'a, T: Clone> SliceByValueGatMut<'a> for [T] {
+impl<'a, T: Clone> SliceByValueSubsliceGatMut<'a> for [T] {
     type Subslice = &'a mut [T];
 }
 
@@ -224,7 +224,7 @@ impl<T: Clone, const N: usize> SliceByValueRepl for [T; N] {
     }
 }
 
-impl<'a, T: Clone, const N: usize> SliceByValueGat<'a> for [T; N] {
+impl<'a, T: Clone, const N: usize> SliceByValueSubsliceGat<'a> for [T; N] {
     type Subslice = &'a [T];
 }
 
@@ -422,7 +422,7 @@ mod alloc_impls {
         }
     }
 
-    impl<'a, T: Clone> SliceByValueGat<'a> for Vec<T> {
+    impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for Vec<T> {
         type Subslice = &'a [T];
     }
 

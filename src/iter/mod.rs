@@ -27,6 +27,7 @@ pub trait IterableByValue {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Self::Iter<'_>;
 }
+
 /// A trait for obtaining a value-based iterator starting from a given position.
 ///
 /// This is an version of [`IterableByValue::iter_value`] that is useful for

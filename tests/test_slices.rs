@@ -32,7 +32,7 @@ fn test_usize(s: impl SliceByValueGet<Value = i32>) -> i32 {
 fn test_range<'a, S>(s: &S) -> &[i32]
 where
     S: SliceByValueSubslice<usize>,
-    S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
+    S: for<'b> SliceByValueSubsliceGat<'b, Subslice = &'b [i32]>,
 {
     let a = &s.index_subslice(0..2);
     let _ = s.index_subslice(0..3); // it can be borrowed multiple times
@@ -42,7 +42,7 @@ where
 fn test_range_mut<'a, S>(s: &mut S) -> &mut [i32]
 where
     S: SliceByValueSubsliceRangeMut<Range<usize>> + ?Sized,
-    S: for<'b> SliceByValueGatMut<'b, Subslice = &'b mut [i32]>,
+    S: for<'b> SliceByValueSubsliceGatMut<'b, Subslice = &'b mut [i32]>,
 {
     let a = s.index_subslice_mut(0..2);
     // let _ = s.index_subslice_mut(0..2); // this instead should not compile
@@ -53,7 +53,7 @@ fn test_usize_range<'a, S>(s: &S) -> (i32, &[i32])
 where
     S: SliceByValueGet<Value = i32>,
     S: SliceByValueSubslice<usize>,
-    S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
+    S: for<'b> SliceByValueSubsliceGat<'b, Subslice = &'b [i32]>,
 {
     (s.index_value(0_usize), s.index_subslice(0..2))
 }
@@ -61,7 +61,7 @@ where
 fn test_len<'a, S>(s: &S) -> usize
 where
     S: SliceByValueSubslice<usize>,
-    S: for<'b> SliceByValueGat<'b, Subslice = &'b [i32]>,
+    S: for<'b> SliceByValueSubsliceGat<'b, Subslice = &'b [i32]>,
 {
     s.len()
 }
