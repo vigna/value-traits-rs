@@ -45,11 +45,9 @@ Finally, like slices, slices by value can provide
 might be contented, for your application, of (possibly read-only) access to
 single elements. Similarly to the access to single elements, you have methods
 such as [`get_subslice`] and [`index_subslice`], which have the same semantics
-as the corresponding methods of slices, but return, once again, values. We also
-let the subslice type be possibly distinct from the original slice type, to make
-room for types in which subslicing cannot be implemented directly, but through
-a supporting structure. [`SubsliceImpl`] is a ready-made implementation that
-keeps track of a reference to the original slice, and of delimiters.
+as the corresponding methods of slices, but return, once again, values.
+[`SubsliceImpl`] is a ready-made implementation that keeps track of a
+reference to the original slice, and of delimiters.
 
 One important difference with slices is that iterating subslicing will lead
 to different types. We could not find any way to express in the current Rust
@@ -67,3 +65,17 @@ brings back the problem of constraining such implementations to explicit
 representations. While it is possible to implement [`IntoIterator`] in such
 a way to return values, slices, vectors, etc., already have implementations
 returning references, so a different trait is necessary.
+
+[`SliceByValue`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValue.html>
+[`SliceByValueGet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html>
+[`SliceByValueSet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSet.html>
+[`SliceByValueReplace`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueReplace.html>
+[`get_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.get_value>
+[`index_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.index_value>
+[`get_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
+[`index_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
+[`SubsliceImpl`]: <https://docs.rs/value_traits/latest/struct.SubsliceImpl.html>
+[`IterableByValue`]: <https://docs.rs/value_traits/latest/iter/trait.IterableByValue.html>
+[`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
+[`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
+[`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
