@@ -20,7 +20,9 @@ use slices::{
     SubsliceMut,
 };
 
-// TODO: check that all traits have the same delegations to &S, &mut, etc.
+// TODO: check that all traits have the same delegations to &S, &mut, etc
+// TODO: implemented default methods for ranges
+// TODO: implement bound checks with wording identical to std's slice methods
 
 pub mod iter;
 pub mod slices;
