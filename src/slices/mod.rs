@@ -102,21 +102,6 @@
 //!     }
 //! }
 //! ```
-//!
-//! In this example we define a function with a signature that enforces
-//! subslices to be all of the same type of the original slice:
-//! ```ignore
-//! use value_traits::slices::*;
-//!
-//! fn f<S: SliceByValueGet<Value = u64> + SliceByValueSubslice<Subslice = S>>(slice: S) {
-//! }
-//!
-//! fn main() {
-//!     let vec = vec![0, 1, 2, 3];
-//!     let slice = vec.as_slice();
-//!     f(slice);
-//! }
-//! ```
 
 use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 

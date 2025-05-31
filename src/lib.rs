@@ -20,6 +20,8 @@ use slices::{
     SubsliceMut,
 };
 
+// TODO: check that all traits have the same delegations to &S, &mut, etc.
+
 pub mod iter;
 pub mod slices;
 
@@ -255,41 +257,6 @@ impl_range_arrays!(RangeTo<usize>);
 impl_range_arrays!(Range<usize>);
 impl_range_arrays!(RangeInclusive<usize>);
 impl_range_arrays!(RangeToInclusive<usize>);
-
-impl<T: Clone> IterableByValue for [T] {
-    type Item = T;
-    type Iter<'a>
-        = Cloned<std::slice::Iter<'a, T>>
-    where
-        T: 'a;
-
-    fn iter_value(&self) -> Self::Iter<'_> {
-        self.iter().cloned()
-    }
-}
-
-impl<T: Clone> IterableByValueFrom for [T] {
-    type IterFrom<'a>
-        = Cloned<Skip<std::slice::Iter<'a, T>>>
-    where
-        T: 'a;
-
-    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
-        self.iter().skip(from).cloned()
-    }
-}
-
-impl<T: Clone, const N: usize> IterableByValue for [T; N] {
-    type Item = T;
-    type Iter<'a>
-        = Cloned<std::slice::Iter<'a, T>>
-    where
-        T: 'a;
-
-    fn iter_value(&self) -> Self::Iter<'_> {
-        self.iter().cloned()
-    }
-}
 
 impl<T: Clone, const N: usize> IterableByValueFrom for [T; N] {
     type IterFrom<'a>
@@ -544,6 +511,41 @@ mod std_impls {
 
         fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
             self.iter().skip(from).cloned()
+        }
+    }
+
+    impl<T: Clone> IterableByValue for [T] {
+        type Item = T;
+        type Iter<'a>
+            = Cloned<std::slice::Iter<'a, T>>
+        where
+            T: 'a;
+
+        fn iter_value(&self) -> Self::Iter<'_> {
+            self.iter().cloned()
+        }
+    }
+
+    impl<T: Clone> IterableByValueFrom for [T] {
+        type IterFrom<'a>
+            = Cloned<Skip<std::slice::Iter<'a, T>>>
+        where
+            T: 'a;
+
+        fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+            self.iter().skip(from).cloned()
+        }
+    }
+
+    impl<T: Clone, const N: usize> IterableByValue for [T; N] {
+        type Item = T;
+        type Iter<'a>
+            = Cloned<std::slice::Iter<'a, T>>
+        where
+            T: 'a;
+
+        fn iter_value(&self) -> Self::Iter<'_> {
+            self.iter().cloned()
         }
     }
 }

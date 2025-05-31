@@ -30,7 +30,7 @@ methods that are exactly analogous of [`std::slice::get`] and [`Index::index`],
 but return values, rather than references, and are named [`get_value`] and
 [`index_value`] instead. The longer names are necessary to avoid ambiguity, as
 all slices of cloneable elements implement our by-value traits. It might argued
-[`RandomAccessList`] or [`Sequence`] might be more standard name, but we want to
+`RandomAccessList` or `Sequence` might be more standard name, but we want to
 underline the fact that the read access is closely modeled after slices. Note
 that we cannot overload the `[]` operator, as `Index` methods must necessarily
 return references.
@@ -40,21 +40,21 @@ completely different setup than [`IndexMut::index_mut`]. We also have a
 [`SliceByValueReplace`] trait whose setter return the original value, which
 might be more efficient in some circumstances.
 
-Finally, like slices, slices by value can provide
-[subslicing](SliceByValueSubslice). Subslicing traits are distinct traits, as you
-might be contented, for your application, of (possibly read-only) access to
-single elements. Similarly to the access to single elements, you have methods
-such as [`get_subslice`] and [`index_subslice`], which have the same semantics
-as the corresponding methods of slices, but return, once again, values.
-[`SubsliceImpl`] is a ready-made implementation that keeps track of a
-reference to the original slice, and of delimiters.
+Finally, like slices, slices by value can provide [subslicing]. Subslicing
+traits are distinct traits, as you might be contented, for your application, of
+(possibly read-only) access to single elements. Similarly to the access to
+single elements, you have methods such as [`get_subslice`] and
+[`index_subslice`], which have the same semantics as the corresponding methods
+of slices, but return, once again, values. [`SubsliceImpl`] is a ready-made
+implementation that keeps track of a reference to the original slice, and of
+delimiters.
 
 One important difference with slices is that iterating subslicing will lead
 to different types. We could not find any way to express in the current Rust
 type system the recursive bound that subslices of a subslice should be of
-the same type. You can enforce this bound in `where` clauses for a finite
-number of level, though, as well as enforce that subslices have the same
-type of the slice.
+the same type. This is not relevant if you pass the subslice to a function
+that accepts a by-value slice, but it is relevant if you want to assign
+subslices of different depth to the same variable.
 
 The other missing trait contained in this crate is [`IterableByValue`], which
 has the same logic for iterators. Rust has presently no trait specifying
@@ -70,6 +70,7 @@ returning references, so a different trait is necessary.
 [`SliceByValueGet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html>
 [`SliceByValueSet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSet.html>
 [`SliceByValueReplace`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueReplace.html>
+[subslicing]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html>
 [`get_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.get_value>
 [`index_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.index_value>
 [`get_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
@@ -79,3 +80,4 @@ returning references, so a different trait is necessary.
 [`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
+[`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
