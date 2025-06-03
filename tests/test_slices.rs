@@ -14,6 +14,9 @@ use value_traits::{
     slices::*,
 };
 
+mod common;
+pub use common::*;
+
 #[test]
 fn test_slices() {
     let mut s = vec![1_i32, 2, 3];
@@ -115,7 +118,13 @@ impl_subslices_mut![Sbv];
 
 #[test]
 fn test_sbv_subslices() {
-    let mut s = Sbv(vec![1_i32, 2, 3, 4]);
+    let mut s = Sbv(vec![1_i32, 2, 3, 4, 5]);
+
+    generic_get(&s, &[1, 2, 3, 4, 5]);
+    generic_slice(&s, &[1, 2, 3, 4, 5]);
+    generic_mut(&mut s);
+    generic_slice_mut(&mut s);
+
     let mut t = s.index_subslice_mut(1..3); // should compile
     assert_eq!(t.len(), 2);
     assert_eq!(t.index_value(0), 2);
