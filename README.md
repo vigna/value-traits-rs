@@ -45,9 +45,14 @@ traits are distinct traits, as you might be contented, for your application, of
 (possibly read-only) access to single elements. Similarly to the access to
 single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
-of slices. [`SubsliceImpl`] is a ready-made
-implementation that keeps track of a reference to the original slice, and of
-delimiters.
+of slices.
+
+Implementing subslices is tricky, so [`impl_subslices`] is a macro that provides
+a complete implementation of subslicing for a type that implements
+[`SliceByValueGet`]; [`impl_subslices_mut`] similarly provides a complete
+implementation of subslicing for a type that implements [`SliceByValueSet`] and
+[`SliceByValueReplace`]. Note that a custom implementation might be more
+efficient if your type can directly represent an inner range.
 
 One important difference with slices is that iterating subslicing will lead
 to different types. We could not find any way to express in the current Rust
@@ -75,10 +80,11 @@ returning references, so a different trait is necessary.
 [`index_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.index_value>
 [`get_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
 [`index_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
-[`SubsliceImpl`]: <https://docs.rs/value_traits/latest/struct.SubsliceImpl.html>
 [`IterableByValue`]: <https://docs.rs/value_traits/latest/iter/trait.IterableByValue.html>
 [`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
 [`Index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html>
 [`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
+[`impl_subslices`]: <https://docs.rs/value_traits/latest/slices/macro.impl_subslices.html>
+[`impl_subslices_mut`]: <https://docs.rs/value_traits/latest/slices/macro.impl_subslices_mut.html>

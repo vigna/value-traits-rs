@@ -198,7 +198,7 @@ impl<T: Clone> IterableByValueFrom for [T] {
 }
 
 #[macro_export]
-macro_rules! impl_subslice {
+macro_rules! impl_subslices {
     ($ty:ty) => {
         pub struct SubsliceImpl<'a> {
             slice: &'a $ty,
@@ -448,7 +448,7 @@ macro_rules! impl_subslice {
 }
 
 #[macro_export]
-macro_rules! impl_subslice_mut {
+macro_rules! impl_subslices_mut {
     ($ty:ty) => {
         pub struct SubsliceImplMut<'a> {
             slice: &'a mut $ty,

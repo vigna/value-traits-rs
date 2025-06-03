@@ -9,7 +9,7 @@
 use core::ops::Range;
 use std::vec;
 use value_traits::{
-    impl_subslice, impl_subslice_mut,
+    impl_subslices, impl_subslices_mut,
     iter::{IterableByValue, IterableByValueFrom},
     slices::*,
 };
@@ -110,8 +110,8 @@ impl SliceByValueRepl for Sbv {
     }
 }
 
-impl_subslice![Sbv];
-impl_subslice_mut![Sbv];
+impl_subslices![Sbv];
+impl_subslices_mut![Sbv];
 
 #[test]
 fn test_sbv_subslices() {
