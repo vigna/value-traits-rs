@@ -9,8 +9,7 @@ use crate::{
     iter::{IterableByValue, IterableByValueFrom},
     slices::{
         SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
-        SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
-        Subslice, SubsliceMut,
+        SliceByValueSubsliceRange, Subslice,
     },
 };
 

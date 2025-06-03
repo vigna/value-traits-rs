@@ -173,7 +173,7 @@ pub trait SliceByValueGet: SliceByValue {
     fn index_value(&self, index: usize) -> Self::Value {
         assert_index(index, self.len());
         // SAFETY: index is without bounds
-        return unsafe { self.get_value_unchecked(index) };
+        unsafe { self.get_value_unchecked(index) }
     }
 
     /// See [`slice::get_unchecked`].
@@ -297,7 +297,7 @@ pub trait SliceByValueRepl: SliceByValue {
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         assert_index(index, self.len());
         // SAFETY: index is without bounds
-        return unsafe { self.replace_value_unchecked(index, value) };
+        unsafe { self.replace_value_unchecked(index, value) }
     }
 }
 
@@ -671,6 +671,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(clippy::reversed_empty_ranges)]
     fn test_good_ranges() {
         // Range
         assert!((0..1).is_valid(1));
