@@ -137,6 +137,14 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
     }
 }
 
+impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
+    type Value = S::Value;
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+}
+
 /// Read-only slice-by-value trait.
 ///
 /// The only method that must be implement is
@@ -241,6 +249,18 @@ impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     }
 }
 
+impl<S: SliceByValueGet + ?Sized> SliceByValueGet for Box<S> {
+    fn get_value(&self, index: usize) -> Option<Self::Value> {
+        (**self).get_value(index)
+    }
+    fn index_value(&self, index: usize) -> Self::Value {
+        (**self).index_value(index)
+    }
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        unsafe { (**self).get_value_unchecked(index) }
+    }
+}
+
 /// Mutable slice-by-value trait providing replacement methods.
 ///
 /// If you just need to set a value, use [`SliceByValueSet`] instead.
@@ -277,6 +297,15 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
     }
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         (**self).replace_value_unchecked(index, value)
+    }
+}
+
+impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for Box<S> {
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        (**self).replace_value(index, value)
+    }
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        unsafe { (**self).replace_value_unchecked(index, value) }
     }
 }
 
@@ -483,4 +512,50 @@ where
     U: SliceByValueSubsliceRangeMut<RangeTo<T>>,
     U: SliceByValueSubsliceRangeMut<RangeToInclusive<T>>,
 {
+}
+
+#[cfg(feature = "std")]
+mod std_impls {
+    use super::*;
+    use std::{rc::Rc, sync::Arc};
+
+    impl<S: SliceByValue + ?Sized> SliceByValue for Arc<S> {
+        type Value = S::Value;
+        #[inline]
+        fn len(&self) -> usize {
+            (**self).len()
+        }
+    }
+
+    impl<S: SliceByValueGet + ?Sized> SliceByValueGet for Arc<S> {
+        fn get_value(&self, index: usize) -> Option<Self::Value> {
+            (**self).get_value(index)
+        }
+        fn index_value(&self, index: usize) -> Self::Value {
+            (**self).index_value(index)
+        }
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+            (**self).get_value_unchecked(index)
+        }
+    }
+
+    impl<S: SliceByValue + ?Sized> SliceByValue for Rc<S> {
+        type Value = S::Value;
+        #[inline]
+        fn len(&self) -> usize {
+            (**self).len()
+        }
+    }
+
+    impl<S: SliceByValueGet + ?Sized> SliceByValueGet for Rc<S> {
+        fn get_value(&self, index: usize) -> Option<Self::Value> {
+            (**self).get_value(index)
+        }
+        fn index_value(&self, index: usize) -> Self::Value {
+            (**self).index_value(index)
+        }
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+            (**self).get_value_unchecked(index)
+        }
+    }
 }
