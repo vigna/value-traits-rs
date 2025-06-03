@@ -79,9 +79,3 @@ fn test_iter() {
     assert_eq!(i.next(), Some(3));
     assert_eq!(i.next(), None);
 }
-
-#[test]
-fn foo() {
-    let s = vec![1_i32, 2, 3];
-    println!("{}", s[10]);
-}

@@ -151,21 +151,27 @@ impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
 }
 
 #[inline(always)]
-fn check_index<S: SliceByValue>(slice: S, index: usize) {
-    let len = slice.len();
+fn assert_index(index: usize, len: usize) {
     if index >= len {
         panic!("index out of bounds: the len is {len} but the index is {index}");
     }
 }
 
+#[inline(always)]
+fn assert_range(range: &impl RangeCheck, len: usize) {
+    if !range.is_valid(len) {
+        panic!("range {range:?} out of range for slice of length {len}: ");
+    }
+}
+
 /// Read-only slice-by-value trait.
 ///
-/// The only method that must be implement is
+/// The only method that must be implemented is
 /// [`get_value_unchecked`](`SliceByValueGet::get_value_unchecked`).
 pub trait SliceByValueGet: SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_value(&self, index: usize) -> Self::Value {
-        check_index(&self, index);
+        assert_index(index, self.len());
         // SAFETY: index is without bounds
         return unsafe { self.get_value_unchecked(index) };
     }
@@ -199,7 +205,7 @@ impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &S {
         (**self).index_value(index)
     }
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        (**self).get_value_unchecked(index)
+        unsafe { (**self).get_value_unchecked(index) }
     }
 }
 
@@ -211,13 +217,13 @@ impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &mut S {
         (**self).index_value(index)
     }
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        (**self).get_value_unchecked(index)
+        unsafe { (**self).get_value_unchecked(index) }
     }
 }
 
 /// Mutable slice-by-value trait providing setting methods.
 ///
-/// The only method that must be implement is
+/// The only method that must be implemented is
 /// [`set_value_unchecked`](`SliceByValueSet::set_value_unchecked`).
 ///
 /// If you need to set a value and get the previous value, use
@@ -239,7 +245,7 @@ pub trait SliceByValueSet: SliceByValue {
     ///
     /// This method will panic is the index is not within bounds.
     fn set_value(&mut self, index: usize, value: Self::Value) {
-        check_index(&self, index);
+        assert_index(index, self.len());
         // SAFETY: index is without bounds
         unsafe {
             self.set_value_unchecked(index, value);
@@ -289,7 +295,7 @@ pub trait SliceByValueRepl: SliceByValue {
     ///
     /// This method will panic is the index is not within bounds.
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        check_index(&self, index);
+        assert_index(index, self.len());
         // SAFETY: index is without bounds
         return unsafe { self.replace_value_unchecked(index, value) };
     }
@@ -318,7 +324,7 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for Box<S> {
 /// This traits makes it possible to monomorphize the six different
 /// range checks that are necessary to handle the six type of
 /// ranges available in [`core::ops`].
-pub trait RangeCheck: RangeBounds<usize> {
+pub trait RangeCheck: RangeBounds<usize> + std::fmt::Debug {
     /// Returns `true` if the range is within the bounds of a slice of given
     /// length
     fn is_valid(&self, len: usize) -> bool;
@@ -344,6 +350,8 @@ impl RangeCheck for RangeFull {
 
 impl RangeCheck for RangeInclusive<usize> {
     fn is_valid(&self, len: usize) -> bool {
+        // This can be significantly improved once
+        // https://rust-lang.github.io/rfcs/3550-new-range.html is implemented
         let start = match self.start_bound() {
             Bound::Included(s) => *s,
             // SAFETY: we cannot take this branch
@@ -417,25 +425,13 @@ pub type Subslice<'a, T: SliceByValueSubsliceGat<'a>> =
 /// The user should never see this trait. [`SliceByValueSubslice`] combines all
 /// instances of this trait with `R` equal to the various kind of standard
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
+///
+/// The only method that must be implemented is
+/// [`get_subslice_unchecked`](`SliceByValueSubsliceRange::get_subslice_unchecked`).
 pub trait SliceByValueSubsliceRange<R: RangeCheck>: for<'a> SliceByValueSubsliceGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
-        let mut range_ok = true;
-        let len = self.len();
-        match range.start_bound() {
-            Bound::Included(s) => range_ok &= *s > len,
-            Bound::Excluded(s) => range_ok &= *s >= len,
-            Bound::Unbounded => {} // Ok
-        };
-        match range.end_bound() {
-            Bound::Included(s) => range_ok &= *s < len,
-            Bound::Excluded(s) => range_ok &= *s <= len,
-            Bound::Unbounded => {} // Ok
-        };
-        if !range_ok {
-            panic!("index out of bounds",);
-        }
-
+        assert_range(&range, self.len());
         unsafe {
             // SAFETY: The range is checked to be within bounds.
             self.get_subslice_unchecked(range)
@@ -454,7 +450,14 @@ pub trait SliceByValueSubsliceRange<R: RangeCheck>: for<'a> SliceByValueSubslice
     unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self>;
 
     /// See [`slice::get`].
-    fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>>;
+    fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
+        if range.is_valid(self.len()) {
+            // SAFETY: range is checked to be within bounds.
+            unsafe { Some(self.get_subslice_unchecked(range)) }
+        } else {
+            None
+        }
+    }
 }
 
 impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R> for &S {
@@ -465,7 +468,7 @@ impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsli
         (**self).index_subslice(range)
     }
     unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self> {
-        (**self).get_subslice_unchecked(range)
+        unsafe { (**self).get_subslice_unchecked(range) }
     }
 }
 impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R>
@@ -478,7 +481,7 @@ impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsli
         (**self).index_subslice(range)
     }
     unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self> {
-        (**self).get_subslice_unchecked(range)
+        unsafe { (**self).get_subslice_unchecked(range) }
     }
 }
 
@@ -513,11 +516,20 @@ pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
 ///  The user should never see this trait. [`SliceByValueSubsliceMut`] combines
 /// all instances of this trait with `R` equal to the various kind of standard
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
+///
+/// The only method that must be implemented is
+/// [`get_subslice_unchecked_mut`](`SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut`).
 pub trait SliceByValueSubsliceRangeMut<R: RangeCheck>:
     for<'a> SliceByValueSubsliceGatMut<'a>
 {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
+    fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
+        assert_range(&range, self.len());
+        unsafe {
+            // SAFETY: The range is checked to be within bounds.
+            self.get_subslice_unchecked_mut(range)
+        }
+    }
 
     /// See [`slice::get_unchecked`].
     ///
@@ -531,7 +543,14 @@ pub trait SliceByValueSubsliceRangeMut<R: RangeCheck>:
     unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
     /// See [`slice::get`].
-    fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>>;
+    fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
+        if range.is_valid(self.len()) {
+            // SAFETY: range is checked to be within bounds.
+            unsafe { Some(self.get_subslice_unchecked_mut(range)) }
+        } else {
+            None
+        }
+    }
 }
 
 impl<R: RangeCheck, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueSubsliceRangeMut<R>
@@ -643,5 +662,43 @@ mod std_impls {
         unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
             (**self).get_value_unchecked(index)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_good_ranges() {
+        // Range
+        assert!((0..1).is_valid(1));
+        assert!(!(1..0).is_valid(1));
+        assert!(!(0..1).is_valid(0));
+
+        // RangeFrom
+        assert!((0..).is_valid(1));
+        assert!((1..).is_valid(1));
+        assert!(!(2..).is_valid(1));
+
+        // RangeFull
+        assert!((..).is_valid(0));
+        assert!((..).is_valid(1));
+
+        // RangeInclusive
+        assert!((0..=1).is_valid(2));
+        assert!(!(1..=0).is_valid(2));
+        assert!(!(0..=1).is_valid(1));
+
+        // RangeTo
+        assert!((..0).is_valid(1));
+        assert!((..1).is_valid(1));
+        assert!(!(..2).is_valid(1));
+
+        // RangeToInclusive
+        assert!((..=0).is_valid(2));
+        assert!((..=1).is_valid(2));
+        assert!(!(..=2).is_valid(2));
     }
 }
