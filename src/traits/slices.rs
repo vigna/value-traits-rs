@@ -104,7 +104,7 @@
 //! ```
 
 use core::ops::{
-    Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
+    Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
 };
 
 use crate::{ImplBound, Ref};
@@ -335,7 +335,7 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for Box<S> {
 pub trait SliceByValueSubsliceGat<'a, __Implicit: ImplBound = Ref<'a, Self>>:
     SliceByValueGet
 {
-    type Subslice: 'a + SliceByValueGet<Value = Self::Value> + SliceByValueSubslice<usize>;
+    type Subslice: 'a + SliceByValueGet<Value = Self::Value> + SliceByValueSubslice;
 }
 
 impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for &T {
@@ -357,11 +357,32 @@ pub type Subslice<'a, T: SliceByValueSubsliceGat<'a>> =
 /// The user should never see this trait. [`SliceByValueSubslice`] combines all
 /// instances of this trait with `R` equal to the various kind of standard
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
-pub trait SliceByValueSubsliceRange<T, R: RangeBounds<T>>:
+pub trait SliceByValueSubsliceRange<R: RangeBounds<usize>>:
     for<'a> SliceByValueSubsliceGat<'a>
 {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
-    fn index_subslice(&self, range: R) -> Subslice<'_, Self>;
+    fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
+        let mut range_ok = true;
+        let len = self.len();
+        match range.start_bound() {
+            Bound::Included(s) => range_ok &= *s > len,
+            Bound::Excluded(s) => range_ok &= *s >= len,
+            Bound::Unbounded => {} // Ok
+        };
+        match range.end_bound() {
+            Bound::Included(s) => range_ok &= *s < len,
+            Bound::Excluded(s) => range_ok &= *s <= len,
+            Bound::Unbounded => {} // Ok
+        };
+        if !range_ok {
+            panic!("index out of bounds",);
+        }
+
+        unsafe {
+            // SAFETY: The range is checked to be within bounds.
+            self.get_subslice_unchecked(range)
+        }
+    }
 
     /// See [`slice::get_unchecked`].
     ///
@@ -378,8 +399,8 @@ pub trait SliceByValueSubsliceRange<T, R: RangeBounds<T>>:
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>>;
 }
 
-impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRange<T, R> + ?Sized>
-    SliceByValueSubsliceRange<T, R> for &S
+impl<R: RangeBounds<usize>, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R>
+    for &S
 {
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         (**self).get_subslice(range)
@@ -391,8 +412,8 @@ impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRange<T, R> + ?Sized>
         (**self).get_subslice_unchecked(range)
     }
 }
-impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRange<T, R> + ?Sized>
-    SliceByValueSubsliceRange<T, R> for &mut S
+impl<R: RangeBounds<usize>, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R>
+    for &mut S
 {
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         (**self).get_subslice(range)
@@ -418,7 +439,7 @@ pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
         + SliceByValueSet<Value = Self::Value>
         + SliceByValueRepl<Value = Self::Value>
         + SliceByValueSubsliceGatMut<'a, Subslice = Self::Subslice> // recursion
-        + SliceByValueSubsliceMut<usize>;
+        + SliceByValueSubsliceMut;
 }
 
 impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<'a> for &mut T {
@@ -436,7 +457,7 @@ pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
 ///  The user should never see this trait. [`SliceByValueSubsliceMut`] combines
 /// all instances of this trait with `R` equal to the various kind of standard
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
-pub trait SliceByValueSubsliceRangeMut<T, R: RangeBounds<T>>:
+pub trait SliceByValueSubsliceRangeMut<R: RangeBounds<usize>>:
     for<'a> SliceByValueSubsliceGatMut<'a>
 {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -457,8 +478,8 @@ pub trait SliceByValueSubsliceRangeMut<T, R: RangeBounds<T>>:
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>>;
 }
 
-impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRangeMut<T, R> + ?Sized>
-    SliceByValueSubsliceRangeMut<T, R> for &mut S
+impl<R: RangeBounds<usize>, S: SliceByValueSubsliceRangeMut<R> + ?Sized>
+    SliceByValueSubsliceRangeMut<R> for &mut S
 {
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
         (**self).get_subslice_mut(range)
@@ -477,24 +498,24 @@ impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRangeMut<T, R> + ?Sized>
 ///
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceRange`] are available.
-pub trait SliceByValueSubslice<T = usize>:
-    SliceByValueSubsliceRange<T, Range<T>>
-    + SliceByValueSubsliceRange<T, RangeFrom<T>>
-    + SliceByValueSubsliceRange<T, RangeFull>
-    + SliceByValueSubsliceRange<T, RangeInclusive<T>>
-    + SliceByValueSubsliceRange<T, RangeTo<T>>
-    + SliceByValueSubsliceRange<T, RangeToInclusive<T>>
+pub trait SliceByValueSubslice:
+    SliceByValueSubsliceRange<Range<usize>>
+    + SliceByValueSubsliceRange<RangeFrom<usize>>
+    + SliceByValueSubsliceRange<RangeFull>
+    + SliceByValueSubsliceRange<RangeInclusive<usize>>
+    + SliceByValueSubsliceRange<RangeTo<usize>>
+    + SliceByValueSubsliceRange<RangeToInclusive<usize>>
 {
 }
 
-impl<T, U> SliceByValueSubslice<T> for U
+impl<U> SliceByValueSubslice for U
 where
-    U: SliceByValueSubsliceRange<T, Range<T>>,
-    U: SliceByValueSubsliceRange<T, RangeFrom<T>>,
-    U: SliceByValueSubsliceRange<T, RangeFull>,
-    U: SliceByValueSubsliceRange<T, RangeInclusive<T>>,
-    U: SliceByValueSubsliceRange<T, RangeTo<T>>,
-    U: SliceByValueSubsliceRange<T, RangeToInclusive<T>>,
+    U: SliceByValueSubsliceRange<Range<usize>>,
+    U: SliceByValueSubsliceRange<RangeFrom<usize>>,
+    U: SliceByValueSubsliceRange<RangeFull>,
+    U: SliceByValueSubsliceRange<RangeInclusive<usize>>,
+    U: SliceByValueSubsliceRange<RangeTo<usize>>,
+    U: SliceByValueSubsliceRange<RangeToInclusive<usize>>,
 {
 }
 
@@ -504,24 +525,24 @@ where
 ///
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceMut`] are available.
-pub trait SliceByValueSubsliceMut<T = usize>:
-    SliceByValueSubsliceRangeMut<T, Range<T>>
-    + SliceByValueSubsliceRangeMut<T, RangeFrom<T>>
-    + SliceByValueSubsliceRangeMut<T, RangeFull>
-    + SliceByValueSubsliceRangeMut<T, RangeInclusive<T>>
-    + SliceByValueSubsliceRangeMut<T, RangeTo<T>>
-    + SliceByValueSubsliceRangeMut<T, RangeToInclusive<T>>
+pub trait SliceByValueSubsliceMut:
+    SliceByValueSubsliceRangeMut<Range<usize>>
+    + SliceByValueSubsliceRangeMut<RangeFrom<usize>>
+    + SliceByValueSubsliceRangeMut<RangeFull>
+    + SliceByValueSubsliceRangeMut<RangeInclusive<usize>>
+    + SliceByValueSubsliceRangeMut<RangeTo<usize>>
+    + SliceByValueSubsliceRangeMut<RangeToInclusive<usize>>
 {
 }
 
-impl<T, U> SliceByValueSubsliceMut<T> for U
+impl<U> SliceByValueSubsliceMut for U
 where
-    U: SliceByValueSubsliceRangeMut<T, Range<T>>,
-    U: SliceByValueSubsliceRangeMut<T, RangeFrom<T>>,
-    U: SliceByValueSubsliceRangeMut<T, RangeFull>,
-    U: SliceByValueSubsliceRangeMut<T, RangeInclusive<T>>,
-    U: SliceByValueSubsliceRangeMut<T, RangeTo<T>>,
-    U: SliceByValueSubsliceRangeMut<T, RangeToInclusive<T>>,
+    U: SliceByValueSubsliceRangeMut<Range<usize>>,
+    U: SliceByValueSubsliceRangeMut<RangeFrom<usize>>,
+    U: SliceByValueSubsliceRangeMut<RangeFull>,
+    U: SliceByValueSubsliceRangeMut<RangeInclusive<usize>>,
+    U: SliceByValueSubsliceRangeMut<RangeTo<usize>>,
+    U: SliceByValueSubsliceRangeMut<RangeToInclusive<usize>>,
 {
 }
 

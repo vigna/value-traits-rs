@@ -87,7 +87,7 @@ impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for Vec<T> {
 
 macro_rules! impl_range_vecs {
     ($range:ty) => {
-        impl<T: Clone> SliceByValueSubsliceRange<usize, $range> for Vec<T> {
+        impl<T: Clone> SliceByValueSubsliceRange<$range> for Vec<T> {
             #[inline]
             fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 // slice.get returns Option<&T>, .copied() converts to Option<T>
