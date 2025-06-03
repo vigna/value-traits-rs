@@ -1030,6 +1030,63 @@ macro_rules! impl_subslices {
                 }
             }
         }
+
+        pub struct Iter<'a, 'b> {
+            subslice: &'b SubsliceImpl<'a>,
+            index: usize,
+        }
+
+        impl<'a, 'b> Iterator for Iter<'a, 'b> {
+            type Item = <$ty as SliceByValue>::Value;
+
+            #[inline]
+            fn next(&mut self) -> Option<Self::Item> {
+                if self.index < self.subslice.len() {
+                    let value = unsafe { self.subslice.get_value_unchecked(self.index) };
+                    self.index += 1;
+                    Some(value)
+                } else {
+                    None
+                }
+            }
+        }
+
+        impl<'a> IterableByValue for SubsliceImpl<'a> {
+            type Item = <$ty as SliceByValue>::Value;
+            type Iter<'b>
+                = Iter<'a, 'b>
+            where
+                Self: 'b;
+
+            #[inline]
+            fn iter_value(&self) -> Self::Iter<'_> {
+                Iter {
+                    subslice: self,
+                    index: 0,
+                }
+            }
+        }
+
+        impl<'a> IterableByValueFrom for SubsliceImpl<'a> {
+            type IterFrom<'b>
+                = Iter<'a, 'b>
+            where
+                Self: 'b;
+
+            #[inline]
+            fn iter_value_from(&self, from: usize) -> Self::Iter<'_> {
+                let len = self.len();
+                if from > len {
+                    panic!(
+                        "index out of bounds: the len is {len} but the starting index is {from}"
+                    );
+                }
+                Iter {
+                    subslice: self,
+                    index: from,
+                }
+            }
+        }
     };
 }
 
@@ -1388,6 +1445,62 @@ macro_rules! impl_subslices_mut {
                         start: self.start,
                         end: self.start + range.end,
                     }
+                }
+            }
+        }
+        pub struct IterMut<'a, 'b> {
+            subslice: &'b SubsliceImplMut<'a>,
+            index: usize,
+        }
+
+        impl<'a, 'b> Iterator for IterMut<'a, 'b> {
+            type Item = <$ty as SliceByValue>::Value;
+
+            #[inline]
+            fn next(&mut self) -> Option<Self::Item> {
+                if self.index < self.subslice.len() {
+                    let value = unsafe { self.subslice.get_value_unchecked(self.index) };
+                    self.index += 1;
+                    Some(value)
+                } else {
+                    None
+                }
+            }
+        }
+
+        impl<'a> IterableByValue for SubsliceImplMut<'a> {
+            type Item = <$ty as SliceByValue>::Value;
+            type Iter<'b>
+                = IterMut<'a, 'b>
+            where
+                Self: 'b;
+
+            #[inline]
+            fn iter_value(&self) -> Self::Iter<'_> {
+                IterMut {
+                    subslice: self,
+                    index: 0,
+                }
+            }
+        }
+
+        impl<'a> IterableByValueFrom for SubsliceImplMut<'a> {
+            type IterFrom<'b>
+                = IterMut<'a, 'b>
+            where
+                Self: 'b;
+
+            #[inline]
+            fn iter_value_from(&self, from: usize) -> Self::Iter<'_> {
+                let len = self.len();
+                if from > len {
+                    panic!(
+                        "index out of bounds: the len is {len} but the starting index is {from}"
+                    );
+                }
+                IterMut {
+                    subslice: self,
+                    index: from,
                 }
             }
         }
