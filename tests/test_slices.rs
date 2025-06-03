@@ -9,7 +9,7 @@
 use core::ops::Range;
 use std::vec;
 use value_traits::{
-    impl_subslice,
+    impl_subslice, impl_subslice_mut,
     iter::{IterableByValue, IterableByValueFrom},
     slices::*,
 };
@@ -94,17 +94,34 @@ impl SliceByValue for Sbv {
 
 impl SliceByValueGet for Sbv {
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        self.0.get_unchecked(index).clone()
+        self.0.as_slice().get_value_unchecked(index)
+    }
+}
+
+impl SliceByValueSet for Sbv {
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+        self.0.as_mut_slice().set_value(index, value)
+    }
+}
+
+impl SliceByValueRepl for Sbv {
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        self.0.as_mut_slice().replace_value(index, value)
     }
 }
 
 impl_subslice![Sbv];
+impl_subslice_mut![Sbv];
 
 #[test]
 fn test_sbv_subslices() {
-    let s = Sbv(vec![1_i32, 2, 3, 4]);
-    let t = s.index_subslice(1..3); // should compile
+    let mut s = Sbv(vec![1_i32, 2, 3, 4]);
+    let mut t = s.index_subslice_mut(1..3); // should compile
     assert_eq!(t.len(), 2);
     assert_eq!(t.index_value(0), 2);
     assert_eq!(t.index_value(1), 3);
+    t.set_value(1, 4);
+    let u = t.index_subslice(1..);
+    assert_eq!(u.len(), 1);
+    assert_eq!(u.index_value(0), 4);
 }
