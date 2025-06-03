@@ -119,11 +119,16 @@ impl_subslices_mut![Sbv];
 #[test]
 fn test_sbv_subslices() {
     let mut s = Sbv(vec![1_i32, 2, 3, 4, 5]);
-
+    // test the struct
     generic_get(&s, &[1, 2, 3, 4, 5]);
     generic_slice(&s, &[1, 2, 3, 4, 5]);
     generic_mut(&mut s);
     generic_slice_mut(&mut s);
+    // test its slice
+    generic_get(s.index_subslice(..), &[1, 2, 3, 4, 5]);
+    generic_slice(s.index_subslice(..), &[1, 2, 3, 4, 5]);
+    generic_mut(s.index_subslice_mut(..));
+    generic_slice_mut(s.index_subslice_mut(..));
 
     let mut t = s.index_subslice_mut(1..3); // should compile
     assert_eq!(t.len(), 2);
@@ -133,4 +138,6 @@ fn test_sbv_subslices() {
     let u = t.index_subslice(1..);
     assert_eq!(u.len(), 1);
     assert_eq!(u.index_value(0), 4);
+
+
 }

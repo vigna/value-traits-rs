@@ -150,4 +150,10 @@ where
     generic_mut(s.index_subslice_mut(r.clone()));
     generic_mut(s.get_subslice_mut(r.clone()).unwrap());
     generic_mut(unsafe { s.get_subslice_unchecked_mut(r.clone()) });
+
+    assert!(s.get_subslice_mut(1..usize::MAX).is_none());
+    assert!(s.get_subslice_mut(1..=usize::MAX).is_none());
+    assert!(s.get_subslice_mut(..=usize::MAX).is_none());
+    assert!(s.get_subslice_mut(..usize::MAX).is_none());
+    assert!(s.get_subslice_mut(usize::MAX..).is_none());
 }
