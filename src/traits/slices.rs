@@ -142,14 +142,6 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
     }
 }
 
-impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
 #[inline(always)]
 fn assert_index(index: usize, len: usize) {
     if index >= len {
@@ -262,18 +254,6 @@ impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     }
 }
 
-impl<S: SliceByValueGet + ?Sized> SliceByValueGet for Box<S> {
-    fn get_value(&self, index: usize) -> Option<Self::Value> {
-        (**self).get_value(index)
-    }
-    fn index_value(&self, index: usize) -> Self::Value {
-        (**self).index_value(index)
-    }
-    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        unsafe { (**self).get_value_unchecked(index) }
-    }
-}
-
 /// Mutable slice-by-value trait providing replacement methods.
 ///
 /// If you just need to set a value, use [`SliceByValueSet`] instead.
@@ -307,15 +287,6 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
     }
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         (**self).replace_value_unchecked(index, value)
-    }
-}
-
-impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for Box<S> {
-    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        (**self).replace_value(index, value)
-    }
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        unsafe { (**self).replace_value_unchecked(index, value) }
     }
 }
 
@@ -604,6 +575,7 @@ pub trait SliceByValueSubsliceMut:
     SliceByValueSubsliceRangeMut<Range<usize>>
     + SliceByValueSubsliceRangeMut<RangeFrom<usize>>
     + SliceByValueSubsliceRangeMut<RangeFull>
+    + SliceByValueSubsliceRangeMut<RangeInclusive<usize>>
     + SliceByValueSubsliceRangeMut<RangeTo<usize>>
     + SliceByValueSubsliceRangeMut<RangeToInclusive<usize>>
 {
@@ -614,9 +586,117 @@ where
     U: SliceByValueSubsliceRangeMut<Range<usize>>,
     U: SliceByValueSubsliceRangeMut<RangeFrom<usize>>,
     U: SliceByValueSubsliceRangeMut<RangeFull>,
+    U: SliceByValueSubsliceRangeMut<RangeInclusive<usize>>,
     U: SliceByValueSubsliceRangeMut<RangeTo<usize>>,
     U: SliceByValueSubsliceRangeMut<RangeToInclusive<usize>>,
 {
+}
+
+#[cfg(feature = "alloc")]
+mod alloc_impls {
+    use super::*;
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::{boxed::Box, vec::Vec};
+
+    impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
+        type Value = S::Value;
+        #[inline]
+        fn len(&self) -> usize {
+            (**self).len()
+        }
+    }
+
+    impl<S: SliceByValueGet + ?Sized> SliceByValueGet for Box<S> {
+        fn get_value(&self, index: usize) -> Option<Self::Value> {
+            (**self).get_value(index)
+        }
+        fn index_value(&self, index: usize) -> Self::Value {
+            (**self).index_value(index)
+        }
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+            unsafe { (**self).get_value_unchecked(index) }
+        }
+    }
+
+    impl<S: SliceByValueSet + ?Sized> SliceByValueSet for Box<S> {
+        fn set_value(&mut self, index: usize, value: Self::Value) {
+            (**self).set_value(index, value)
+        }
+        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+            unsafe { (**self).set_value_unchecked(index, value) }
+        }
+    }
+
+    impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for Box<S> {
+        fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+            (**self).replace_value(index, value)
+        }
+        unsafe fn replace_value_unchecked(
+            &mut self,
+            index: usize,
+            value: Self::Value,
+        ) -> Self::Value {
+            unsafe { (**self).replace_value_unchecked(index, value) }
+        }
+    }
+
+    impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Box<S> {
+        type Subslice = S::Subslice;
+    }
+    impl<'a, S: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<'a> for Box<S> {
+        type Subslice = S::Subslice;
+    }
+
+    macro_rules! impl_range_alloc {
+        ($range:ty) => {
+            impl<S: SliceByValueSubsliceRange<$range> + ?Sized> SliceByValueSubsliceRange<$range>
+                for Box<S>
+            {
+                #[inline]
+                fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
+                    (**self).get_subslice(index)
+                }
+
+                #[inline]
+                fn index_subslice(&self, index: $range) -> Subslice<'_, Self> {
+                    (**self).index_subslice(index)
+                }
+
+                #[inline]
+                unsafe fn get_subslice_unchecked(&self, index: $range) -> Subslice<'_, Self> {
+                    unsafe { (**self).get_subslice_unchecked(index) }
+                }
+            }
+            impl<S: SliceByValueSubsliceRangeMut<$range> + ?Sized>
+                SliceByValueSubsliceRangeMut<$range> for Box<S>
+            {
+                #[inline]
+                fn get_subslice_mut(&mut self, index: $range) -> Option<SubsliceMut<'_, Self>> {
+                    (**self).get_subslice_mut(index)
+                }
+
+                #[inline]
+                fn index_subslice_mut(&mut self, index: $range) -> SubsliceMut<'_, Self> {
+                    (**self).index_subslice_mut(index)
+                }
+
+                #[inline]
+                unsafe fn get_subslice_unchecked_mut(
+                    &mut self,
+                    index: $range,
+                ) -> SubsliceMut<'_, Self> {
+                    unsafe { (**self).get_subslice_unchecked_mut(index) }
+                }
+            }
+        };
+    }
+
+    impl_range_alloc!(RangeFull);
+    impl_range_alloc!(RangeFrom<usize>);
+    impl_range_alloc!(RangeTo<usize>);
+    impl_range_alloc!(Range<usize>);
+    impl_range_alloc!(RangeInclusive<usize>);
+    impl_range_alloc!(RangeToInclusive<usize>);
 }
 
 #[cfg(feature = "std")]
@@ -643,6 +723,9 @@ mod std_impls {
             (**self).get_value_unchecked(index)
         }
     }
+    impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Arc<S> {
+        type Subslice = S::Subslice;
+    }
 
     impl<S: SliceByValue + ?Sized> SliceByValue for Rc<S> {
         type Value = S::Value;
@@ -663,6 +746,58 @@ mod std_impls {
             (**self).get_value_unchecked(index)
         }
     }
+
+    impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Rc<S> {
+        type Subslice = S::Subslice;
+    }
+
+    macro_rules! impl_range_arc_and_rc {
+        ($range:ty) => {
+            impl<S: SliceByValueSubsliceRange<$range> + ?Sized> SliceByValueSubsliceRange<$range>
+                for Rc<S>
+            {
+                #[inline]
+                fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
+                    (**self).get_subslice(index)
+                }
+
+                #[inline]
+                fn index_subslice(&self, index: $range) -> Subslice<'_, Self> {
+                    (**self).index_subslice(index)
+                }
+
+                #[inline]
+                unsafe fn get_subslice_unchecked(&self, index: $range) -> Subslice<'_, Self> {
+                    unsafe { (**self).get_subslice_unchecked(index) }
+                }
+            }
+            impl<S: SliceByValueSubsliceRange<$range> + ?Sized> SliceByValueSubsliceRange<$range>
+                for Arc<S>
+            {
+                #[inline]
+                fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
+                    (**self).get_subslice(index)
+                }
+
+                #[inline]
+                fn index_subslice(&self, index: $range) -> Subslice<'_, Self> {
+                    (**self).index_subslice(index)
+                }
+
+                #[inline]
+                unsafe fn get_subslice_unchecked(&self, index: $range) -> Subslice<'_, Self> {
+                    unsafe { (**self).get_subslice_unchecked(index) }
+                }
+            }
+        };
+    }
+
+    impl_range_arc_and_rc!(RangeFull);
+    impl_range_arc_and_rc!(RangeFrom<usize>);
+    impl_range_arc_and_rc!(RangeTo<usize>);
+    impl_range_arc_and_rc!(Range<usize>);
+    impl_range_arc_and_rc!(RangeInclusive<usize>);
+    impl_range_arc_and_rc!(RangeToInclusive<usize>);
 }
 
 #[cfg(test)]

@@ -9,7 +9,8 @@ use crate::{
     iter::{IterableByValue, IterableByValueFrom},
     slices::{
         SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
-        SliceByValueSubsliceRange, Subslice,
+        SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
+        Subslice, SubsliceMut,
     },
 };
 
@@ -83,6 +84,9 @@ impl<T: Clone> SliceByValueSet for Vec<T> {
 impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for Vec<T> {
     type Subslice = &'a [T];
 }
+impl<'a, T: Clone> SliceByValueSubsliceGatMut<'a> for Vec<T> {
+    type Subslice = &'a mut [T];
+}
 
 macro_rules! impl_range_vecs {
     ($range:ty) => {
@@ -101,6 +105,25 @@ macro_rules! impl_range_vecs {
             #[inline]
             unsafe fn get_subslice_unchecked(&self, index: $range) -> Subslice<'_, Self> {
                 unsafe { (*self).get_unchecked(index) }
+            }
+        }
+        impl<T: Clone> SliceByValueSubsliceRangeMut<$range> for Vec<T> {
+            #[inline]
+            fn get_subslice_mut(&mut self, index: $range) -> Option<SubsliceMut<'_, Self>> {
+                (*self).get_mut(index)
+            }
+
+            #[inline]
+            fn index_subslice_mut(&mut self, index: $range) -> SubsliceMut<'_, Self> {
+                &mut self[index]
+            }
+
+            #[inline]
+            unsafe fn get_subslice_unchecked_mut(
+                &mut self,
+                index: $range,
+            ) -> SubsliceMut<'_, Self> {
+                unsafe { (*self).get_unchecked_mut(index) }
             }
         }
     };
