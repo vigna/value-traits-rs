@@ -127,6 +127,9 @@ fn test_sbv_subslices() {
     // test its slice
     generic_get(s.index_subslice(..), &[1, 2, 3, 4, 5]);
     generic_slice(s.index_subslice(..), &[1, 2, 3, 4, 5]);
+    // test its mutable slice
+    generic_get(s.index_subslice_mut(..), &[1, 2, 3, 4, 5]);
+    generic_slice(s.index_subslice_mut(..), &[1, 2, 3, 4, 5]);
     generic_mut(s.index_subslice_mut(..));
     generic_slice_mut(s.index_subslice_mut(..));
 
