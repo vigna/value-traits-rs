@@ -145,6 +145,14 @@ impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
     }
 }
 
+#[inline(always)]
+fn check_index<S: SliceByValue>(slice: S, index: usize) {
+    let len = slice.len();
+    if index >= len {
+        panic!("index out of bounds: the len is {len} but the index is {index}");
+    }
+}
+
 /// Read-only slice-by-value trait.
 ///
 /// The only method that must be implement is
@@ -152,12 +160,9 @@ impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
 pub trait SliceByValueGet: SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_value(&self, index: usize) -> Self::Value {
-        if index < self.len() {
-            // SAFETY: index is without bounds
-            return unsafe { self.get_value_unchecked(index) };
-        }
-
-        panic!("Index is out of range"); // TODO: equal to slices
+        check_index(&self, index);
+        // SAFETY: index is without bounds
+        return unsafe { self.get_value_unchecked(index) };
     }
 
     /// See [`slice::get_unchecked`].
@@ -229,14 +234,11 @@ pub trait SliceByValueSet: SliceByValue {
     ///
     /// This method will panic is the index is not within bounds.
     fn set_value(&mut self, index: usize, value: Self::Value) {
-        if index < self.len() {
-            // SAFETY: index is without bounds
-            unsafe {
-                self.set_value_unchecked(index, value);
-            }
+        check_index(&self, index);
+        // SAFETY: index is without bounds
+        unsafe {
+            self.set_value_unchecked(index, value);
         }
-
-        panic!("Index is out of range"); // TODO: equal to slices
     }
 }
 
@@ -282,12 +284,9 @@ pub trait SliceByValueRepl: SliceByValue {
     ///
     /// This method will panic is the index is not within bounds.
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        if index < self.len() {
-            // SAFETY: index is without bounds
-            return unsafe { self.replace_value_unchecked(index, value) };
-        }
-
-        panic!("Index is out of range"); // TODO: equal to slices
+        check_index(&self, index);
+        // SAFETY: index is without bounds
+        return unsafe { self.replace_value_unchecked(index, value) };
     }
 }
 
