@@ -8,7 +8,6 @@
 
 use value_traits::slices::*;
 
-
 #[test]
 #[cfg(feature = "alloc")]
 fn test() {

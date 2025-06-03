@@ -139,7 +139,6 @@ impl_range_vecs!(Range<usize>);
 impl_range_vecs!(RangeInclusive<usize>);
 impl_range_vecs!(RangeToInclusive<usize>);
 
-
 impl<T: Clone> IterableByValue for Vec<T> {
     type Item = T;
     type Iter<'a>
