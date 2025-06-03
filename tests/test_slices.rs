@@ -138,6 +138,4 @@ fn test_sbv_subslices() {
     let u = t.index_subslice(1..);
     assert_eq!(u.len(), 1);
     assert_eq!(u.index_value(0), 4);
-
-
 }
