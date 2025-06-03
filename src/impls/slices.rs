@@ -98,7 +98,7 @@ impl<'a, T: Clone> SliceByValueSubsliceGatMut<'a> for [T] {
 
 macro_rules! impl_range_slices {
     ($range:ty) => {
-        impl<T: Clone> SliceByValueSubsliceRange<$range> for [T] {
+        impl<T: Clone> SliceByValueSubsliceRange<usize, $range> for [T] {
             #[inline]
             fn get_subslice(&self, index: $range) -> Option<Subslice<'_, Self>> {
                 (*self).get(index)
@@ -115,7 +115,7 @@ macro_rules! impl_range_slices {
             }
         }
 
-        impl<T: Clone> SliceByValueSubsliceRangeMut<$range> for [T] {
+        impl<T: Clone> SliceByValueSubsliceRangeMut<usize, $range> for [T] {
             #[inline]
             fn get_subslice_mut(&mut self, index: $range) -> Option<SubsliceMut<'_, Self>> {
                 (*self).get_mut(index)

@@ -103,7 +103,9 @@
 //! }
 //! ```
 
-use core::ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
+use core::ops::{
+    Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
+};
 
 use crate::{ImplBound, Ref};
 
@@ -355,7 +357,9 @@ pub type Subslice<'a, T: SliceByValueSubsliceGat<'a>> =
 /// The user should never see this trait. [`SliceByValueSubslice`] combines all
 /// instances of this trait with `R` equal to the various kind of standard
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
-pub trait SliceByValueSubsliceRange<R>: for<'a> SliceByValueSubsliceGat<'a> {
+pub trait SliceByValueSubsliceRange<T, R: RangeBounds<T>>:
+    for<'a> SliceByValueSubsliceGat<'a>
+{
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self>;
 
@@ -374,7 +378,9 @@ pub trait SliceByValueSubsliceRange<R>: for<'a> SliceByValueSubsliceGat<'a> {
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>>;
 }
 
-impl<S: SliceByValueSubsliceRange<R> + ?Sized, R> SliceByValueSubsliceRange<R> for &S {
+impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRange<T, R> + ?Sized>
+    SliceByValueSubsliceRange<T, R> for &S
+{
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         (**self).get_subslice(range)
     }
@@ -385,7 +391,9 @@ impl<S: SliceByValueSubsliceRange<R> + ?Sized, R> SliceByValueSubsliceRange<R> f
         (**self).get_subslice_unchecked(range)
     }
 }
-impl<S: SliceByValueSubsliceRange<R> + ?Sized, R> SliceByValueSubsliceRange<R> for &mut S {
+impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRange<T, R> + ?Sized>
+    SliceByValueSubsliceRange<T, R> for &mut S
+{
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         (**self).get_subslice(range)
     }
@@ -428,7 +436,9 @@ pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
 ///  The user should never see this trait. [`SliceByValueSubsliceMut`] combines
 /// all instances of this trait with `R` equal to the various kind of standard
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
-pub trait SliceByValueSubsliceRangeMut<R>: for<'a> SliceByValueSubsliceGatMut<'a> {
+pub trait SliceByValueSubsliceRangeMut<T, R: RangeBounds<T>>:
+    for<'a> SliceByValueSubsliceGatMut<'a>
+{
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
@@ -447,7 +457,9 @@ pub trait SliceByValueSubsliceRangeMut<R>: for<'a> SliceByValueSubsliceGatMut<'a
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>>;
 }
 
-impl<S: SliceByValueSubsliceRangeMut<R> + ?Sized, R> SliceByValueSubsliceRangeMut<R> for &mut S {
+impl<T, R: RangeBounds<T>, S: SliceByValueSubsliceRangeMut<T, R> + ?Sized>
+    SliceByValueSubsliceRangeMut<T, R> for &mut S
+{
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
         (**self).get_subslice_mut(range)
     }
@@ -466,23 +478,23 @@ impl<S: SliceByValueSubsliceRangeMut<R> + ?Sized, R> SliceByValueSubsliceRangeMu
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceRange`] are available.
 pub trait SliceByValueSubslice<T = usize>:
-    SliceByValueSubsliceRange<Range<T>>
-    + SliceByValueSubsliceRange<RangeFrom<T>>
-    + SliceByValueSubsliceRange<RangeFull>
-    + SliceByValueSubsliceRange<RangeInclusive<T>>
-    + SliceByValueSubsliceRange<RangeTo<T>>
-    + SliceByValueSubsliceRange<RangeToInclusive<T>>
+    SliceByValueSubsliceRange<T, Range<T>>
+    + SliceByValueSubsliceRange<T, RangeFrom<T>>
+    + SliceByValueSubsliceRange<T, RangeFull>
+    + SliceByValueSubsliceRange<T, RangeInclusive<T>>
+    + SliceByValueSubsliceRange<T, RangeTo<T>>
+    + SliceByValueSubsliceRange<T, RangeToInclusive<T>>
 {
 }
 
-impl<U, T> SliceByValueSubslice<T> for U
+impl<T, U> SliceByValueSubslice<T> for U
 where
-    U: SliceByValueSubsliceRange<Range<T>>,
-    U: SliceByValueSubsliceRange<RangeFrom<T>>,
-    U: SliceByValueSubsliceRange<RangeFull>,
-    U: SliceByValueSubsliceRange<RangeInclusive<T>>,
-    U: SliceByValueSubsliceRange<RangeTo<T>>,
-    U: SliceByValueSubsliceRange<RangeToInclusive<T>>,
+    U: SliceByValueSubsliceRange<T, Range<T>>,
+    U: SliceByValueSubsliceRange<T, RangeFrom<T>>,
+    U: SliceByValueSubsliceRange<T, RangeFull>,
+    U: SliceByValueSubsliceRange<T, RangeInclusive<T>>,
+    U: SliceByValueSubsliceRange<T, RangeTo<T>>,
+    U: SliceByValueSubsliceRange<T, RangeToInclusive<T>>,
 {
 }
 
@@ -493,23 +505,23 @@ where
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceMut`] are available.
 pub trait SliceByValueSubsliceMut<T = usize>:
-    SliceByValueSubsliceRangeMut<Range<T>>
-    + SliceByValueSubsliceRangeMut<RangeFrom<T>>
-    + SliceByValueSubsliceRangeMut<RangeFull>
-    + SliceByValueSubsliceRangeMut<RangeInclusive<T>>
-    + SliceByValueSubsliceRangeMut<RangeTo<T>>
-    + SliceByValueSubsliceRangeMut<RangeToInclusive<T>>
+    SliceByValueSubsliceRangeMut<T, Range<T>>
+    + SliceByValueSubsliceRangeMut<T, RangeFrom<T>>
+    + SliceByValueSubsliceRangeMut<T, RangeFull>
+    + SliceByValueSubsliceRangeMut<T, RangeInclusive<T>>
+    + SliceByValueSubsliceRangeMut<T, RangeTo<T>>
+    + SliceByValueSubsliceRangeMut<T, RangeToInclusive<T>>
 {
 }
 
-impl<U, T> SliceByValueSubsliceMut<T> for U
+impl<T, U> SliceByValueSubsliceMut<T> for U
 where
-    U: SliceByValueSubsliceRangeMut<Range<T>>,
-    U: SliceByValueSubsliceRangeMut<RangeFrom<T>>,
-    U: SliceByValueSubsliceRangeMut<RangeFull>,
-    U: SliceByValueSubsliceRangeMut<RangeInclusive<T>>,
-    U: SliceByValueSubsliceRangeMut<RangeTo<T>>,
-    U: SliceByValueSubsliceRangeMut<RangeToInclusive<T>>,
+    U: SliceByValueSubsliceRangeMut<T, Range<T>>,
+    U: SliceByValueSubsliceRangeMut<T, RangeFrom<T>>,
+    U: SliceByValueSubsliceRangeMut<T, RangeFull>,
+    U: SliceByValueSubsliceRangeMut<T, RangeInclusive<T>>,
+    U: SliceByValueSubsliceRangeMut<T, RangeTo<T>>,
+    U: SliceByValueSubsliceRangeMut<T, RangeToInclusive<T>>,
 {
 }
 
