@@ -1,5 +1,8 @@
 #![cfg(feature = "alloc")]
 
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::vec::Vec;
+
 use core::{
     iter::{Cloned, Skip},
     ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
@@ -136,10 +139,11 @@ impl_range_vecs!(Range<usize>);
 impl_range_vecs!(RangeInclusive<usize>);
 impl_range_vecs!(RangeToInclusive<usize>);
 
+
 impl<T: Clone> IterableByValue for Vec<T> {
     type Item = T;
     type Iter<'a>
-        = Cloned<std::slice::Iter<'a, T>>
+        = Cloned<core::slice::Iter<'a, T>>
     where
         T: 'a;
 
@@ -150,7 +154,7 @@ impl<T: Clone> IterableByValue for Vec<T> {
 
 impl<T: Clone> IterableByValueFrom for Vec<T> {
     type IterFrom<'a>
-        = Cloned<Skip<std::slice::Iter<'a, T>>>
+        = Cloned<Skip<core::slice::Iter<'a, T>>>
     where
         T: 'a;
 

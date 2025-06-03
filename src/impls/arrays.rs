@@ -145,7 +145,7 @@ impl_range_arrays!(RangeToInclusive<usize>);
 
 impl<T: Clone, const N: usize> IterableByValueFrom for [T; N] {
     type IterFrom<'a>
-        = Cloned<Skip<std::slice::Iter<'a, T>>>
+        = Cloned<Skip<core::slice::Iter<'a, T>>>
     where
         T: 'a;
 
@@ -157,7 +157,7 @@ impl<T: Clone, const N: usize> IterableByValueFrom for [T; N] {
 impl<T: Clone, const N: usize> IterableByValue for [T; N] {
     type Item = T;
     type Iter<'a>
-        = Cloned<std::slice::Iter<'a, T>>
+        = Cloned<core::slice::Iter<'a, T>>
     where
         T: 'a;
 

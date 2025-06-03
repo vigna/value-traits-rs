@@ -10,6 +10,9 @@
 #![deny(unconditional_recursion)]
 #![doc = include_str!("../README.md")]
 
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+extern crate alloc;
+
 // TODO: check that all traits have the same delegations to &S, &mut, etc
 // TODO: implemented default methods for ranges
 // TODO: implement bound checks with wording identical to std's slice methods

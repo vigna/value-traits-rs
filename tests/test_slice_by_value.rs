@@ -6,8 +6,6 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-use std::{rc::Rc, sync::Arc};
-
 use value_traits::slices::*;
 
 const EXPECTED: [i32; 5] = [1, 2, 3, 4, 5];
@@ -36,6 +34,7 @@ fn test_slice_mut() {
 }
 
 #[test]
+#[cfg(feature = "alloc")]
 fn test_vecs() {
     generic_get(EXPECTED.to_vec(), &EXPECTED);
     generic_slice(EXPECTED.to_vec(), &EXPECTED);
@@ -44,7 +43,9 @@ fn test_vecs() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_rc() {
+    use std::rc::Rc;
     let x = <Rc<[i32]>>::from(EXPECTED);
     generic_get(x.clone(), &EXPECTED);
     generic_slice(x.clone(), &EXPECTED);
@@ -52,7 +53,9 @@ fn test_rc() {
 }
 
 #[test]
+#[cfg(feature = "std")]
 fn test_arc() {
+    use std::sync::Arc;
     let x = <Arc<[i32]>>::from(EXPECTED);
     generic_get(x.clone(), &EXPECTED);
     generic_slice(x.clone(), &EXPECTED);
@@ -60,6 +63,7 @@ fn test_arc() {
 }
 
 #[test]
+#[cfg(feature = "alloc")]
 fn test_boxed_slice() {
     let x = EXPECTED.to_vec().into_boxed_slice();
     generic_get(x.clone(), &EXPECTED);

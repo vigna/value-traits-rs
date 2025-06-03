@@ -8,8 +8,15 @@
 
 use value_traits::slices::*;
 
+
 #[test]
+#[cfg(feature = "alloc")]
 fn test() {
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    extern crate alloc;
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::vec;
+
     let s = vec![1_i32, 2, 3, 4, 5];
     test_bounds(&s);
 }

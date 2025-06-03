@@ -144,33 +144,40 @@ impl_range_slices!(Range<usize>);
 impl_range_slices!(RangeInclusive<usize>);
 impl_range_slices!(RangeToInclusive<usize>);
 
-impl<T: Clone> IterableByValue for Box<[T]> {
-    type Item = T;
-    type Iter<'a>
-        = Cloned<std::slice::Iter<'a, T>>
-    where
-        T: 'a;
+#[cfg(feature = "alloc")]
+mod alloc_impl {
+    use super::*;
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::boxed::Box;
 
-    fn iter_value(&self) -> Self::Iter<'_> {
-        self.iter().cloned()
+    impl<T: Clone> IterableByValue for Box<[T]> {
+        type Item = T;
+        type Iter<'a>
+            = Cloned<core::slice::Iter<'a, T>>
+        where
+            T: 'a;
+
+        fn iter_value(&self) -> Self::Iter<'_> {
+            self.iter().cloned()
+        }
     }
-}
 
-impl<T: Clone> IterableByValueFrom for Box<[T]> {
-    type IterFrom<'a>
-        = Cloned<Skip<std::slice::Iter<'a, T>>>
-    where
-        T: 'a;
+    impl<T: Clone> IterableByValueFrom for Box<[T]> {
+        type IterFrom<'a>
+            = Cloned<Skip<core::slice::Iter<'a, T>>>
+        where
+            T: 'a;
 
-    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
-        self.iter().skip(from).cloned()
+        fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+            self.iter().skip(from).cloned()
+        }
     }
 }
 
 impl<T: Clone> IterableByValue for [T] {
     type Item = T;
     type Iter<'a>
-        = Cloned<std::slice::Iter<'a, T>>
+        = Cloned<core::slice::Iter<'a, T>>
     where
         T: 'a;
 
@@ -181,7 +188,7 @@ impl<T: Clone> IterableByValue for [T] {
 
 impl<T: Clone> IterableByValueFrom for [T] {
     type IterFrom<'a>
-        = Cloned<Skip<std::slice::Iter<'a, T>>>
+        = Cloned<Skip<core::slice::Iter<'a, T>>>
     where
         T: 'a;
 

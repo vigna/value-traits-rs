@@ -295,7 +295,7 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
 /// This traits makes it possible to monomorphize the six different
 /// range checks that are necessary to handle the six type of
 /// ranges available in [`core::ops`].
-pub trait RangeCheck: RangeBounds<usize> + std::fmt::Debug {
+pub trait RangeCheck: RangeBounds<usize> + core::fmt::Debug {
     /// Returns `true` if the range is within the bounds of a slice of given
     /// length
     fn is_valid(&self, len: usize) -> bool;
@@ -596,7 +596,7 @@ where
 mod alloc_impls {
     use super::*;
     #[cfg(all(feature = "alloc", not(feature = "std")))]
-    use alloc::{boxed::Box, vec::Vec};
+    use alloc::boxed::Box;
 
     impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
         type Value = S::Value;
