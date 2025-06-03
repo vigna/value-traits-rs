@@ -2,9 +2,10 @@
 name = "value-traits"
 version = "0.1.0"
 edition = "2021"
-description = "Traits for implicit collections"
+description = "Value-based slices and iterators"
 repository = "https://github.com/vigna/value-traits-rs/"
 license = "Apache-2.0 OR LGPL-2.1-or-later"
+categories = ["rust-patterns", "no-std"]
 readme = "README.md"
 authors = [
 	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
