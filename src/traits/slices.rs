@@ -805,7 +805,8 @@ macro_rules! impl_subslices {
     ($ty:ty) => {
         pub struct SubsliceImpl<'a> {
             slice: &'a $ty,
-            range: Range<usize>,
+            start: usize,
+            end: usize,
         }
 
         impl<'a> SliceByValue for SubsliceImpl<'a> {
@@ -813,7 +814,7 @@ macro_rules! impl_subslices {
 
             #[inline]
             fn len(&self) -> usize {
-                self.range.len()
+                self.end - self.start
             }
         }
 
@@ -829,7 +830,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: &self,
-                        range: range.clone(),
+                        start: range.start,
+                        end: range.end,
                     }
                 }
             }
@@ -842,10 +844,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: &self,
-                        range: Range {
-                            start: range.start,
-                            end: self.len(),
-                        },
+                        start: range.start,
+                        end: self.len(),
                     }
                 }
             }
@@ -858,10 +858,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: &self,
-                        range: Range {
-                            start: 0,
-                            end: range.end + 1,
-                        },
+                        start: 0,
+                        end: range.end + 1,
                     }
                 }
             }
@@ -874,10 +872,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: &self,
-                        range: Range {
-                            start: 0,
-                            end: self.len(),
-                        },
+                        start: 0,
+                        end: self.len(),
                     }
                 }
             }
@@ -903,10 +899,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: &self,
-                        range: Range {
-                            start: start,
-                            end: end + 1,
-                        },
+                        start: start,
+                        end: end + 1,
                     }
                 }
             }
@@ -920,10 +914,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: &self,
-                        range: Range {
-                            start: 0,
-                            end: range.end,
-                        },
+                        start: 0,
+                        end: range.end,
                     }
                 }
             }
@@ -931,7 +923,7 @@ macro_rules! impl_subslices {
 
         impl<'a> SliceByValueGet for SubsliceImpl<'a> {
             unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-                self.slice.get_value_unchecked(index + self.range.start)
+                self.slice.get_value_unchecked(index + self.start)
             }
         }
 
@@ -947,10 +939,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + range.start,
-                            end: self.range.start + range.end,
-                        },
+                        start: self.start + range.start,
+                        end: self.start + range.end,
                     }
                 }
             }
@@ -963,10 +953,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + range.start,
-                            end: self.range.end,
-                        },
+                        start: self.start + range.start,
+                        end: self.end,
                     }
                 }
             }
@@ -981,10 +969,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start,
-                            end: self.range.start + range.end + 1,
-                        },
+                        start: self.start,
+                        end: self.start + range.end + 1,
                     }
                 }
             }
@@ -997,7 +983,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: self.range.clone(),
+                        start: self.start,
+                        end: self.end,
                     }
                 }
             }
@@ -1022,10 +1009,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + start,
-                            end: self.range.start + end + 1,
-                        },
+                        start: self.start + start,
+                        end: self.start + end + 1,
                     }
                 }
             }
@@ -1039,10 +1024,8 @@ macro_rules! impl_subslices {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start,
-                            end: self.range.start + range.end,
-                        },
+                        start: self.start,
+                        end: self.start + range.end,
                     }
                 }
             }
@@ -1055,7 +1038,8 @@ macro_rules! impl_subslices_mut {
     ($ty:ty) => {
         pub struct SubsliceImplMut<'a> {
             slice: &'a mut $ty,
-            range: Range<usize>,
+            start: usize,
+            end: usize,
         }
 
         impl<'a> SliceByValue for SubsliceImplMut<'a> {
@@ -1063,7 +1047,7 @@ macro_rules! impl_subslices_mut {
 
             #[inline]
             fn len(&self) -> usize {
-                self.range.len()
+                self.end - self.start
             }
         }
 
@@ -1079,7 +1063,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self,
-                        range: range.clone(),
+                        start: range.start,
+                        end: range.end,
                     }
                 }
             }
@@ -1093,10 +1078,8 @@ macro_rules! impl_subslices_mut {
                     let end = self.len();
                     SubsliceImplMut {
                         slice: self,
-                        range: Range {
-                            start: range.start,
-                            end,
-                        },
+                        start: range.start,
+                        end,
                     }
                 }
             }
@@ -1109,10 +1092,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self,
-                        range: Range {
-                            start: 0,
-                            end: range.end + 1,
-                        },
+                        start: 0,
+                        end: range.end + 1,
                     }
                 }
             }
@@ -1126,7 +1107,8 @@ macro_rules! impl_subslices_mut {
                     let end = self.len();
                     SubsliceImplMut {
                         slice: self,
-                        range: Range { start: 0, end },
+                        start: 0,
+                        end,
                     }
                 }
             }
@@ -1152,10 +1134,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self,
-                        range: Range {
-                            start: start,
-                            end: end + 1,
-                        },
+                        start: start,
+                        end: end + 1,
                     }
                 }
             }
@@ -1169,10 +1149,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self,
-                        range: Range {
-                            start: 0,
-                            end: range.end,
-                        },
+                        start: 0,
+                        end: range.end,
                     }
                 }
             }
@@ -1180,7 +1158,7 @@ macro_rules! impl_subslices_mut {
 
         impl<'a> SliceByValueGet for SubsliceImplMut<'a> {
             unsafe fn get_value_unchecked(&self, index: usize) -> <$ty as SliceByValue>::Value {
-                self.slice.get_value_unchecked(index + self.range.start)
+                self.slice.get_value_unchecked(index + self.start)
             }
         }
 
@@ -1196,10 +1174,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + range.start,
-                            end: self.range.start + range.end,
-                        },
+                        start: self.start + range.start,
+                        end: self.start + range.end,
                     }
                 }
             }
@@ -1212,10 +1188,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + range.start,
-                            end: self.range.end,
-                        },
+                        start: self.start + range.start,
+                        end: self.end,
                     }
                 }
             }
@@ -1230,10 +1204,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start,
-                            end: self.range.start + range.end + 1,
-                        },
+                        start: self.start,
+                        end: self.start + range.end + 1,
                     }
                 }
             }
@@ -1246,7 +1218,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: self.range.clone(),
+                        start: self.start,
+                        end: self.end,
                     }
                 }
             }
@@ -1273,10 +1246,9 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + start,
-                            end: self.range.start + end + 1,
-                        },
+
+                        start: self.start + start,
+                        end: self.start + end + 1,
                     }
                 }
             }
@@ -1290,10 +1262,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImpl {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start,
-                            end: self.range.start + range.end,
-                        },
+                        start: self.start,
+                        end: self.start + range.end,
                     }
                 }
             }
@@ -1301,8 +1271,7 @@ macro_rules! impl_subslices_mut {
 
         impl<'a> SliceByValueSet for SubsliceImplMut<'a> {
             unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-                self.slice
-                    .set_value_unchecked(index + self.range.start, value)
+                self.slice.set_value_unchecked(index + self.start, value)
             }
         }
 
@@ -1313,7 +1282,7 @@ macro_rules! impl_subslices_mut {
                 value: Self::Value,
             ) -> Self::Value {
                 self.slice
-                    .replace_value_unchecked(index + self.range.start, value)
+                    .replace_value_unchecked(index + self.start, value)
             }
         }
 
@@ -1329,10 +1298,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + range.start,
-                            end: self.range.start + range.end,
-                        },
+                        start: self.start + range.start,
+                        end: self.start + range.end,
                     }
                 }
             }
@@ -1345,10 +1312,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + range.start,
-                            end: self.range.end,
-                        },
+                        start: self.start + range.start,
+                        end: self.end,
                     }
                 }
             }
@@ -1363,10 +1328,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start,
-                            end: self.range.start + range.end + 1,
-                        },
+                        start: self.start,
+                        end: self.start + range.end + 1,
                     }
                 }
             }
@@ -1379,7 +1342,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self.slice,
-                        range: self.range.clone(),
+                        start: self.start,
+                        end: self.end,
                     }
                 }
             }
@@ -1406,10 +1370,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start + start,
-                            end: self.range.start + end + 1,
-                        },
+                        start: self.start + start,
+                        end: self.start + end + 1,
                     }
                 }
             }
@@ -1423,10 +1385,8 @@ macro_rules! impl_subslices_mut {
                 unsafe {
                     SubsliceImplMut {
                         slice: self.slice,
-                        range: Range {
-                            start: self.range.start,
-                            end: self.range.start + range.end,
-                        },
+                        start: self.start,
+                        end: self.start + range.end,
                     }
                 }
             }
