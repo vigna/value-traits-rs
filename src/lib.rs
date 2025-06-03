@@ -13,10 +13,6 @@
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
-// TODO: check that all traits have the same delegations to &S, &mut, etc
-// TODO: implemented default methods for ranges
-// TODO: implement bound checks with wording identical to std's slice methods
-
 // Impls are not re-exported
 pub mod impls;
 

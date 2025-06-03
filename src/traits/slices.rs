@@ -351,23 +351,23 @@ impl RangeCheck for RangeToInclusive<usize> {
 
 /// A GAT-like trait specifying the subslice type.
 ///
-/// It implicitly restricts the lifetime `'a` used in `SliceByValueRange`
-/// to be `where Self: 'a`. Moreover, it requires [`SliceByValueGet`].
+/// It implicitly restricts the lifetime `'a` used in `SliceByValueRange` to be
+/// `where Self: 'a`. Moreover, it requires [`SliceByValueGet`].
 ///
-/// As in other theoretical applications of GATs, like
-/// [lenders](https://crates.io/crates/lender), using a GAT to express the type
-/// of a subslice is problematic because when bounding the type itself in a
-/// where clause using Higher-Ranked Trait Bounds (HRTBs) the bound must be true
-/// for all lifetimes, including `'static`, resulting in the sliced type having
-/// to be `'static` as well.
+/// As in other theoretical applications of GATs (Generic Associated Types),
+/// like [lenders](https://crates.io/crates/lender), using a GAT to express the
+/// type of a subslice is problematic because when bounding the type itself in a
+/// `where` clause using Higher-Ranked Trait Bounds (HRTBs) the bound must be
+/// true for all lifetimes, including `'static`, resulting in the sliced type
+/// having to be `'static` as well.
 ///
 /// This is a result of HRTBs not having a way to express qualifiers (`for<'any
 /// where Self: 'any> Self: Trait`) and effectively making HRTBs only useful
 /// when you want to express a trait constraint on ALL lifetimes, including
 /// `'static` (`for<'all> Self: trait`)
 ///
-/// Please see [Sabrina's Blog][1] for more information, and how a trait
-/// like this can be used to solve it by implicitly restricting HRTBs.
+/// Please see [Sabrina's Blog][1] for more information, and how a trait like
+/// this can be used to solve it by implicitly restricting HRTBs.
 ///
 /// [1]:
 ///     <https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats>

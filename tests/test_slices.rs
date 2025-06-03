@@ -7,7 +7,9 @@
  */
 
 use core::ops::Range;
+use std::vec;
 use value_traits::{
+    impl_subslice,
     iter::{IterableByValue, IterableByValueFrom},
     slices::*,
 };
@@ -78,4 +80,31 @@ fn test_iter() {
     assert_eq!(i.next(), Some(2));
     assert_eq!(i.next(), Some(3));
     assert_eq!(i.next(), None);
+}
+
+pub struct Sbv(vec::Vec<i32>);
+
+impl SliceByValue for Sbv {
+    type Value = i32;
+
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl SliceByValueGet for Sbv {
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        self.0.get_unchecked(index).clone()
+    }
+}
+
+impl_subslice![Sbv];
+
+#[test]
+fn test_sbv_subslices() {
+    let s = Sbv(vec![1_i32, 2, 3, 4]);
+    let t = s.index_subslice(1..3); // should compile
+    assert_eq!(t.len(), 2);
+    assert_eq!(t.index_value(0), 2);
+    assert_eq!(t.index_value(1), 3);
 }

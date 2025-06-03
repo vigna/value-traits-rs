@@ -196,3 +196,268 @@ impl<T: Clone> IterableByValueFrom for [T] {
         self.iter().skip(from).cloned()
     }
 }
+
+#[macro_export]
+macro_rules! impl_subslice {
+    ($ty:ty) => {
+        impl<'a> SliceByValueSubsliceGat<'a> for $ty {
+            type Subslice = SubsliceImpl<'a>;
+        }
+
+        impl<'a> SliceByValueSubsliceRange<core::ops::Range<usize>> for $ty {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::Range<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: &self,
+                        range: range.clone(),
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>> for $ty {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeFrom<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: &self,
+                        range: Range {
+                            start: range.start,
+                            end: self.len(),
+                        },
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>> for $ty {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeToInclusive<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: &self,
+                        range: Range {
+                            start: 0,
+                            // TODO: UB?
+                            end: range.end + 1,
+                        },
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFull> for $ty {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                _range: core::ops::RangeFull,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: &self,
+                        range: Range {
+                            start: 0,
+                            end: self.len(),
+                        },
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>> for $ty {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeInclusive<usize>,
+            ) -> Subslice<'_, Self> {
+                use core::ops::{Bound, RangeBounds};
+                use std::hint::unreachable_unchecked;
+
+                let start = match range.start_bound() {
+                    Bound::Included(s) => *s,
+                    // SAFETY: we cannot take this branch
+                    _ => unsafe { unreachable_unchecked() },
+                };
+                let end = match range.end_bound() {
+                    Bound::Included(s) => *s,
+                    // SAFETY: we cannot take this branch
+                    _ => unsafe { unreachable_unchecked() },
+                };
+                unsafe {
+                    SubsliceImpl {
+                        slice: &self,
+                        range: Range {
+                            start: start,
+                            // TODO: UB?
+                            end: end + 1,
+                        },
+                    }
+                }
+            }
+        }
+
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeTo<usize>> for $ty {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeTo<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: &self,
+                        range: Range {
+                            start: 0,
+                            end: range.end,
+                        },
+                    }
+                }
+            }
+        }
+
+        pub struct SubsliceImpl<'a> {
+            slice: &'a $ty,
+            range: Range<usize>,
+        }
+
+        impl<'a> SliceByValue for SubsliceImpl<'a> {
+            type Value = <$ty as SliceByValue>::Value;
+
+            #[inline]
+            fn len(&self) -> usize {
+                self.range.len()
+            }
+        }
+
+        impl<'a> SliceByValueGet for SubsliceImpl<'a> {
+            unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+                self.slice.get_value_unchecked(index + self.range.start)
+            }
+        }
+
+        impl<'a, 'b> SliceByValueSubsliceGat<'b> for SubsliceImpl<'a> {
+            type Subslice = SubsliceImpl<'b>;
+        }
+
+        impl<'a> SliceByValueSubsliceRange<core::ops::Range<usize>> for SubsliceImpl<'a> {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::Range<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: self.slice,
+                        range: Range {
+                            start: self.range.start + range.start,
+                            end: self.range.start + range.end,
+                        },
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>> for SubsliceImpl<'a> {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeFrom<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: self.slice,
+                        range: Range {
+                            start: self.range.start + range.start,
+                            end: self.range.end,
+                        },
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
+            for SubsliceImpl<'a>
+        {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeToInclusive<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: self.slice,
+                        range: Range {
+                            start: self.range.start,
+                            // TODO: UB?
+                            end: self.range.start + range.end + 1,
+                        },
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFull> for SubsliceImpl<'a> {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                _range: core::ops::RangeFull,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: self.slice,
+                        range: self.range.clone(),
+                    }
+                }
+            }
+        }
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>> for SubsliceImpl<'a> {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeInclusive<usize>,
+            ) -> Subslice<'_, Self> {
+                use core::ops::{Bound, RangeBounds};
+                use std::hint::unreachable_unchecked;
+                // Safety: The caller must ensure that `index` is within bounds.
+                let start = match range.start_bound() {
+                    Bound::Included(s) => *s,
+                    // SAFETY: we cannot take this branch
+                    _ => unsafe { unreachable_unchecked() },
+                };
+                let end = match range.end_bound() {
+                    Bound::Included(s) => *s,
+                    // SAFETY: we cannot take this branch
+                    _ => unsafe { unreachable_unchecked() },
+                };
+                unsafe {
+                    SubsliceImpl {
+                        slice: self.slice,
+                        range: Range {
+                            start: self.range.start + start,
+                            // TODO: UB?
+                            end: self.range.start + end + 1,
+                        },
+                    }
+                }
+            }
+        }
+
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeTo<usize>> for SubsliceImpl<'a> {
+            unsafe fn get_subslice_unchecked(
+                &self,
+                range: core::ops::RangeTo<usize>,
+            ) -> Subslice<'_, Self> {
+                // Safety: The caller must ensure that `index` is within bounds.
+                unsafe {
+                    SubsliceImpl {
+                        slice: self.slice,
+                        range: Range {
+                            start: self.range.start,
+                            end: self.range.start + range.end,
+                        },
+                    }
+                }
+            }
+        }
+    };
+}

@@ -15,7 +15,7 @@ are lightweight, flexible, and represent a basic data structure, the _sequence_,
 AKA _random-access list_.
 
 The problem with slices is that, by design, they are accessed by _reference_:
-the most used slice trait, `Index`, gives a reference to an element of the
+the most used slice trait, [`Index`], gives a reference to an element of the
 slice. While this approach is elegant and makes several compiler optimizations
 possible, it also means that slices cannot be used as generic random-access
 lists, as access by reference means there must be an actual continuous segment
@@ -29,10 +29,10 @@ of values of the slice by value and its length. A [`SliceByValueGet`] provides
 methods that are exactly analogous of [`std::slice::get`] and [`Index::index`],
 but return values, rather than references, and are named [`get_value`] and
 [`index_value`] instead. The longer names are necessary to avoid ambiguity, as
-all slices of cloneable elements implement our by-value traits. It might argued
+all slices of cloneable elements implement our by-value traits. It might be argued
 `RandomAccessList` or `Sequence` might be more standard name, but we want to
 underline the fact that the read access is closely modeled after slices. Note
-that we cannot overload the `[]` operator, as `Index` methods must necessarily
+that we cannot overload the `[]` operator, as [`Index`] methods must necessarily
 return references.
 
 Write access is a different issue because [`SliceByValueSet`] has necessarily a
@@ -45,7 +45,7 @@ traits are distinct traits, as you might be contented, for your application, of
 (possibly read-only) access to single elements. Similarly to the access to
 single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
-of slices, but return, once again, values. [`SubsliceImpl`] is a ready-made
+of slices. [`SubsliceImpl`] is a ready-made
 implementation that keeps track of a reference to the original slice, and of
 delimiters.
 
@@ -80,4 +80,5 @@ returning references, so a different trait is necessary.
 [`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
+[`Index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html>
 [`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
