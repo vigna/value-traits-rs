@@ -809,14 +809,14 @@ mod std_impls {
 /// [`IterableByValue`](crate::iter::IterableByValue) on `SubsliceImpl`.
 #[macro_export]
 macro_rules! impl_subslices {
-    ($ty:ty; $impl:tt; $param:tt) => {
-        pub struct SubsliceImpl<'a, $param> {
+    ($ty:ty) => {
+        pub struct SubsliceImpl<'a> {
             slice: &'a $ty,
             start: usize,
             end: usize,
         }
 
-        impl<'a, $impl> SliceByValue for SubsliceImpl<'a, $param> {
+        impl<'a> SliceByValue for SubsliceImpl<'a> {
             type Value = <$ty as SliceByValue>::Value;
 
             #[inline]
@@ -825,19 +825,17 @@ macro_rules! impl_subslices {
             }
         }
 
-        impl<'a, $impl> SliceByValueGet for SubsliceImpl<'a, $param> {
+        impl<'a> SliceByValueGet for SubsliceImpl<'a> {
             unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                 self.slice.get_value_unchecked(index + self.start)
             }
         }
 
-        impl<'a, 'b, $impl> SliceByValueSubsliceGat<'b> for SubsliceImpl<'a, $param> {
-            type Subslice = SubsliceImpl<'b, $param>;
+        impl<'a, 'b> SliceByValueSubsliceGat<'b> for SubsliceImpl<'a> {
+            type Subslice = SubsliceImpl<'b>;
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::Range<usize>>
-            for SubsliceImpl<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::Range<usize>> for SubsliceImpl<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::Range<usize>,
@@ -851,9 +849,7 @@ macro_rules! impl_subslices {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
-            for SubsliceImpl<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>> for SubsliceImpl<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::RangeFrom<usize>,
@@ -867,8 +863,8 @@ macro_rules! impl_subslices {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
-            for SubsliceImpl<'a, $param>
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
+            for SubsliceImpl<'a>
         {
             unsafe fn get_subslice_unchecked(
                 &self,
@@ -883,9 +879,7 @@ macro_rules! impl_subslices {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeFull>
-            for SubsliceImpl<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFull> for SubsliceImpl<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 _range: core::ops::RangeFull,
@@ -899,9 +893,7 @@ macro_rules! impl_subslices {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
-            for SubsliceImpl<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>> for SubsliceImpl<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::RangeInclusive<usize>,
@@ -928,9 +920,7 @@ macro_rules! impl_subslices {
             }
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeTo<usize>>
-            for SubsliceImpl<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeTo<usize>> for SubsliceImpl<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::RangeTo<usize>,
@@ -945,12 +935,12 @@ macro_rules! impl_subslices {
             }
         }
 
-        pub struct Iter<'a, 'b, $param> {
-            subslice: &'b SubsliceImpl<'a, $param>,
+        pub struct Iter<'a, 'b> {
+            subslice: &'b SubsliceImpl<'a>,
             index: usize,
         }
 
-        impl<'a, 'b, $impl> Iterator for Iter<'a, 'b, $param> {
+        impl<'a, 'b> Iterator for Iter<'a, 'b> {
             type Item = <$ty as SliceByValue>::Value;
 
             #[inline]
@@ -965,10 +955,10 @@ macro_rules! impl_subslices {
             }
         }
 
-        impl<'a, $impl> IterableByValue for SubsliceImpl<'a, $param> {
+        impl<'a> IterableByValue for SubsliceImpl<'a> {
             type Item = <$ty as SliceByValue>::Value;
             type Iter<'b>
-                = Iter<'a, 'b, $param>
+                = Iter<'a, 'b>
             where
                 Self: 'b;
 
@@ -981,9 +971,9 @@ macro_rules! impl_subslices {
             }
         }
 
-        impl<'a, $impl> IterableByValueFrom for SubsliceImpl<'a, $param> {
+        impl<'a> IterableByValueFrom for SubsliceImpl<'a> {
             type IterFrom<'b>
-                = Iter<'a, 'b, $param>
+                = Iter<'a, 'b>
             where
                 Self: 'b;
 
@@ -1002,8 +992,8 @@ macro_rules! impl_subslices {
             }
         }
 
-        impl<'a, $impl> SliceByValueSubsliceGat<'a> for $ty {
-            type Subslice = SubsliceImpl<'a, $param>;
+        impl<'a> SliceByValueSubsliceGat<'a> for $ty {
+            type Subslice = SubsliceImpl<'a>;
         }
 
         impl<$impl> SliceByValueSubsliceRange<core::ops::Range<usize>> for $ty {
@@ -1125,14 +1115,14 @@ macro_rules! impl_subslices {
 /// `SubsliceImplMut` will yield a `SubsliceImpl`.
 #[macro_export]
 macro_rules! impl_subslices_mut {
-    ($ty:ty; $impl:tt; $param:tt) => {
-        pub struct SubsliceImplMut<'a, $param> {
+    ($ty:ty) => {
+        pub struct SubsliceImplMut<'a> {
             slice: &'a mut $ty,
             start: usize,
             end: usize,
         }
 
-        impl<'a> SliceByValue for SubsliceImplMut<'a, $param> {
+        impl<'a> SliceByValue for SubsliceImplMut<'a> {
             type Value = <$ty as SliceByValue>::Value;
 
             #[inline]
@@ -1141,19 +1131,17 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a> SliceByValueGet for SubsliceImplMut<'a, $param> {
+        impl<'a> SliceByValueGet for SubsliceImplMut<'a> {
             unsafe fn get_value_unchecked(&self, index: usize) -> <$ty as SliceByValue>::Value {
                 self.slice.get_value_unchecked(index + self.start)
             }
         }
 
-        impl<'a, 'b> SliceByValueSubsliceGat<'b> for SubsliceImplMut<'a, $param> {
-            type Subslice = SubsliceImpl<'b, $param>;
+        impl<'a, 'b> SliceByValueSubsliceGat<'b> for SubsliceImplMut<'a> {
+            type Subslice = SubsliceImpl<'b>;
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::Range<usize>>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::Range<usize>> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::Range<usize>,
@@ -1167,9 +1155,7 @@ macro_rules! impl_subslices_mut {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::RangeFrom<usize>,
@@ -1183,8 +1169,8 @@ macro_rules! impl_subslices_mut {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
-            for SubsliceImplMut<'a, $param>
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
+            for SubsliceImplMut<'a>
         {
             unsafe fn get_subslice_unchecked(
                 &self,
@@ -1199,9 +1185,7 @@ macro_rules! impl_subslices_mut {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeFull>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeFull> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 _range: core::ops::RangeFull,
@@ -1216,8 +1200,8 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
-            for SubsliceImplMut<'a, $param>
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
+            for SubsliceImplMut<'a>
         {
             unsafe fn get_subslice_unchecked(
                 &self,
@@ -1246,9 +1230,7 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRange<core::ops::RangeTo<usize>>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRange<core::ops::RangeTo<usize>> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked(
                 &self,
                 range: core::ops::RangeTo<usize>,
@@ -1263,13 +1245,13 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a, $impl> SliceByValueSet for SubsliceImplMut<'a, $param> {
+        impl<'a> SliceByValueSet for SubsliceImplMut<'a> {
             unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
                 self.slice.set_value_unchecked(index + self.start, value)
             }
         }
 
-        impl<'a> SliceByValueRepl for SubsliceImplMut<'a, $param> {
+        impl<'a> SliceByValueRepl for SubsliceImplMut<'a> {
             unsafe fn replace_value_unchecked(
                 &mut self,
                 index: usize,
@@ -1280,13 +1262,11 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a, 'b, $impl> SliceByValueSubsliceGatMut<'b> for SubsliceImplMut<'a, $param> {
-            type Subslice = SubsliceImplMut<'b, $param>;
+        impl<'a, 'b> SliceByValueSubsliceGatMut<'b> for SubsliceImplMut<'a> {
+            type Subslice = SubsliceImplMut<'b>;
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRangeMut<core::ops::Range<usize>>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRangeMut<core::ops::Range<usize>> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked_mut(
                 &mut self,
                 range: core::ops::Range<usize>,
@@ -1300,9 +1280,7 @@ macro_rules! impl_subslices_mut {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRangeMut<core::ops::RangeFrom<usize>>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRangeMut<core::ops::RangeFrom<usize>> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked_mut(
                 &mut self,
                 range: core::ops::RangeFrom<usize>,
@@ -1316,8 +1294,8 @@ macro_rules! impl_subslices_mut {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRangeMut<core::ops::RangeToInclusive<usize>>
-            for SubsliceImplMut<'a, $param>
+        impl<'a> SliceByValueSubsliceRangeMut<core::ops::RangeToInclusive<usize>>
+            for SubsliceImplMut<'a>
         {
             unsafe fn get_subslice_unchecked_mut(
                 &mut self,
@@ -1332,9 +1310,7 @@ macro_rules! impl_subslices_mut {
                 }
             }
         }
-        impl<'a, $impl> SliceByValueSubsliceRangeMut<core::ops::RangeFull>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRangeMut<core::ops::RangeFull> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked_mut(
                 &mut self,
                 _range: core::ops::RangeFull,
@@ -1349,8 +1325,8 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRangeMut<core::ops::RangeInclusive<usize>>
-            for SubsliceImplMut<'a, $param>
+        impl<'a> SliceByValueSubsliceRangeMut<core::ops::RangeInclusive<usize>>
+            for SubsliceImplMut<'a>
         {
             unsafe fn get_subslice_unchecked_mut(
                 &mut self,
@@ -1378,9 +1354,7 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a, $impl> SliceByValueSubsliceRangeMut<core::ops::RangeTo<usize>>
-            for SubsliceImplMut<'a, $param>
-        {
+        impl<'a> SliceByValueSubsliceRangeMut<core::ops::RangeTo<usize>> for SubsliceImplMut<'a> {
             unsafe fn get_subslice_unchecked_mut(
                 &mut self,
                 range: core::ops::RangeTo<usize>,
@@ -1396,7 +1370,7 @@ macro_rules! impl_subslices_mut {
         }
 
         pub struct IterMut<'a, 'b> {
-            subslice: &'b SubsliceImplMut<'a, $param>,
+            subslice: &'b SubsliceImplMut<'a>,
             index: usize,
         }
 
@@ -1415,7 +1389,7 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a> IterableByValue for SubsliceImplMut<'a, $param> {
+        impl<'a> IterableByValue for SubsliceImplMut<'a> {
             type Item = <$ty as SliceByValue>::Value;
             type Iter<'b>
                 = IterMut<'a, 'b>
@@ -1431,7 +1405,7 @@ macro_rules! impl_subslices_mut {
             }
         }
 
-        impl<'a> IterableByValueFrom for SubsliceImplMut<'a, $param> {
+        impl<'a> IterableByValueFrom for SubsliceImplMut<'a> {
             type IterFrom<'b>
                 = IterMut<'a, 'b>
             where
@@ -1453,7 +1427,7 @@ macro_rules! impl_subslices_mut {
         }
 
         impl<'a> SliceByValueSubsliceGatMut<'a> for $ty {
-            type Subslice = SubsliceImplMut<'a, $param>;
+            type Subslice = SubsliceImplMut<'a>;
         }
 
         impl SliceByValueSubsliceRangeMut<core::ops::Range<usize>> for $ty {
