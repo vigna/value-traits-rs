@@ -85,9 +85,9 @@ fn test_iter() {
     assert_eq!(i.next(), None);
 }
 
-use value_traits_derive::Subslices;
+use value_traits_derive::{Subslices, SubslicesMut};
 
-#[derive(Subslices)]
+#[derive(Subslices, SubslicesMut)]
 pub struct Sbv<T: Clone>(Vec<T>);
 
 impl<T: Clone> SliceByValue for Sbv<T> {
@@ -122,7 +122,7 @@ fn test_sbv_subslices() {
     // test the struct
     generic_get(&s, &[1, 2, 3, 4, 5]);
     generic_slice(&s, &[1, 2, 3, 4, 5]);
-    /*generic_mut(&mut s);
+    generic_mut(&mut s);
     generic_slice_mut(&mut s);
     // test its slice
     generic_get(s.index_subslice(..), &[1, 2, 3, 4, 5]);
@@ -140,5 +140,5 @@ fn test_sbv_subslices() {
     t.set_value(1, 4);
     let u = t.index_subslice(1..);
     assert_eq!(u.len(), 1);
-    assert_eq!(u.index_value(0), 4);*/
+    assert_eq!(u.index_value(0), 4);
 }
