@@ -7,8 +7,8 @@
  */
 
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{parse2, parse_macro_input, AngleBracketedGenericArguments, Data, DeriveInput};
+use quote::{ToTokens, quote};
+use syn::{AngleBracketedGenericArguments, Data, DeriveInput, parse_macro_input, parse2};
 
 #[proc_macro_derive(Subslices)]
 pub fn subslices(input: TokenStream) -> TokenStream {
@@ -73,7 +73,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::Range<usize>>
-                    for SubsliceImpl<'__subslice_impl, #names> #where_clause 
+                    for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
@@ -91,7 +91,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
-                    for SubsliceImpl<'__subslice_impl, #names> #where_clause 
+                    for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
@@ -109,7 +109,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
-                    for SubsliceImpl<'__subslice_impl, #names> #where_clause 
+                    for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
@@ -127,7 +127,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeFull>
-                    for SubsliceImpl<'__subslice_impl, #names> #where_clause 
+                    for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
@@ -145,7 +145,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
-                    for SubsliceImpl<'__subslice_impl, #names> #where_clause 
+                    for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
@@ -175,7 +175,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeTo<usize>>
-                    for SubsliceImpl<'__subslice_impl, #names> #where_clause 
+                    for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,

@@ -8,7 +8,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unconditional_recursion)]
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../../README.md")]
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;

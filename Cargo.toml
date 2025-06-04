@@ -1,21 +1,11 @@
-[package]
-name = "value-traits"
-version = "0.1.0"
-edition = "2021"
-description = "Value-based slices and iterators"
-repository = "https://github.com/vigna/value-traits-rs/"
-license = "Apache-2.0 OR LGPL-2.1-or-later"
-categories = ["rust-patterns", "no-std"]
-readme = "README.md"
-authors = [
-	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
-	"Sebastiano Vigna <sebastiano.vigna@unimi.it>",
+[workspace]
+resolver = "2"
+
+members = [
+    "value-traits-derive",
+    "value-traits",
 ]
 
-[dependencies]
-value-traits-derive = { path = "value-traits-derive" }
-
-[features]
-default = ["std"]
-std = ["alloc"]
-alloc = []
+[workspace.dependencies]
+value-traits = {path="./value-traits", version="0.1.0"}
+value-traits-derive = {path="./value-traits-derive", version="0.1.0"}
