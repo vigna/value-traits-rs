@@ -13,6 +13,7 @@ authors = [
 ]
 
 [dependencies]
+value-traits-derive = { path = "value-traits-derive" }
 
 [features]
 default = ["std"]
