@@ -151,8 +151,10 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                         &self,
                         range: core::ops::RangeInclusive<usize>,
                     ) -> Subslice<'_, Self> {
-                        use core::ops::{Bound, RangeBounds};
-                        use std::hint::unreachable_unchecked;
+                        use ::core::{
+                            ops::{Bound, RangeBounds},
+                            hint::unreachable_unchecked
+                        };
                         let start = match range.start_bound() {
                             Bound::Included(s) => *s,
                             // SAFETY: we cannot take this branch
@@ -327,9 +329,10 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                         &self,
                         range: core::ops::RangeInclusive<usize>,
                     ) -> Subslice<'_, Self> {
-                        use core::ops::{Bound, RangeBounds};
-                        use std::hint::unreachable_unchecked;
-
+                        use ::core::{
+                            ops::{Bound, RangeBounds}, 
+                            hint::unreachable_unchecked
+                        };
                         let start = match range.start_bound() {
                             Bound::Included(s) => *s,
                             // SAFETY: we cannot take this branch
