@@ -86,8 +86,8 @@ fn test_iter() {
 }
 
 use value_traits_derive::{Subslices, SubslicesMut};
-/*
-#[derive(Subslices, SubslicesMut)]
+
+/*#[derive(Subslices, SubslicesMut)]
 pub struct Sbv<T: Clone>(Vec<T>);
 
 impl<T: Clone> SliceByValue for Sbv<T> {
@@ -114,11 +114,11 @@ impl<T: Clone> SliceByValueRepl for Sbv<T> {
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         self.0.as_mut_slice().replace_value(index, value)
     }
-}
-    */
+}*/
 
-impl_subslices!(Sbv);
-impl_subslices_mut!(Sbv);
+//impl_subslices!(Sbv);
+//impl_subslices_mut!(Sbv);
+#[derive(Subslices, SubslicesMut)]
 pub struct Sbv(Vec<i32>);
 
 impl SliceByValue for Sbv {
