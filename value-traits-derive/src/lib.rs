@@ -36,7 +36,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<#params, R: core::ops::RangeBounds<usize> + value_traits::slices::RangeCheck> value_traits::slices::SliceByValueSubsliceRange<R> for #input_ident #ty_generics #where_clause {
+                impl<#params, R: core::ops::RangeBounds<usize> + core::fmt::Debug> value_traits::slices::SliceByValueSubsliceRange<R> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
                         range: R,
@@ -89,7 +89,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<#params, R: core::ops::RangeBounds<usize> + value_traits::slices::RangeCheck> value_traits::slices::SliceByValueSubsliceRangeMut<R> for #input_ident #ty_generics #where_clause {
+                impl<#params, R: core::ops::RangeBounds<usize> + core::fmt::Debug> value_traits::slices::SliceByValueSubsliceRangeMut<R> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
                         range: R,

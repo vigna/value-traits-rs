@@ -9,6 +9,7 @@
 //! Helpers structs used by the procedural macro, and possibly by users, to
 //! simplify the implementation of the traits.
 
+use core::borrow::Borrow;
 use core::ops::RangeBounds;
 
 mod iter;
@@ -26,9 +27,10 @@ pub use subslice_mut::SubsliceImplMut;
 /// The range `..=usize::MAX` cannot be represented and it will panic if you
 /// try to use it.
 pub fn range_compose(
-    base: &core::ops::Range<usize>,
+    base: impl Borrow<core::ops::Range<usize>>,
     subrange: impl RangeBounds<usize>,
 ) -> core::ops::Range<usize> {
+    let base = base.borrow();
     let start = match subrange.start_bound() {
         core::ops::Bound::Included(s) => base.start + *s,
         core::ops::Bound::Excluded(s) => base.start + *s + 1,

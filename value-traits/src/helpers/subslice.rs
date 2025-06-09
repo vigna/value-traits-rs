@@ -64,7 +64,7 @@ use crate::traits::slices::*;
 ///    ) -> Subslice<'_, Self> {
 ///        SubsliceImpl::new(
 ///            self,
-///            range_compose(&(0..self.len()), range),
+///            range_compose(0..self.len(), range),
 ///        )
 ///    }
 /// }
@@ -106,7 +106,7 @@ impl<'a, 'b, T: SliceByValueGet> SliceByValueSubsliceGat<'b> for SubsliceImpl<'a
     type Subslice = SubsliceImpl<'b, T>;
 }
 
-impl<'a, T: SliceByValueGet, R: core::ops::RangeBounds<usize> + RangeCheck>
+impl<'a, T: SliceByValueGet, R: core::ops::RangeBounds<usize> + core::fmt::Debug>
     SliceByValueSubsliceRange<R> for SubsliceImpl<'a, T>
 {
     #[inline]

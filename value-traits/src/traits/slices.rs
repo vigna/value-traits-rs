@@ -103,11 +103,8 @@
 //! }
 //! ```
 
-use core::{
-    hint::unreachable_unchecked,
-    ops::{
-        Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
-    },
+use core::ops::{
+    Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
 };
 
 use crate::{ImplBound, Ref};
@@ -301,51 +298,19 @@ pub trait RangeCheck: RangeBounds<usize> + core::fmt::Debug {
     fn is_valid(&self, len: usize) -> bool;
 }
 
-impl RangeCheck for Range<usize> {
+impl<R: RangeBounds<usize> + core::fmt::Debug> RangeCheck for R {
     fn is_valid(&self, len: usize) -> bool {
-        self.start <= len && self.end <= len && self.start <= self.end
-    }
-}
-
-impl RangeCheck for RangeFrom<usize> {
-    fn is_valid(&self, len: usize) -> bool {
-        self.start <= len
-    }
-}
-
-impl RangeCheck for RangeFull {
-    fn is_valid(&self, _len: usize) -> bool {
-        true
-    }
-}
-
-impl RangeCheck for RangeInclusive<usize> {
-    fn is_valid(&self, len: usize) -> bool {
-        // This can be significantly improved once
-        // https://rust-lang.github.io/rfcs/3550-new-range.html is implemented
-        let start = match self.start_bound() {
-            Bound::Included(s) => *s,
-            // SAFETY: we cannot take this branch
-            _ => unsafe { unreachable_unchecked() },
-        };
-        let end = match self.end_bound() {
-            Bound::Included(s) => *s,
-            // SAFETY: we cannot take this branch
-            _ => unsafe { unreachable_unchecked() },
-        };
-        start < len && end < len && start <= end
-    }
-}
-
-impl RangeCheck for RangeTo<usize> {
-    fn is_valid(&self, len: usize) -> bool {
-        self.end <= len
-    }
-}
-
-impl RangeCheck for RangeToInclusive<usize> {
-    fn is_valid(&self, len: usize) -> bool {
-        self.end < len
+        match (self.start_bound(), self.end_bound()) {
+            (Bound::Unbounded, Bound::Unbounded) => true,
+            (Bound::Included(start), Bound::Unbounded) => *start <= len,
+            (Bound::Excluded(start), Bound::Unbounded) => *start < len,
+            (Bound::Included(start), Bound::Included(end)) => *start <= *end && *end < len,
+            (Bound::Excluded(start), Bound::Included(end)) => *start < *end && *end < len,
+            (Bound::Included(start), Bound::Excluded(end)) => *start <= *end && *end <= len,
+            (Bound::Excluded(start), Bound::Excluded(end)) => *start < *end && *end <= len,
+            (Bound::Unbounded, Bound::Included(end)) => *end < len,
+            (Bound::Unbounded, Bound::Excluded(end)) => *end <= len,
+        }
     }
 }
 
