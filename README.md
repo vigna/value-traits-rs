@@ -47,9 +47,9 @@ single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
 of slices.
 
-Implementing subslices is tricky, so [`impl_subslices`] is a macro that provides
+Implementing subslices is tricky, so the `#[derive(Subslices)]` macro provides
 a complete implementation of subslicing for a type that implements
-[`SliceByValueGet`]; [`impl_subslices_mut`] similarly provides a complete
+[`SliceByValueGet`]; `#[derive(SubslicesMut)]` similarly provides a complete
 implementation of subslicing for a type that implements [`SliceByValueSet`] and
 [`SliceByValueReplace`]. Note that a custom implementation might be more
 efficient if your type can directly represent an inner range.
@@ -86,5 +86,5 @@ returning references, so a different trait is necessary.
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
 [`Index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html>
 [`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
-[`impl_subslices`]: <https://docs.rs/value_traits/latest/slices/macro.impl_subslices.html>
-[`impl_subslices_mut`]: <https://docs.rs/value_traits/latest/slices/macro.impl_subslices_mut.html>
+[`#[derive(Subslices)]`]: <https://docs.rs/value-traits-derive/latest/value_traits_derive/derive.Subslices.html>
+[`#[derive(SubslicesMut)]`]: <https://docs.rs/value-traits-derive/latest/value_traits_derive/derive.SubslicesMut.html>

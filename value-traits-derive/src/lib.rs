@@ -13,12 +13,17 @@ use syn::{AngleBracketedGenericArguments, Data, DeriveInput, parse_macro_input, 
 /// A procedural macro fully implementing subslices on top of a
 /// [`SliceByValueGet`].
 ///
+/// # Panics
+/// Panics if the generic arguments of the type deriving `Subslices` cannot be parsed correctly. This typically indicates an unexpected internal structure of the type's generics.
+///
 /// The macro defines a structure `SubsliceImpl` that keeps track of a reference
 /// to a slice, and of the start and end of the subslice. `SubsliceImpl` then
 /// implements [`SliceByValueGet`] and [`SliceByValueSubslice`]. Finally, a
 /// structure `Iter` is used to implement
 /// [`IterableByValue`](crate::iter::IterableByValue) on `SubsliceImpl`.
 #[proc_macro_derive(Subslices)]
+// TODO: Refactor this function to reduce its size.
+#[allow(clippy::too_many_lines)]
 pub fn subslices(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
 
@@ -372,10 +377,15 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 /// implement [`IterableByValue`](crate::iter::IterableByValue) on
 /// `SubsliceImplMut`.
 ///
+/// # Panics
+/// Panics if the generic arguments of the type deriving `SubslicesMut` cannot be parsed correctly. This typically indicates an unexpected internal structure of the type's generics.
+///
 /// Note that since `IterMut` provides iterators by value, it cannot use to
 /// mutate the subslice. Moreover, non-mutable subslicing on a
 /// `SubsliceImplMut` will yield a `SubsliceImpl`.
 #[proc_macro_derive(SubslicesMut)]
+// TODO: Refactor this function to reduce its size.
+#[allow(clippy::too_many_lines)]
 pub fn subslices_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
 

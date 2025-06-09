@@ -22,7 +22,6 @@ use crate::{
 
 impl<T, const N: usize> SliceByValue for [T; N] {
     type Value = T;
-    #[inline(always)]
     fn len(&self) -> usize {
         N
     }

@@ -146,7 +146,7 @@ impl_range_slices!(RangeToInclusive<usize>);
 
 #[cfg(feature = "alloc")]
 mod alloc_impl {
-    use super::*;
+    use super::{Cloned, IterableByValue, IterableByValueFrom, Skip};
     #[cfg(all(feature = "alloc", not(feature = "std")))]
     use alloc::boxed::Box;
 

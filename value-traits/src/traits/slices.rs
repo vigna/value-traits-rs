@@ -142,18 +142,12 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
     }
 }
 
-#[inline(always)]
 fn assert_index(index: usize, len: usize) {
-    if index >= len {
-        panic!("index out of bounds: the len is {len} but the index is {index}");
-    }
+    assert!(index < len, "index out of bounds: the len is {len} but the index is {index}");
 }
 
-#[inline(always)]
 fn assert_range(range: &impl RangeCheck, len: usize) {
-    if !range.is_valid(len) {
-        panic!("range {range:?} out of range for slice of length {len}: ");
-    }
+    assert!(range.is_valid(len), "range {range:?} out of range for slice of length {len}: ");
 }
 
 /// Read-only slice-by-value trait.
@@ -247,10 +241,10 @@ pub trait SliceByValueSet: SliceByValue {
 
 impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     fn set_value(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value(index, value)
+        (**self).set_value(index, value);
     }
     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value_unchecked(index, value)
+        (**self).set_value_unchecked(index, value);
     }
 }
 
@@ -594,7 +588,7 @@ where
 
 #[cfg(feature = "alloc")]
 mod alloc_impls {
-    use super::*;
+    use super::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive, SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat, SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice, SubsliceMut};
     #[cfg(all(feature = "alloc", not(feature = "std")))]
     use alloc::boxed::Box;
 
@@ -620,10 +614,10 @@ mod alloc_impls {
 
     impl<S: SliceByValueSet + ?Sized> SliceByValueSet for Box<S> {
         fn set_value(&mut self, index: usize, value: Self::Value) {
-            (**self).set_value(index, value)
+            (**self).set_value(index, value);
         }
         unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-            unsafe { (**self).set_value_unchecked(index, value) }
+            unsafe { (**self).set_value_unchecked(index, value); }
         }
     }
 
@@ -701,7 +695,7 @@ mod alloc_impls {
 
 #[cfg(feature = "std")]
 mod std_impls {
-    use super::*;
+    use super::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive, SliceByValue, SliceByValueGet, SliceByValueSubsliceGat, SliceByValueSubsliceRange, Subslice};
     use std::{rc::Rc, sync::Arc};
 
     impl<S: SliceByValue + ?Sized> SliceByValue for Arc<S> {
