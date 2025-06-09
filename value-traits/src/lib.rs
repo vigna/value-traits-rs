@@ -16,6 +16,9 @@ extern crate alloc;
 // Impls are not re-exported
 pub mod impls;
 
+// Helpers are not re-exported
+pub mod helpers;
+
 // Traits are re-exported
 mod traits;
 pub use traits::*;
