@@ -84,9 +84,9 @@ fn test_iter() {
     assert_eq!(i.next(), None);
 }
 
-use value_traits_derive::{Subslices, SubslicesMut};
+use value_traits_derive::{Iterators, IteratorsMut, Subslices, SubslicesMut};
 
-#[derive(Subslices, SubslicesMut)]
+#[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
 pub struct Sbv<T: Clone>(Vec<T>);
 
 impl<T: Clone> SliceByValue for Sbv<T> {
