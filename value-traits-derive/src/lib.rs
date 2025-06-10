@@ -7,8 +7,8 @@
  */
 
 use proc_macro::TokenStream;
-use quote::{ToTokens, quote};
-use syn::{AngleBracketedGenericArguments, Data, DeriveInput, parse_macro_input, parse2};
+use quote::{quote, ToTokens};
+use syn::{parse2, parse_macro_input, AngleBracketedGenericArguments, Data, DeriveInput};
 
 /// A procedural macro fully implementing subslices on top of a
 /// [`SliceByValueGet`].
@@ -255,7 +255,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                         range: core::ops::RangeInclusive<usize>,
                     ) -> Subslice<'_, Self> {
                         use ::core::{
-                            ops::{Bound, RangeBounds}, 
+                            ops::{Bound, RangeBounds},
                             hint::unreachable_unchecked
                         };
                         let start = match range.start_bound() {
@@ -296,7 +296,6 @@ pub fn subslices(input: TokenStream) -> TokenStream {
     }
     .into()
 }
-
 
 /// A procedural macro fully implementing [`IterableByValue`] and
 /// [`IterableByValueFrom`] for subslices on top of a the `SubsliceImpl`
@@ -340,22 +339,83 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 #[automatically_derived]
                 pub struct Iter<'__subslice_impl, '__iter_ref, #params> {
                     subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>,
-                    index: usize,
+                    range: core::ops::Range<usize>,
                 }
 
                 #[automatically_derived]
+                impl<'__subslice_impl, '__iter_ref, #params> Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                    pub fn new(subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>) -> Self {
+                        Self {
+                            subslice,
+                            range: 0..subslice.len(),
+                        }
+                    }
+                    pub fn new_from(subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>, from: usize) -> Self {
+                        let len = subslice.len();
+                        if from > len {
+                            panic!("index out of bounds: the len is {len} but the starting index is {from}");
+                        }
+                        Self {
+                            subslice,
+                            range: from..len,
+                        }
+                    }
+                }
+
+                #[automatically_derived]
+                /// Ideally we would like to also implement [`Iterator::advance_by`], but it is
+                /// nightly, and [`Iterator::skip`], [`Iterator::take`], [`Iterator::step_by`],
+                /// as we can do it more efficiently, but the [`Iterator`] trait definition
+                /// doesn't allow to return an arbitrary type.
                 impl<'__subslice_impl, '__iter_ref, #params> Iterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as SliceByValue>::Value;
 
                     #[inline]
                     fn next(&mut self) -> Option<Self::Item> {
-                        if self.index < self.subslice.len() {
-                            let value = unsafe { self.subslice.get_value_unchecked(self.index) };
-                            self.index += 1;
-                            Some(value)
-                        } else {
-                            None
+                        if self.range.is_empty() {
+                            return None;
                         }
+                        let value = unsafe { self.subslice.get_value_unchecked(self.range.start) };
+                        self.range.start += 1;
+                        Some(value)
+                    }
+
+                    /// Since we are indexing into a subslice, we can implement
+                    /// [`Iterator::nth`] without needing to consume the first `n` elements.
+                    #[inline]
+                    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+                        if n >= self.range.end {
+                            self.range.start = self.range.end; // consume the iterator
+                            return None;
+                        }
+                        let value = unsafe { self.subslice.get_value_unchecked(self.range.start + n) };
+                        self.range.start += n + 1;
+                        Some(value)
+                    }
+
+                    #[inline]
+                    fn size_hint(&self) -> (usize, Option<usize>) {
+                        let len = self.range.len();
+                        (len, Some(len))
+                    }
+                }
+
+                impl<'__subslice_impl, '__iter_ref, #params> DoubleEndedIterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                    #[inline]
+                    fn next_back(&mut self) -> Option<Self::Item> {
+                        if self.range.is_empty() {
+                            return None;
+                        }
+                        self.range.end -= 1;
+                        let value = unsafe { self.subslice.get_value_unchecked(self.range.end) };
+                        Some(value)
+                    }
+                }
+
+                impl<'__subslice_impl, '__iter_ref, #params> ExactSizeIterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                    #[inline]
+                    fn len(&self) -> usize {
+                        self.range.len()
                     }
                 }
 
@@ -369,10 +429,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 
                     #[inline]
                     fn iter_value(&self) -> Self::Iter<'_> {
-                        Iter {
-                            subslice: self,
-                            index: 0,
-                        }
+                        Iter::new(self)
                     }
                 }
 
@@ -391,10 +448,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                                 "index out of bounds: the len is {len} but the starting index is {from}"
                             );
                         }
-                        Iter {
-                            subslice: self,
-                            index: from,
-                        }
+                        Iter::new_from(self, from)
                     }
                 }
             }
@@ -404,7 +458,6 @@ pub fn iterators(input: TokenStream) -> TokenStream {
     }
     .into()
 }
-
 
 /// A procedural macro fully implementing mutable subslices on top of a
 /// [`SliceByValueSet`]/[`SliceByValueRepl`] for which the derive macro
@@ -710,7 +763,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                         }
                     }
                 }
-                
+
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> SliceByValueSubsliceGatMut<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
                     type Subslice = SubsliceImplMut<'__subslice_impl, #names>;
@@ -821,7 +874,6 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
     }
     .into()
 }
-
 
 /// A procedural macro fully implementing [`IterableByValue`] and
 /// [`IterableByValueFrom`] for subslices on top of a the `SubsliceImplMut`
@@ -934,5 +986,3 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
     }
     .into()
 }
-
-
