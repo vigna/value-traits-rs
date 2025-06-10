@@ -47,12 +47,16 @@ single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
 of slices.
 
-Implementing subslices is tricky, so [`impl_subslices`] is a macro that provides
-a complete implementation of subslicing for a type that implements
-[`SliceByValueGet`]; [`impl_subslices_mut`] similarly provides a complete
+Implementing subslices is tricky, so [`Subslices`] is a procedural macro that
+provides a complete implementation of subslicing for a type that implements
+[`SliceByValueGet`]; [`SubslicesMut`] similarly provides a complete
 implementation of subslicing for a type that implements [`SliceByValueSet`] and
 [`SliceByValueReplace`]. Note that a custom implementation might be more
-efficient if your type can directly represent an inner range.
+efficient if your type can directly represent an inner range. Analogous
+procedural macros [`Iterators`] and  [`IteratorsMut`] implement the by-value
+iteration traits for the structures created by [`Subslices`] and
+[`SubslicesMut`]. All these procedural macros are independent to make
+specialized, more efficient implementation possible at every step.
 
 One important difference with slices is that iterating subslicing will lead
 to different types. We could not find any way to express in the current Rust
@@ -86,5 +90,7 @@ returning references, so a different trait is necessary.
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
 [`Index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html>
 [`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
-[`impl_subslices`]: <https://docs.rs/value_traits/latest/slices/macro.impl_subslices.html>
-[`impl_subslices_mut`]: <https://docs.rs/value_traits/latest/slices/macro.impl_subslices_mut.html>
+[`Subslices`]: <https://docs.rs/value_traits_derive/latest/derive.Subslices.html>
+[`SubslicesMut`]: <https://docs.rs/value_traits_derive/latest/derive.SubslicesMut.html>
+[`Iterators`]: <https://docs.rs/value_traits_derive/latest/derive.Iterators.html>
+[`IteratorsMut`]: <https://docs.rs/value_traits_derive/latest/derive.IteratorsMut.html>
