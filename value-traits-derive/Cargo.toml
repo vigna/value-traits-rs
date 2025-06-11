@@ -5,7 +5,7 @@ edition = "2021"
 description = "Procedural macros for the value-traits crate"
 repository = "https://github.com/vigna/value-traits-rs/"
 license = "Apache-2.0 OR LGPL-2.1-or-later"
-readme = "../README.md"
+readme = "README.md"
 authors = [
 	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
 	"Sebastiano Vigna <sebastiano.vigna@unimi.it>",
