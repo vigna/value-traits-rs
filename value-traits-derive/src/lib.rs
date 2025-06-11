@@ -56,8 +56,8 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
-                    type Value = <#input_ident #ty_generics as SliceByValue>::Value;
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                    type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
                     fn len(&self) -> usize {
@@ -66,25 +66,25 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueGet for SubsliceImpl<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueGet for SubsliceImpl<'__subslice_impl, #names> #where_clause  {
                     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                         self.slice.get_value_unchecked(index + self.start)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__subslice_gat, #params> SliceByValueSubsliceGat<'__subslice_gat> for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_gat> for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     type Subslice = SubsliceImpl<'__subslice_gat, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::Range<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::Range<usize>>
                     for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::Range<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::Range<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start + range.start,
@@ -94,13 +94,13 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
                     for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeFrom<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeFrom<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start + range.start,
@@ -110,13 +110,13 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<::core::ops::RangeToInclusive<usize>>
                     for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeToInclusive<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeToInclusive<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start,
@@ -126,13 +126,13 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeFull>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeFull>
                     for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        _range: core::ops::RangeFull,
-                    ) -> Subslice<'_, Self> {
+                        _range: ::core::ops::RangeFull,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start,
@@ -142,13 +142,13 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
                     for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeInclusive<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeInclusive<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         use ::core::{
                             ops::{Bound, RangeBounds},
                             hint::unreachable_unchecked
@@ -172,13 +172,13 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeTo<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<::core::ops::RangeTo<usize>>
                     for SubsliceImpl<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeTo<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeTo<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start,
@@ -188,16 +188,16 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceGat<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
                     type Subslice = SubsliceImpl<'__subslice_impl, #names>;
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRange<core::ops::Range<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRange<core::ops::Range<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::Range<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::Range<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: &self,
                             start: range.start,
@@ -207,11 +207,11 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRange<core::ops::RangeFrom<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeFrom<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeFrom<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeFrom<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: &self,
                             start: range.start,
@@ -221,11 +221,11 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRange<::core::ops::RangeToInclusive<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeToInclusive<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeToInclusive<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: &self,
                             start: 0,
@@ -235,11 +235,11 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRange<core::ops::RangeFull> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeFull> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        _range: core::ops::RangeFull,
-                    ) -> Subslice<'_, Self> {
+                        _range: ::core::ops::RangeFull,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: &self,
                             start: 0,
@@ -249,11 +249,11 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeInclusive<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeInclusive<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         use ::core::{
                             ops::{Bound, RangeBounds},
                             hint::unreachable_unchecked
@@ -277,11 +277,11 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRange<core::ops::RangeTo<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRange<::core::ops::RangeTo<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeTo<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeTo<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: &self,
                             start: 0,
@@ -339,7 +339,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 #[automatically_derived]
                 pub struct Iter<'__subslice_impl, '__iter_ref, #params> {
                     subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>,
-                    range: core::ops::Range<usize>,
+                    range: ::core::ops::Range<usize>,
                 }
 
                 #[automatically_derived]
@@ -352,9 +352,8 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     }
                     pub fn new_from(subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>, from: usize) -> Self {
                         let len = subslice.len();
-                        if from > len {
-                            panic!("index out of bounds: the len is {len} but the starting index is {from}");
-                        }
+                        assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
+
                         Self {
                             subslice,
                             range: from..len,
@@ -368,16 +367,16 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 /// as we can do it more efficiently, but the [`Iterator`] trait definition
                 /// doesn't allow to return an arbitrary type.
                 impl<'__subslice_impl, '__iter_ref, #params> Iterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
-                    type Item = <#input_ident #ty_generics as SliceByValue>::Value;
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
                     fn next(&mut self) -> Option<Self::Item> {
                         if self.range.is_empty() {
-                            return None;
+                            return ::core::option::Option::None;
                         }
                         let value = unsafe { self.subslice.get_value_unchecked(self.range.start) };
                         self.range.start += 1;
-                        Some(value)
+                        ::core::option::Option::Some(value)
                     }
 
                     /// Since we are indexing into a subslice, we can implement
@@ -386,11 +385,11 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     fn nth(&mut self, n: usize) -> Option<Self::Item> {
                         if n >= self.range.end {
                             self.range.start = self.range.end; // consume the iterator
-                            return None;
+                            return ::core::option::Option::None;
                         }
                         let value = unsafe { self.subslice.get_value_unchecked(self.range.start + n) };
                         self.range.start += n + 1;
-                        Some(value)
+                        ::core::option::Option::Some(value)
                     }
 
                     #[inline]
@@ -404,11 +403,11 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     #[inline]
                     fn next_back(&mut self) -> Option<Self::Item> {
                         if self.range.is_empty() {
-                            return None;
+                            return ::core::option::Option::None;
                         }
                         self.range.end -= 1;
                         let value = unsafe { self.subslice.get_value_unchecked(self.range.end) };
-                        Some(value)
+                        ::core::option::Option::Some(value)
                     }
                 }
 
@@ -421,7 +420,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
-                    type Item = <#input_ident #ty_generics as SliceByValue>::Value;
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter<'__iter_ref>
                         = Iter<'__subslice_impl, '__iter_ref, #names>
                     where
@@ -443,11 +442,8 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     #[inline]
                     fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
                         let len = self.len();
-                        if from > len {
-                            panic!(
-                                "index out of bounds: the len is {len} but the starting index is {from}"
-                            );
-                        }
+                        assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
+
                         Iter::new_from(self, from)
                     }
                 }
@@ -508,8 +504,8 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
-                    type Value = <#input_ident #ty_generics as SliceByValue>::Value;
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                    type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
                     fn len(&self) -> usize {
@@ -518,25 +514,25 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueGet for SubsliceImplMut<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueGet for SubsliceImplMut<'__subslice_impl, #names> #where_clause  {
                     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                         self.slice.get_value_unchecked(index + self.start)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__subslice_gat, #params> SliceByValueSubsliceGat<'__subslice_gat> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_gat> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
                     type Subslice = SubsliceImpl<'__subslice_gat, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::Range<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::Range<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::Range<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::Range<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start + range.start,
@@ -546,13 +542,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeFrom<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeFrom<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeFrom<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start + range.start,
@@ -562,13 +558,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeToInclusive<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<::core::ops::RangeToInclusive<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeToInclusive<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeToInclusive<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start,
@@ -578,13 +574,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeFull>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeFull>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        _range: core::ops::RangeFull,
-                    ) -> Subslice<'_, Self> {
+                        _range: ::core::ops::RangeFull,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start,
@@ -594,13 +590,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<core::ops::RangeInclusive<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeInclusive<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeInclusive<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         use core::ops::{Bound, RangeBounds};
                         use std::hint::unreachable_unchecked;
                         let start = match range.start_bound() {
@@ -622,13 +618,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRange<core::ops::RangeTo<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<::core::ops::RangeTo<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked(
                         &self,
-                        range: core::ops::RangeTo<usize>,
-                    ) -> Subslice<'_, Self> {
+                        range: ::core::ops::RangeTo<usize>,
+                    ) -> ::value_traits::slices::Subslice<'_, Self> {
                         SubsliceImpl {
                             slice: self.slice,
                             start: self.start,
@@ -638,32 +634,32 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSet for SubsliceImplMut<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSet for SubsliceImplMut<'__subslice_impl, #names> #where_clause  {
                     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
                         self.slice.set_value_unchecked(index + self.start, value)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueRepl for SubsliceImplMut<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueRepl for SubsliceImplMut<'__subslice_impl, #names> #where_clause  {
                     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
                         self.slice.replace_value_unchecked(index + self.start, value)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__subslice_gat, #params> SliceByValueSubsliceGatMut<'__subslice_gat> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_gat> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
                     type Subslice = SubsliceImplMut<'__subslice_gat, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRangeMut<core::ops::Range<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::Range<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::Range<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::Range<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self.slice,
                             start: self.start + range.start,
@@ -673,13 +669,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRangeMut<core::ops::RangeFrom<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::RangeFrom<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeFrom<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeFrom<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self.slice,
                             start: self.start + range.start,
@@ -689,13 +685,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRangeMut<core::ops::RangeToInclusive<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<::core::ops::RangeToInclusive<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeToInclusive<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeToInclusive<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self.slice,
                             start: self.start,
@@ -705,13 +701,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRangeMut<core::ops::RangeFull>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::RangeFull>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        _range: core::ops::RangeFull,
-                    ) -> SubsliceMut<'_, Self> {
+                        _range: ::core::ops::RangeFull,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self.slice,
                             start: self.start,
@@ -721,13 +717,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRangeMut<core::ops::RangeInclusive<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::RangeInclusive<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeInclusive<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeInclusive<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         use core::ops::{Bound, RangeBounds};
                         use std::hint::unreachable_unchecked;
                         let start = match range.start_bound() {
@@ -749,13 +745,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceRangeMut<core::ops::RangeTo<usize>>
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<::core::ops::RangeTo<usize>>
                     for SubsliceImplMut<'__subslice_impl, #names> #where_clause
                 {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeTo<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeTo<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self.slice,
                             start: self.start,
@@ -765,16 +761,16 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> SliceByValueSubsliceGatMut<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
                     type Subslice = SubsliceImplMut<'__subslice_impl, #names>;
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRangeMut<core::ops::Range<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::Range<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::Range<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::Range<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self,
                             start: range.start,
@@ -784,11 +780,11 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRangeMut<core::ops::RangeFrom<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::RangeFrom<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeFrom<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeFrom<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         let end = self.len();
                         SubsliceImplMut {
                             slice: self,
@@ -799,11 +795,11 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRangeMut<core::ops::RangeToInclusive<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRangeMut<::core::ops::RangeToInclusive<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeToInclusive<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeToInclusive<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self,
                             start: 0,
@@ -813,11 +809,11 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRangeMut<core::ops::RangeFull> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::RangeFull> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        _range: core::ops::RangeFull,
-                    ) -> SubsliceMut<'_, Self> {
+                        _range: ::core::ops::RangeFull,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         let end = self.len();
                         SubsliceImplMut {
                             slice: self,
@@ -828,11 +824,11 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRangeMut<core::ops::RangeInclusive<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRangeMut<core::ops::RangeInclusive<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeInclusive<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeInclusive<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         use core::ops::{Bound, RangeBounds};
                         use std::hint::unreachable_unchecked;
 
@@ -855,11 +851,11 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics SliceByValueSubsliceRangeMut<core::ops::RangeTo<usize>> for #input_ident #ty_generics #where_clause {
+                impl #impl_generics ::value_traits::slices::SliceByValueSubsliceRangeMut<::core::ops::RangeTo<usize>> for #input_ident #ty_generics #where_clause {
                     unsafe fn get_subslice_unchecked_mut(
                         &mut self,
-                        range: core::ops::RangeTo<usize>,
-                    ) -> SubsliceMut<'_, Self> {
+                        range: ::core::ops::RangeTo<usize>,
+                    ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                         SubsliceImplMut {
                             slice: self,
                             start: 0,
@@ -927,23 +923,23 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
 
                 #[automatically_derived]
                 impl<'__subslice_impl, '__iter_ref, #params> Iterator for IterMut<'__subslice_impl, '__iter_ref, #names> #where_clause {
-                    type Item = <#input_ident #ty_generics as SliceByValue>::Value;
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
                     fn next(&mut self) -> Option<Self::Item> {
                         if self.index < self.subslice.len() {
                             let value = unsafe { self.subslice.get_value_unchecked(self.index) };
                             self.index += 1;
-                            Some(value)
+                            ::core::option::Option::Some(value)
                         } else {
-                            None
+                            ::core::option::Option::None
                         }
                     }
                 }
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> IterableByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
-                    type Item = <#input_ident #ty_generics as SliceByValue>::Value;
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter<'__iter_ref>
                         = IterMut<'__subslice_impl, '__iter_ref, #names>
                     where
@@ -968,11 +964,8 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
                     #[inline]
                     fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
                         let len = self.len();
-                        if from > len {
-                            panic!(
-                                "index out of bounds: the len is {len} but the starting index is {from}"
-                            );
-                        }
+                        assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
+                        
                         IterMut {
                             subslice: self,
                             index: from,

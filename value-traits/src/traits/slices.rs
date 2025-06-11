@@ -144,16 +144,18 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
 
 #[inline(always)]
 fn assert_index(index: usize, len: usize) {
-    if index >= len {
-        panic!("index out of bounds: the len is {len} but the index is {index}");
-    }
+    assert!(
+        index < len,
+        "index out of bounds: the len is {len} but the index is {index}",
+    );
 }
 
 #[inline(always)]
 fn assert_range(range: &impl RangeCheck, len: usize) {
-    if !range.is_valid(len) {
-        panic!("range {range:?} out of range for slice of length {len}: ");
-    }
+    assert!(
+        range.is_valid(len),
+        "range {range:?} out of range for slice of length {len}: ",
+    );
 }
 
 /// Read-only slice-by-value trait.
