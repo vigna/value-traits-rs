@@ -362,11 +362,11 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                /// Ideally we would like to also implement [`Iterator::advance_by`], but it is
-                /// nightly, and [`Iterator::skip`], [`Iterator::take`], [`Iterator::step_by`],
-                /// as we can do it more efficiently, but the [`Iterator`] trait definition
+                /// Ideally we would like to also implement [`::core::iter::Iterator::advance_by`], but it is
+                /// nightly, and [`::core::iter::Iterator::skip`], [`::core::iter::Iterator::take`], [`::core::iter::Iterator::step_by`],
+                /// as we can do it more efficiently, but the [`::core::iter::Iterator`] trait definition
                 /// doesn't allow to return an arbitrary type.
-                impl<'__subslice_impl, '__iter_ref, #params> Iterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::Iterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
@@ -380,11 +380,11 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     }
 
                     /// Since we are indexing into a subslice, we can implement
-                    /// [`Iterator::nth`] without needing to consume the first `n` elements.
+                    /// [`::core::iter::Iterator::nth`] without needing to consume the first `n` elements.
                     #[inline]
                     fn nth(&mut self, n: usize) -> Option<Self::Item> {
                         if n >= self.range.end {
-                            self.range.start = self.range.end; // consume the iterator
+                            self.range.start = self.range.end; // consume the ::core::iter::iterator
                             return ::core::option::Option::None;
                         }
                         let value = unsafe { self.subslice.get_value_unchecked(self.range.start + n) };
@@ -399,7 +399,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     }
                 }
 
-                impl<'__subslice_impl, '__iter_ref, #params> DoubleEndedIterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::DoubleEndedIterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
                     #[inline]
                     fn next_back(&mut self) -> Option<Self::Item> {
                         if self.range.is_empty() {
@@ -411,7 +411,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     }
                 }
 
-                impl<'__subslice_impl, '__iter_ref, #params> ExactSizeIterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::ExactSizeIterator for Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
                     #[inline]
                     fn len(&self) -> usize {
                         self.range.len()
@@ -419,7 +419,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter<'__iter_ref>
                         = Iter<'__subslice_impl, '__iter_ref, #names>
@@ -433,7 +433,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> IterableByValueFrom for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     type IterFrom<'__iter_ref>
                         = Iter<'__subslice_impl, '__iter_ref, #names>
                     where
@@ -879,7 +879,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 /// to a slice, and of a current position, and that is used to implement
 /// [`IterableByValue`](crate::iter::IterableByValue) on `SubsliceImpl`.
 ///
-/// Note that since `IterMut` provides iterators by value, it cannot use to
+/// Note that since `IterMut` provides ::core::iter::iterators by value, it cannot use to
 /// mutate the subslice. Moreover, non-mutable subslicing on a
 /// `SubsliceImplMut` will yield a `SubsliceImpl`.
 #[proc_macro_derive(IteratorsMut)]
@@ -922,7 +922,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref, #params> Iterator for IterMut<'__subslice_impl, '__iter_ref, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::Iterator for IterMut<'__subslice_impl, '__iter_ref, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
@@ -938,7 +938,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> IterableByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter<'__iter_ref>
                         = IterMut<'__subslice_impl, '__iter_ref, #names>
@@ -955,7 +955,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> IterableByValueFrom for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
                     type IterFrom<'__iter_ref>
                         = IterMut<'__subslice_impl, '__iter_ref, #names>
                     where
