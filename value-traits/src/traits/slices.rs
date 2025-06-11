@@ -103,11 +103,8 @@
 //! }
 //! ```
 
-use core::{
-    hint::unreachable_unchecked,
-    ops::{
-        Bound, Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
-    },
+use core::ops::{
+    Range, RangeBounds, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
 };
 
 use crate::{ImplBound, Ref};
@@ -151,7 +148,7 @@ fn assert_index(index: usize, len: usize) {
 }
 
 #[inline(always)]
-fn assert_range(range: &impl RangeCheck, len: usize) {
+fn assert_range(range: &impl ComposeRange, len: usize) {
     assert!(
         range.is_valid(len),
         "range {range:?} out of range for slice of length {len}: ",
@@ -297,57 +294,70 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
 /// This traits makes it possible to monomorphize the six different
 /// range checks that are necessary to handle the six type of
 /// ranges available in [`core::ops`].
-pub trait RangeCheck: RangeBounds<usize> + core::fmt::Debug {
+pub trait ComposeRange: RangeBounds<usize> + core::fmt::Debug {
     /// Returns `true` if the range is within the bounds of a slice of given
     /// length
     fn is_valid(&self, len: usize) -> bool;
+    fn compose(&self, base: Range<usize>) -> Range<usize>;
 }
 
-impl RangeCheck for Range<usize> {
+impl ComposeRange for Range<usize> {
     fn is_valid(&self, len: usize) -> bool {
         self.start <= len && self.end <= len && self.start <= self.end
     }
+
+    fn compose(&self, base: Range<usize>) -> Range<usize> {
+        base.start + self.start..base.start + self.end
+    }
 }
 
-impl RangeCheck for RangeFrom<usize> {
+impl ComposeRange for RangeFrom<usize> {
     fn is_valid(&self, len: usize) -> bool {
         self.start <= len
     }
+
+    fn compose(&self, base: Range<usize>) -> Range<usize> {
+        base.start + self.start..base.end
+    }
 }
 
-impl RangeCheck for RangeFull {
+impl ComposeRange for RangeFull {
     fn is_valid(&self, _len: usize) -> bool {
         true
     }
-}
 
-impl RangeCheck for RangeInclusive<usize> {
-    fn is_valid(&self, len: usize) -> bool {
-        // This can be significantly improved once
-        // https://rust-lang.github.io/rfcs/3550-new-range.html is implemented
-        let start = match self.start_bound() {
-            Bound::Included(s) => *s,
-            // SAFETY: we cannot take this branch
-            _ => unsafe { unreachable_unchecked() },
-        };
-        let end = match self.end_bound() {
-            Bound::Included(s) => *s,
-            // SAFETY: we cannot take this branch
-            _ => unsafe { unreachable_unchecked() },
-        };
-        start < len && end < len && start <= end
+    fn compose(&self, base: Range<usize>) -> Range<usize> {
+        base
     }
 }
 
-impl RangeCheck for RangeTo<usize> {
+impl ComposeRange for RangeInclusive<usize> {
+    fn is_valid(&self, len: usize) -> bool {
+        *self.start() < len && *self.end() < len && self.start() <= self.end()
+    }
+
+    fn compose(&self, base: Range<usize>) -> Range<usize> {
+        base.start + self.start()..base.start + self.end() + 1
+    }
+}
+
+impl ComposeRange for RangeTo<usize> {
     fn is_valid(&self, len: usize) -> bool {
         self.end <= len
     }
+
+    fn compose(&self, base: Range<usize>) -> Range<usize> {
+        base.start..base.start + self.end
+    }
 }
 
-impl RangeCheck for RangeToInclusive<usize> {
+impl ComposeRange for RangeToInclusive<usize> {
     fn is_valid(&self, len: usize) -> bool {
         self.end < len
+    }
+
+    fn compose(&self, base: Range<usize>) -> Range<usize> {
+        base.start..base.start + self.end + 1
     }
 }
 
@@ -401,7 +411,7 @@ pub type Subslice<'a, T: SliceByValueSubsliceGat<'a>> =
 ///
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked`](`SliceByValueSubsliceRange::get_subslice_unchecked`).
-pub trait SliceByValueSubsliceRange<R: RangeCheck>: for<'a> SliceByValueSubsliceGat<'a> {
+pub trait SliceByValueSubsliceRange<R: ComposeRange>: for<'a> SliceByValueSubsliceGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
         assert_range(&range, self.len());
@@ -425,7 +435,6 @@ pub trait SliceByValueSubsliceRange<R: RangeCheck>: for<'a> SliceByValueSubslice
     /// See [`slice::get`].
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         if range.is_valid(self.len()) {
-            // SAFETY: range is checked to be within bounds.
             unsafe { Some(self.get_subslice_unchecked(range)) }
         } else {
             None
@@ -433,7 +442,9 @@ pub trait SliceByValueSubsliceRange<R: RangeCheck>: for<'a> SliceByValueSubslice
     }
 }
 
-impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R> for &S {
+impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R>
+    for &S
+{
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         (**self).get_subslice(range)
     }
@@ -444,7 +455,7 @@ impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsli
         unsafe { (**self).get_subslice_unchecked(range) }
     }
 }
-impl<R: RangeCheck, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R>
+impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubsliceRange<R>
     for &mut S
 {
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
@@ -492,7 +503,7 @@ pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
 ///
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked_mut`](`SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut`).
-pub trait SliceByValueSubsliceRangeMut<R: RangeCheck>:
+pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     for<'a> SliceByValueSubsliceGatMut<'a>
 {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -526,7 +537,7 @@ pub trait SliceByValueSubsliceRangeMut<R: RangeCheck>:
     }
 }
 
-impl<R: RangeCheck, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueSubsliceRangeMut<R>
+impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueSubsliceRangeMut<R>
     for &mut S
 {
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
