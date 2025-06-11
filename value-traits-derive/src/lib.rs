@@ -965,7 +965,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
                     fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
                         let len = self.len();
                         assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
-                        
+
                         IterMut {
                             subslice: self,
                             index: from,

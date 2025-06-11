@@ -249,10 +249,10 @@ pub trait SliceByValueSet: SliceByValue {
 
 impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     fn set_value(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value(index, value)
+        (**self).set_value(index, value);
     }
     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-        (**self).set_value_unchecked(index, value)
+        (**self).set_value_unchecked(index, value);
     }
 }
 
@@ -622,10 +622,12 @@ mod alloc_impls {
 
     impl<S: SliceByValueSet + ?Sized> SliceByValueSet for Box<S> {
         fn set_value(&mut self, index: usize, value: Self::Value) {
-            (**self).set_value(index, value)
+            (**self).set_value(index, value);
         }
         unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-            unsafe { (**self).set_value_unchecked(index, value) }
+            unsafe {
+                (**self).set_value_unchecked(index, value);
+            }
         }
     }
 
