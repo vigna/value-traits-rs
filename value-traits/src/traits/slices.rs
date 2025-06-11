@@ -298,6 +298,20 @@ pub trait ComposeRange: RangeBounds<usize> + core::fmt::Debug {
     /// Returns `true` if the range is within the bounds of a slice of given
     /// length
     fn is_valid(&self, len: usize) -> bool;
+
+    /// Return a new range that is the composition of `base` with this range.
+    /// The resulting range will always be a smaller or equal than `base`.
+    ///
+    /// ```rust
+    /// use value_traits::slices::ComposeRange;
+    ///
+    /// assert_eq!((2..5).compose(10..20),  12..15);
+    /// assert_eq!((2..=5).compose(10..20), 12..16);
+    /// assert_eq!((..5).compose(10..20),   10..15);
+    /// assert_eq!((..=5).compose(10..20),  10..16);
+    /// assert_eq!((2..).compose(10..20),   12..20);
+    /// assert_eq!((..).compose(10..20),    10..20);
+    /// ```
     fn compose(&self, base: Range<usize>) -> Range<usize>;
 }
 
@@ -307,7 +321,7 @@ impl ComposeRange for Range<usize> {
     }
 
     fn compose(&self, base: Range<usize>) -> Range<usize> {
-        base.start + self.start..base.start + self.end
+        (base.start + self.start)..(base.start + self.end)
     }
 }
 
@@ -317,7 +331,7 @@ impl ComposeRange for RangeFrom<usize> {
     }
 
     fn compose(&self, base: Range<usize>) -> Range<usize> {
-        base.start + self.start..base.end
+        (base.start + self.start)..base.end
     }
 }
 
@@ -337,7 +351,7 @@ impl ComposeRange for RangeInclusive<usize> {
     }
 
     fn compose(&self, base: Range<usize>) -> Range<usize> {
-        base.start + self.start()..base.start + self.end() + 1
+        (base.start + self.start())..(base.start + self.end() + 1)
     }
 }
 
@@ -347,7 +361,7 @@ impl ComposeRange for RangeTo<usize> {
     }
 
     fn compose(&self, base: Range<usize>) -> Range<usize> {
-        base.start..base.start + self.end
+        base.start..(base.start + self.end)
     }
 }
 
@@ -357,7 +371,7 @@ impl ComposeRange for RangeToInclusive<usize> {
     }
 
     fn compose(&self, base: Range<usize>) -> Range<usize> {
-        base.start..base.start + self.end + 1
+        base.start..(base.start + self.end + 1)
     }
 }
 
