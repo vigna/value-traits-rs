@@ -1,6 +1,6 @@
 [package]
 name = "value-traits"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Value-based slices and iterators"
 repository = "https://github.com/vigna/value-traits-rs/"
