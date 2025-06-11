@@ -6,7 +6,12 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-use value_traits::slices::*;
+use core::borrow::Borrow;
+
+use value_traits::{
+    iter::{IterableByValue, IterableByValueFrom},
+    slices::*,
+};
 
 pub fn generic_get<S>(s: S, expected: &[i32])
 where
@@ -156,4 +161,27 @@ where
     assert!(s.get_subslice_mut(..=usize::MAX).is_none());
     assert!(s.get_subslice_mut(..usize::MAX).is_none());
     assert!(s.get_subslice_mut(usize::MAX..).is_none());
+}
+
+pub fn generic_iter<S>(s: &S, expected: &[i32])
+where
+    S: IterableByValue<Item = i32> + IterableByValueFrom,
+{
+    let s = s.borrow();
+
+    let mut i = IterableByValue::iter_value(s);
+    let mut truth = expected.iter();
+
+    for _ in 0..expected.len() + 2 {
+        assert_eq!(truth.next().copied(), i.next());
+    }
+
+    for start in 0..expected.len() {
+        let mut iter = IterableByValueFrom::iter_value_from(s, start);
+        let mut truth = (&expected[start..]).into_iter();
+
+        for _ in 0..truth.len() + 2 {
+            assert_eq!(truth.next().copied(), iter.next());
+        }
+    }
 }

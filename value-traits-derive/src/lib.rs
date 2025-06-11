@@ -8,10 +8,7 @@
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{
-    parse2, parse_macro_input, AngleBracketedGenericArguments, Data, DeriveInput, Ident,
-    TypeGenerics,
-};
+use syn::{parse2, parse_macro_input, AngleBracketedGenericArguments, Data, DeriveInput};
 
 /// A procedural macro fully implementing subslices on top of a
 /// [`SliceByValueGet`].
@@ -325,44 +322,146 @@ pub fn iterators(input: TokenStream) -> TokenStream {
     };
     match input.data {
         Data::Struct(_) => {
-            let mut res = quote! {
+            quote! {
                 #[automatically_derived]
-                pub struct Iter<'__subslice_impl, '__iter_ref, #params> {
-                    subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>,
+                pub struct Iter<'__iter_ref, #params> {
+                    subslice: &'__iter_ref #input_ident #ty_generics,
                     range: ::core::ops::Range<usize>,
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref, #params> Iter<'__subslice_impl, '__iter_ref, #names> #where_clause {
-                    pub fn new(subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>) -> Self {
+                impl<'__iter_ref, #params> Iter<'__iter_ref, #names> #where_clause {
+                    pub fn new(subslice: &'__iter_ref #input_ident #ty_generics) -> Self {
+                        let len = subslice.len();
                         Self {
                             subslice,
-                            range: 0..subslice.len(),
+                            range: 0..len,
                         }
                     }
-                    pub fn new_from(subslice: &'__iter_ref SubsliceImpl<'__subslice_impl, #names>, from: usize) -> Self {
-                        let len = subslice.len();
-                        assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
-
+                    pub fn new_with_range(subslice: &'__iter_ref #input_ident #ty_generics, range: ::core::ops::Range<usize>) -> Self {
                         Self {
                             subslice,
-                            range: from..len,
+                            range,
                         }
                     }
                 }
-            };
 
-            res.extend(iterators_methods(
-                &input_ident,
-                &ty_generics,
-                params,
-                names,
-                &Ident::new("Iter", input_ident.span()),
-                &Ident::new("SubsliceImpl", input_ident.span()),
-                where_clause,
-            ));
+                #[automatically_derived]
+                impl<#params> ::value_traits::iter::IterableByValue for #input_ident #ty_generics #where_clause {
+                    type Item = <Self as ::value_traits::slices::SliceByValue>::Value;
+                    type Iter<'__iter_ref>
+                        = Iter<'__iter_ref, #names>
+                    where
+                        Self: '__iter_ref;
 
-            res
+                    #[inline]
+                    fn iter_value(&self) -> Self::Iter<'_> {
+                        Iter::new(self)
+                    }
+                }
+
+                #[automatically_derived]
+                impl<#params> ::value_traits::iter::IterableByValueFrom for #input_ident #ty_generics #where_clause {
+                    type IterFrom<'__iter_ref>
+                        = Iter<'__iter_ref, #names>
+                    where
+                        Self: '__iter_ref;
+
+                    #[inline]
+                    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+                        let len = self.len();
+                        assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
+                        Iter::new_with_range(self, from..len)
+                    }
+                }
+
+                #[automatically_derived]
+                /// Ideally we would like to also implement [`::core::iter::Iterator::advance_by`], but it is
+                /// nightly, and [`::core::iter::Iterator::skip`], [`::core::iter::Iterator::take`], [`::core::iter::Iterator::step_by`],
+                /// as we can do it more efficiently, but the [`::core::iter::Iterator`] trait definition
+                /// doesn't allow to return an arbitrary type.
+                impl<'__iter_ref, #params> ::core::iter::Iterator for Iter<'__iter_ref, #names> #where_clause {
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
+
+                    #[inline]
+                    fn next(&mut self) -> Option<Self::Item> {
+                        if self.range.is_empty() {
+                            return ::core::option::Option::None;
+                        }
+                        let value = unsafe { self.subslice.get_value_unchecked(self.range.start) };
+                        self.range.start += 1;
+                        ::core::option::Option::Some(value)
+                    }
+
+                    /// Since we are indexing into a subslice, we can implement
+                    /// [`::core::iter::Iterator::nth`] without needing to consume the first `n` elements.
+                    #[inline]
+                    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+                        if n >= self.range.end {
+                            self.range.start = self.range.end; // consume the ::core::iter::iterator
+                            return ::core::option::Option::None;
+                        }
+                        let value = unsafe { self.subslice.get_value_unchecked(self.range.start + n) };
+                        self.range.start += n + 1;
+                        ::core::option::Option::Some(value)
+                    }
+
+                    #[inline]
+                    fn size_hint(&self) -> (usize, Option<usize>) {
+                        let len = self.range.len();
+                        (len, Some(len))
+                    }
+                }
+
+                impl<'__iter_ref, #params> ::core::iter::DoubleEndedIterator for Iter<'__iter_ref, #names> #where_clause {
+                    #[inline]
+                    fn next_back(&mut self) -> Option<Self::Item> {
+                        if self.range.is_empty() {
+                            return ::core::option::Option::None;
+                        }
+                        self.range.end -= 1;
+                        let value = unsafe { self.subslice.get_value_unchecked(self.range.end) };
+                        ::core::option::Option::Some(value)
+                    }
+                }
+
+                impl<'__iter_ref, #params> ::core::iter::ExactSizeIterator for Iter<'__iter_ref, #names> #where_clause {
+                    #[inline]
+                    fn len(&self) -> usize {
+                        self.range.len()
+                    }
+                }
+
+                #[automatically_derived]
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
+                    type Iter<'__iter_ref>
+                        = Iter<'__iter_ref, #names>
+                    where
+                        Self: '__iter_ref;
+
+                    #[inline]
+                    fn iter_value(&self) -> Self::Iter<'_> {
+                        Iter::new(self.slice)
+                    }
+                }
+
+                #[automatically_derived]
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                    type IterFrom<'__iter_ref>
+                        = Iter<'__iter_ref, #names>
+                    where
+                        Self: '__iter_ref;
+
+                    #[inline]
+                    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+                        let len = self.len();
+                        assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
+                        let range = ::value_traits::slices::ComposeRange::compose(&(from..), self.range.clone());
+                        Iter::new_with_range(self.slice, range)
+                    }
+                }
+            }
         },
 
         _ => unimplemented!(),
@@ -370,17 +469,12 @@ pub fn iterators(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// A procedural macro fully implementing [`IterableByValue`] and
-/// [`IterableByValueFrom`] for subslices on top of a the `SubsliceImplMut`
-/// structure generated by the derive macro [`SubsliceMut`].
+/// A procedural macro that implements [`IterableByValue`] and
+/// [`IterableByValueFrom`] for mutable subslices on top of the
+/// `SubsliceImplMut` structure generated by the derive macro [`SubsliceMut`].
 ///
-/// The macro defines a structure `IterMut` that keeps track of a mutable reference
-/// to a slice, and of a current position, and that is used to implement
-/// [`IterableByValue`](crate::iter::IterableByValue) on `SubsliceImpl`.
-///
-/// Note that since `IterMut` provides ::core::iter::iterators by value, it cannot use to
-/// mutate the subslice. Moreover, non-mutable subslicing on a
-/// `SubsliceImplMut` will yield a `SubsliceImpl`.
+/// To call this macro, you first need to derive both [`SubsliceMut`] and [`Iterators`]
+/// on the same struct.
 #[proc_macro_derive(IteratorsMut)]
 pub fn iterators_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
@@ -412,149 +506,38 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
     };
     match input.data {
         Data::Struct(_) => {
-            let mut res = quote! {
-                // TODO: maybe referring directly to the slice?
+            quote!{
                 #[automatically_derived]
-                pub struct IterMut<'__subslice_impl, '__iter_ref, #params> {
-                    subslice: &'__iter_ref SubsliceImplMut<'__subslice_impl, #names>,
-                    range: ::core::ops::Range<usize>,
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
+                    type Iter<'__iter_ref>
+                        = Iter<'__iter_ref, #names>
+                    where
+                        Self: '__iter_ref;
+
+                    #[inline]
+                    fn iter_value(&self) -> Self::Iter<'_> {
+                        Iter::new(self.slice)
+                    }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref, #params> IterMut<'__subslice_impl, '__iter_ref, #names> #where_clause {
-                    pub fn new(subslice: &'__iter_ref SubsliceImplMut<'__subslice_impl, #names>) -> Self {
-                        Self {
-                            subslice,
-                            range: 0..subslice.len(),
-                        }
-                    }
-                    pub fn new_from(subslice: &'__iter_ref SubsliceImplMut<'__subslice_impl, #names>, from: usize) -> Self {
-                        let len = subslice.len();
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                    type IterFrom<'__iter_ref>
+                        = Iter<'__iter_ref, #names>
+                    where
+                        Self: '__iter_ref;
+
+                    #[inline]
+                    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+                        let len = self.len();
                         assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
-
-                        Self {
-                            subslice,
-                            range: from..len,
-                        }
+                        let range = ::value_traits::slices::ComposeRange::compose(&(from..), self.range.clone());
+                        Iter::new_with_range(self.slice, range)
                     }
                 }
-            };
-
-            res.extend(iterators_methods(
-                &input_ident,
-                &ty_generics,
-                params,
-                names,
-                &Ident::new("IterMut", input_ident.span()),
-                &Ident::new("SubsliceImplMut", input_ident.span()),
-                where_clause,
-            ));
-
-            res
-        },
-
+            }
+        }
         _ => unimplemented!(),
-    }
-    .into()
-}
-
-/// both the `Iter` and `IterMut` struct are very similar, but one uses a
-/// `SubsliceImpl` and the other a `SubsliceImplMut`. This groups the common
-/// methods implementations for the two methods.
-fn iterators_methods(
-    input_ident: &syn::Ident,
-    ty_generics: &TypeGenerics,
-    params: &syn::punctuated::Punctuated<syn::GenericParam, syn::token::Comma>,
-    names: proc_macro2::TokenStream,
-    iter_struct: &syn::Ident,
-    subslice_impl: &syn::Ident,
-    where_clause: Option<&syn::WhereClause>,
-) -> proc_macro2::TokenStream {
-    quote! {
-        #[automatically_derived]
-        /// Ideally we would like to also implement [`::core::iter::Iterator::advance_by`], but it is
-        /// nightly, and [`::core::iter::Iterator::skip`], [`::core::iter::Iterator::take`], [`::core::iter::Iterator::step_by`],
-        /// as we can do it more efficiently, but the [`::core::iter::Iterator`] trait definition
-        /// doesn't allow to return an arbitrary type.
-        impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::Iterator for #iter_struct<'__subslice_impl, '__iter_ref, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
-
-            #[inline]
-            fn next(&mut self) -> Option<Self::Item> {
-                if self.range.is_empty() {
-                    return ::core::option::Option::None;
-                }
-                let value = unsafe { self.subslice.get_value_unchecked(self.range.start) };
-                self.range.start += 1;
-                ::core::option::Option::Some(value)
-            }
-
-            /// Since we are indexing into a subslice, we can implement
-            /// [`::core::iter::Iterator::nth`] without needing to consume the first `n` elements.
-            #[inline]
-            fn nth(&mut self, n: usize) -> Option<Self::Item> {
-                if n >= self.range.end {
-                    self.range.start = self.range.end; // consume the ::core::iter::iterator
-                    return ::core::option::Option::None;
-                }
-                let value = unsafe { self.subslice.get_value_unchecked(self.range.start + n) };
-                self.range.start += n + 1;
-                ::core::option::Option::Some(value)
-            }
-
-            #[inline]
-            fn size_hint(&self) -> (usize, Option<usize>) {
-                let len = self.range.len();
-                (len, Some(len))
-            }
-        }
-
-        impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::DoubleEndedIterator for #iter_struct<'__subslice_impl, '__iter_ref, #names> #where_clause {
-            #[inline]
-            fn next_back(&mut self) -> Option<Self::Item> {
-                if self.range.is_empty() {
-                    return ::core::option::Option::None;
-                }
-                self.range.end -= 1;
-                let value = unsafe { self.subslice.get_value_unchecked(self.range.end) };
-                ::core::option::Option::Some(value)
-            }
-        }
-
-        impl<'__subslice_impl, '__iter_ref, #params> ::core::iter::ExactSizeIterator for #iter_struct<'__subslice_impl, '__iter_ref, #names> #where_clause {
-            #[inline]
-            fn len(&self) -> usize {
-                self.range.len()
-            }
-        }
-
-        #[automatically_derived]
-        impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for #subslice_impl<'__subslice_impl, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
-            type Iter<'__iter_ref>
-                = #iter_struct<'__subslice_impl, '__iter_ref, #names>
-            where
-                Self: '__iter_ref;
-
-            #[inline]
-            fn iter_value(&self) -> Self::Iter<'_> {
-                #iter_struct::new(self)
-            }
-        }
-
-        #[automatically_derived]
-        impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for #subslice_impl<'__subslice_impl, #names> #where_clause {
-            type IterFrom<'__iter_ref>
-                = #iter_struct<'__subslice_impl, '__iter_ref, #names>
-            where
-                Self: '__iter_ref;
-
-            #[inline]
-            fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
-                let len = self.len();
-                assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
-                #iter_struct::new_from(self, from)
-            }
-        }
-    }
+    }.into()
 }

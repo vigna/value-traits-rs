@@ -8,10 +8,7 @@
 
 use core::ops::Range;
 use std::vec;
-use value_traits::{
-    iter::{IterableByValue, IterableByValueFrom},
-    slices::*,
-};
+use value_traits::slices::*;
 
 mod common;
 pub use common::*;
@@ -72,16 +69,8 @@ where
 
 #[test]
 fn test_iter() {
-    let s = vec![1_i32, 2, 3];
-    let mut i = s.iter_value();
-    assert_eq!(i.next(), Some(1));
-    assert_eq!(i.next(), Some(2));
-    assert_eq!(i.next(), Some(3));
-    assert_eq!(i.next(), None);
-    let mut i = s.iter_value_from(1);
-    assert_eq!(i.next(), Some(2));
-    assert_eq!(i.next(), Some(3));
-    assert_eq!(i.next(), None);
+    let s = [1_i32, 2, 3];
+    generic_iter(&s.to_vec(), &s);
 }
 
 use value_traits_derive::{Iterators, IteratorsMut, Subslices, SubslicesMut};
@@ -117,18 +106,20 @@ impl<T: Clone> SliceByValueRepl for Sbv<T> {
 
 #[test]
 fn test_sbv_subslices() {
-    let mut s = Sbv(vec![1_i32, 2, 3, 4, 5]);
+    let expected = [1_i32, 2, 3, 4, 5];
+    let mut s = Sbv(expected.to_vec());
     // test the struct
-    generic_get(&s, &[1, 2, 3, 4, 5]);
-    generic_slice(&s, &[1, 2, 3, 4, 5]);
+    generic_get(&s, &expected);
+    generic_slice(&s, &expected);
     generic_mut(&mut s);
     generic_slice_mut(&mut s);
+    generic_iter(&s, &expected);
     // test its slice
-    generic_get(s.index_subslice(..), &[1, 2, 3, 4, 5]);
-    generic_slice(s.index_subslice(..), &[1, 2, 3, 4, 5]);
+    generic_get(s.index_subslice(..), &expected);
+    generic_slice(s.index_subslice(..), &expected);
     // test its mutable slice
-    generic_get(s.index_subslice_mut(..), &[1, 2, 3, 4, 5]);
-    generic_slice(s.index_subslice_mut(..), &[1, 2, 3, 4, 5]);
+    generic_get(s.index_subslice_mut(..), &expected);
+    generic_slice(s.index_subslice_mut(..), &expected);
     generic_mut(s.index_subslice_mut(..));
     generic_slice_mut(s.index_subslice_mut(..));
 
