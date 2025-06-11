@@ -47,6 +47,16 @@ single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
 of slices.
 
+The other missing trait contained in this crate is [`IterableByValue`], which
+has the same logic for iterators. Rust has presently no trait specifying
+that you can iterate by value on some structure without consuming it
+as [`IntoIterator`] does. What one usually does is to implement [`IntoIterator`]
+on a reference, providing an iterator on references on the element, which
+brings back the problem of constraining such implementations to explicit
+representations. While it is possible to implement [`IntoIterator`] in such
+a way to return values, slices, vectors, etc., already have implementations
+returning references, so a different trait is necessary.
+
 Implementing subslices is tricky, so [`Subslices`] is a procedural macro that
 provides a complete implementation of subslicing for a type that implements
 [`SliceByValueGet`]; [`SubslicesMut`] similarly provides a complete
@@ -64,16 +74,6 @@ type system the recursive bound that subslices of a subslice should be of
 the same type. This is not relevant if you pass the subslice to a function
 that accepts a by-value slice, but it is relevant if you want to assign
 subslices of different depth to the same variable.
-
-The other missing trait contained in this crate is [`IterableByValue`], which
-has the same logic for iterators. Rust has presently no trait specifying
-that you can iterate by value on some structure without consuming it
-as [`IntoIterator`] does. What one usually does is to implement [`IntoIterator`]
-on a reference, providing an iterator on references on the element, which
-brings back the problem of constraining such implementations to explicit
-representations. While it is possible to implement [`IntoIterator`] in such
-a way to return values, slices, vectors, etc., already have implementations
-returning references, so a different trait is necessary.
 
 [`SliceByValue`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValue.html>
 [`SliceByValueGet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html>
