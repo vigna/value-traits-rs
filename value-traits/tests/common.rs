@@ -169,11 +169,11 @@ where
 {
     let s = s.borrow();
 
-    let mut i = IterableByValue::iter_value(s);
+    let mut iter = IterableByValue::iter_value(s);
     let mut truth = expected.iter();
 
     for _ in 0..expected.len() + 2 {
-        assert_eq!(truth.next().copied(), i.next());
+        assert_eq!(truth.next().copied(), iter.next());
     }
 
     for start in 0..expected.len() {
@@ -182,6 +182,56 @@ where
 
         for _ in 0..truth.len() + 2 {
             assert_eq!(truth.next().copied(), iter.next());
+        }
+    }
+}
+
+pub fn generic_derived_iter<'a, S>(s: &'a S, expected: &[i32])
+where
+    S: IterableByValue<Item = i32> + IterableByValueFrom,
+    S::Iter<'a>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
+    S::IterFrom<'a>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
+{
+    let s = s.borrow();
+
+    let mut iter = IterableByValue::iter_value(s);
+    let mut truth = expected.iter();
+
+    for _ in 0..expected.len() + 2 {
+        assert_eq!(truth.len(), iter.len());
+        assert_eq!(truth.next().copied(), iter.next());
+    }
+
+    let mut iter = IterableByValue::iter_value(s);
+    let mut truth = expected.iter();
+
+    for i in 0..truth.len() + 2 {
+        assert_eq!(truth.len(), iter.len());
+        if i % 2 == 0 {
+            assert_eq!(truth.next().copied(), iter.next());
+        } else {
+            assert_eq!(truth.next_back().copied(), iter.next_back());
+        }
+    }
+
+    for start in 0..expected.len() {
+        let mut iter = IterableByValueFrom::iter_value_from(s, start);
+        let mut truth = (&expected[start..]).into_iter();
+
+        for _ in 0..truth.len() + 2 {
+            assert_eq!(truth.len(), iter.len());
+            assert_eq!(truth.next().copied(), iter.next());
+        }
+
+        let mut iter = IterableByValueFrom::iter_value_from(s, start);
+        let mut truth = (&expected[start..]).into_iter();
+        for i in 0..truth.len() + 2 {
+            assert_eq!(truth.len(), iter.len());
+            if i % 2 == 0 {
+                assert_eq!(truth.next().copied(), iter.next());
+            } else {
+                assert_eq!(truth.next_back().copied(), iter.next_back());
+            }
         }
     }
 }

@@ -68,6 +68,7 @@ where
 }
 
 #[test]
+#[cfg(any(feature = "std", feature = "alloc"))]
 fn test_iter() {
     let s = [1_i32, 2, 3];
     generic_iter(&s.to_vec(), &s);
@@ -113,17 +114,17 @@ fn test_sbv_subslices() {
     generic_slice(&s, &expected);
     generic_mut(&mut s);
     generic_slice_mut(&mut s);
-    generic_iter(&s, &expected);
+    generic_derived_iter(&s, &expected);
     // test its slice
     generic_get(s.index_subslice(..), &expected);
     generic_slice(s.index_subslice(..), &expected);
-    generic_iter(&s.index_subslice(..), &expected);
+    generic_derived_iter(&s.index_subslice(..), &expected);
     // test its mutable slice
     generic_get(s.index_subslice_mut(..), &expected);
     generic_slice(s.index_subslice_mut(..), &expected);
     generic_mut(s.index_subslice_mut(..));
     generic_slice_mut(s.index_subslice_mut(..));
-    generic_iter(&s.index_subslice_mut(..), &expected);
+    generic_derived_iter(&s.index_subslice_mut(..), &expected);
 
     let mut t = s.index_subslice_mut(1..3); // should compile
     assert_eq!(t.len(), 2);
