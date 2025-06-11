@@ -117,11 +117,13 @@ fn test_sbv_subslices() {
     // test its slice
     generic_get(s.index_subslice(..), &expected);
     generic_slice(s.index_subslice(..), &expected);
+    generic_iter(&s.index_subslice(..), &expected);
     // test its mutable slice
     generic_get(s.index_subslice_mut(..), &expected);
     generic_slice(s.index_subslice_mut(..), &expected);
     generic_mut(s.index_subslice_mut(..));
     generic_slice_mut(s.index_subslice_mut(..));
+    generic_iter(&s.index_subslice_mut(..), &expected);
 
     let mut t = s.index_subslice_mut(1..3); // should compile
     assert_eq!(t.len(), 2);
