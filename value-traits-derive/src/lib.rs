@@ -436,7 +436,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter = Iter<'__iter_ref, #names>;
-                } 
+                }
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
@@ -450,7 +450,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 impl<'__subslice_impl, '__iter_ref,#params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type IterFrom = Iter<'__iter_ref, #names>;
-                } 
+                }
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImpl<'__subslice_impl, #names> #where_clause {
@@ -525,7 +525,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
                 impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type IterFrom = Iter<'__iter_ref, #names>;
-                } 
+                }
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
