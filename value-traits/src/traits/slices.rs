@@ -403,19 +403,19 @@ pub trait SliceByValueSubsliceGat<'a, __Implicit: ImplBound = Ref<'a, Self>>:
     type Subslice: 'a + SliceByValueGet<Value = Self::Value> + SliceByValueSubslice;
 }
 
-impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for &T {
-    type Subslice = <T as SliceByValueSubsliceGat<'a>>::Subslice;
-}
-
-impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for &mut T {
-    type Subslice = <T as SliceByValueSubsliceGat<'a>>::Subslice;
-}
-
 /// A convenience type representing the type of subslice
 /// of a type implementing [`SliceByValueSubsliceGat`].
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
 pub type Subslice<'a, T: SliceByValueSubsliceGat<'a>> =
     <T as SliceByValueSubsliceGat<'a>>::Subslice;
+
+impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for &T {
+    type Subslice = T::Subslice;
+}
+
+impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for &mut T {
+    type Subslice = T::Subslice;
+}
 
 /// A trait implementing subslicing for a specific range parameter.
 ///
@@ -499,15 +499,15 @@ pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
         + SliceByValueSubsliceMut;
 }
 
-impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<'a> for &mut T {
-    type Subslice = <T as SliceByValueSubsliceGatMut<'a>>::Subslice;
-}
-
 /// A convenience type representing the type of subslice
 /// of a type implementing [`SliceByValueSubsliceGatMut`].
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
 pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
     <T as SliceByValueSubsliceGatMut<'a>>::Subslice;
+
+impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<'a> for &mut T {
+    type Subslice = T::Subslice;
+}
 
 /// A trait implementing mutable subslicing for a specific range parameter.
 ///

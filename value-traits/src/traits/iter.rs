@@ -17,6 +17,16 @@ pub trait IterableByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
 
 pub type Iter<'a, T> = <T as IterableByValueGat<'a>>::Iter;
 
+impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &T {
+    type Item = T::Item;
+    type Iter = T::Iter;
+}
+
+impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &mut T {
+    type Item = T::Item;
+    type Iter = T::Iter;
+}
+
 /// A trait for obtaining a value-based iterator.
 ///
 /// This trait necessary as all standard Rust containers already have
@@ -33,9 +43,31 @@ pub trait IterableByValue: for<'a> IterableByValueGat<'a> {
     fn iter_value(&self) -> Iter<'_, Self>;
 }
 
+impl<T: IterableByValue> IterableByValue for &T {
+    fn iter_value(&self) -> Iter<'_, Self> {
+        (**self).iter_value()
+    }
+}
+
+impl<T: IterableByValue> IterableByValue for &mut T {
+    fn iter_value(&self) -> Iter<'_, Self> {
+        (**self).iter_value()
+    }
+}
+
 pub trait IterableByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     type Item;
     type IterFrom: 'a + Iterator<Item = Self::Item>;
+}
+
+impl<'a, T: IterableByValueFromGat<'a> + ?Sized> IterableByValueFromGat<'a> for &T {
+    type Item = T::Item;
+    type IterFrom = T::IterFrom;
+}
+
+impl<'a, T: IterableByValueFromGat<'a> + ?Sized> IterableByValueFromGat<'a> for &mut T {
+    type Item = T::Item;
+    type IterFrom = T::IterFrom;
 }
 
 pub type IterFrom<'a, T> = <T as IterableByValueFromGat<'a>>::IterFrom;
@@ -51,4 +83,16 @@ pub type IterFrom<'a, T> = <T as IterableByValueFromGat<'a>>::IterFrom;
 pub trait IterableByValueFrom: for<'a> IterableByValueFromGat<'a> {
     /// Returns an iterator on values starting at the given position.
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self>;
+}
+
+impl<T: IterableByValueFrom> IterableByValueFrom for &T {
+    fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+        (**self).iter_value_from(from)
+    }
+}
+
+impl<T: IterableByValueFrom> IterableByValueFrom for &mut T {
+    fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+        (**self).iter_value_from(from)
+    }
 }
