@@ -346,7 +346,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                     }
                 }
 
-                #[automatically_derived]
+                /*#[automatically_derived]
                 impl<#params> ::value_traits::iter::IterableByValue for #input_ident #ty_generics #where_clause {
                     type Item = <Self as ::value_traits::slices::SliceByValue>::Value;
                     type Iter<'__iter_ref>
@@ -373,7 +373,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                         assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
                         Iter::new_with_range(self, from..len)
                     }
-                }
+                }*/
 
                 #[automatically_derived]
                 /// Ideally we would like to also implement [`::core::iter::Iterator::advance_by`], but it is
@@ -433,28 +433,29 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
-                    type Iter<'__iter_ref>
-                        = Iter<'__iter_ref, #names>
-                    where
-                        Self: '__iter_ref;
+                    type Iter = Iter<'__iter_ref, #names>;
+                } 
 
+                #[automatically_derived]
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     #[inline]
-                    fn iter_value(&self) -> Self::Iter<'_> {
+                    fn iter_value(&self) -> ::value_traits::iter::Iter<'_, Self> {
                         Iter::new(self.slice)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImpl<'__subslice_impl, #names> #where_clause {
-                    type IterFrom<'__iter_ref>
-                        = Iter<'__iter_ref, #names>
-                    where
-                        Self: '__iter_ref;
+                impl<'__subslice_impl, '__iter_ref,#params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for SubsliceImpl<'__subslice_impl, #names> #where_clause {
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
+                    type IterFrom = Iter<'__iter_ref, #names>;
+                } 
 
+                #[automatically_derived]
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImpl<'__subslice_impl, #names> #where_clause {
                     #[inline]
-                    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+                    fn iter_value_from(&self, from: usize) -> ::value_traits::iter::IterFrom<'_, Self> {
                         let len = self.len();
                         assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
                         let range = ::value_traits::slices::ComposeRange::compose(&(from..), self.range.clone());
@@ -508,28 +509,27 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
         Data::Struct(_) => {
             quote!{
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
-                    type Iter<'__iter_ref>
-                        = Iter<'__iter_ref, #names>
-                    where
-                        Self: '__iter_ref;
+                    type Iter = Iter<'__iter_ref, #names>;
+                }
 
-                    #[inline]
-                    fn iter_value(&self) -> Self::Iter<'_> {
+                #[automatically_derived]
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                    fn iter_value(&self) -> ::value_traits::iter::Iter<'_, Self> {
                         Iter::new(self.slice)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
-                    type IterFrom<'__iter_ref>
-                        = Iter<'__iter_ref, #names>
-                    where
-                        Self: '__iter_ref;
+                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                    type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
+                    type IterFrom = Iter<'__iter_ref, #names>;
+                } 
 
-                    #[inline]
-                    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_> {
+                #[automatically_derived]
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for SubsliceImplMut<'__subslice_impl, #names> #where_clause {
+                    fn iter_value_from(&self, from: usize) -> ::value_traits::iter::IterFrom<'_, Self> {
                         let len = self.len();
                         assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
                         let range = ::value_traits::slices::ComposeRange::compose(&(from..), self.range.clone());

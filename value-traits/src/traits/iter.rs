@@ -8,6 +8,15 @@
 
 //! Traits for value-based iterators.
 
+use crate::{ImplBound, Ref};
+
+pub trait IterableByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+    type Item;
+    type Iter: 'a + Iterator<Item = Self::Item>;
+}
+
+pub type Iter<'a, T> = <T as IterableByValueGat<'a>>::Iter;
+
 /// A trait for obtaining a value-based iterator.
 ///
 /// This trait necessary as all standard Rust containers already have
@@ -19,14 +28,17 @@
 ///
 /// If you need to iterate from a given position, and you can implement such
 /// an iterator more efficiently, please consider [`IterableByValueFrom`].
-pub trait IterableByValue {
-    type Item;
-    type Iter<'a>: Iterator<Item = Self::Item>
-    where
-        Self: 'a;
+pub trait IterableByValue: for<'a> IterableByValueGat<'a> {
     /// Returns an iterator on values.
-    fn iter_value(&self) -> Self::Iter<'_>;
+    fn iter_value(&self) -> Iter<'_, Self>;
 }
+
+pub trait IterableByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+    type Item;
+    type IterFrom: 'a + Iterator<Item = Self::Item>;
+}
+
+pub type IterFrom<'a, T> = <T as IterableByValueFromGat<'a>>::IterFrom;
 
 /// A trait for obtaining a value-based iterator starting from a given position.
 ///
@@ -36,10 +48,7 @@ pub trait IterableByValue {
 /// returned type is not necessarily the same type as that returned by
 /// [`IterableByValue::iter_value`], but you are free to implement
 /// [`iter_value_from`](IterableByValueFrom::iter_value_from) that way.
-pub trait IterableByValueFrom: IterableByValue {
-    type IterFrom<'a>: Iterator<Item = <Self as IterableByValue>::Item>
-    where
-        Self: 'a;
+pub trait IterableByValueFrom: for<'a> IterableByValueFromGat<'a> {
     /// Returns an iterator on values starting at the given position.
-    fn iter_value_from(&self, from: usize) -> Self::IterFrom<'_>;
+    fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self>;
 }

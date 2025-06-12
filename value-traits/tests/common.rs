@@ -9,7 +9,7 @@
 use core::borrow::Borrow;
 
 use value_traits::{
-    iter::{IterableByValue, IterableByValueFrom},
+    iter::{Iter, IterFrom, IterableByValue, IterableByValueFrom},
     slices::*,
 };
 
@@ -165,7 +165,7 @@ where
 
 pub fn generic_iter<S>(s: &S, expected: &[i32])
 where
-    S: IterableByValue<Item = i32> + IterableByValueFrom,
+    S: IterableByValue<Item = i32> + IterableByValueFrom<Item = i32>,
 {
     let s = s.borrow();
 
@@ -186,11 +186,11 @@ where
     }
 }
 
-pub fn generic_derived_iter<'a, S>(s: &'a S, expected: &[i32])
+pub fn generic_derived_iter<S>(s: S, expected: &[i32])
 where
-    S: IterableByValue<Item = i32> + IterableByValueFrom,
-    S::Iter<'a>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
-    S::IterFrom<'a>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
+    S: IterableByValue<Item = i32> + IterableByValueFrom<Item = i32>,
+    for<'a> Iter<'a, S>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
+    for<'a> IterFrom<'a, S>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
 {
     let s = s.borrow();
 
