@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Procedural macros for the [`value-traits`](https://docs.rs/value-traits/latest/value_traits/) crate.
+#![doc = include_str!("../README.md")]
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -31,22 +31,17 @@ pub fn subslices(input: TokenStream) -> TokenStream {
     let params = &input.generics.params;
     let ty_generics_token_stream = ty_generics.clone().into_token_stream();
 
+    // This block extracts the generic parameter names (e.g., `T, U`) from the type generics
+    // (e.g., `<T, U>`) to be used in the generated struct and impls.
+    // If the original struct has no generics, `names` will be an empty TokenStream.
+    // Otherwise, it parses the type generics (like `<T, U>`) to get just the `T, U` part.
     let names: proc_macro2::TokenStream = {
         if ty_generics_token_stream.is_empty() {
-            // If the original struct has no generics (e.g., struct MyStruct;),
-            // then ty_generics is empty, and we want an empty stream.
             proc_macro2::TokenStream::new()
         } else {
-            // 2. Parse this TokenStream into a syn::AngleBracketedGenericArguments.
-            //    This syn type represents the `T, A, B` arguments enclosed in angle brackets.
             let parsed_args: AngleBracketedGenericArguments =
                 parse2(ty_generics_token_stream)
-                    .expect("Failed to parse ty_generics into AngleBracketedGenericArguments. This indicates an unexpected structure in the generic parameters.");
-
-            // 3. The `args` field of AngleBracketedGenericArguments is a Punctuated list
-            //    (Punctuated<GenericArgument, Comma>) containing just the T, A, B.
-            //    When you convert this Punctuated list to a TokenStream, it will
-            //    automatically produce the comma-separated tokens without angle brackets.
+                    .expect("Failed to parse ty_generics into AngleBracketedGenericArguments.");
             parsed_args.args.into_token_stream()
         }
     };
@@ -160,22 +155,17 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
     let params = &input.generics.params;
     let ty_generics_token_stream = ty_generics.clone().into_token_stream();
 
+    // This block extracts the generic parameter names (e.g., `T, U`) from the type generics
+    // (e.g., `<T, U>`) to be used in the generated struct and impls.
+    // If the original struct has no generics, `names` will be an empty TokenStream.
+    // Otherwise, it parses the type generics (like `<T, U>`) to get just the `T, U` part.
     let names: proc_macro2::TokenStream = {
         if ty_generics_token_stream.is_empty() {
-            // If the original struct has no generics (e.g., struct MyStruct;),
-            // then ty_generics is empty, and we want an empty stream.
             proc_macro2::TokenStream::new()
         } else {
-            // 2. Parse this TokenStream into a syn::AngleBracketedGenericArguments.
-            //    This syn type represents the `T, A, B` arguments enclosed in angle brackets.
             let parsed_args: AngleBracketedGenericArguments =
                 parse2(ty_generics_token_stream)
-                    .expect("Failed to parse ty_generics into AngleBracketedGenericArguments. This indicates an unexpected structure in the generic parameters.");
-
-            // 3. The `args` field of AngleBracketedGenericArguments is a Punctuated list
-            //    (Punctuated<GenericArgument, Comma>) containing just the T, A, B.
-            //    When you convert this Punctuated list to a TokenStream, it will
-            //    automatically produce the comma-separated tokens without angle brackets.
+                    .expect("Failed to parse ty_generics into AngleBracketedGenericArguments.");
             parsed_args.args.into_token_stream()
         }
     };

@@ -14,9 +14,11 @@
 extern crate alloc;
 
 // Impls are not re-exported
+/// Contains implementations of the by-value traits for standard Rust types like arrays, slices, and `Vec`.
 pub mod impls;
 
 // Traits are re-exported
+/// Defines the core by-value traits such as `SliceByValue`, `IterableByValue`, and their GAT-based counterparts.
 mod traits;
 pub use traits::*;
 
