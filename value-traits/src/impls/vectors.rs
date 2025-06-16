@@ -22,8 +22,8 @@ use core::{
 
 use crate::{
     iter::{
-        Iter, IterFrom, IterableByValue, IterableByValueFrom, IterableByValueFromGat,
-        IterableByValueGat,
+        Iter, IterFrom, IterateByValue, IterateByValueFrom, IterateByValueFromGat,
+        IterateByValueGat,
     },
     slices::{
         SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
@@ -141,23 +141,23 @@ impl_range_vecs!(Range<usize>);
 impl_range_vecs!(RangeInclusive<usize>);
 impl_range_vecs!(RangeToInclusive<usize>);
 
-impl<'a, T: Clone> IterableByValueGat<'a> for Vec<T> {
+impl<'a, T: Clone> IterateByValueGat<'a> for Vec<T> {
     type Item = T;
     type Iter = Cloned<core::slice::Iter<'a, T>>;
 }
 
-impl<T: Clone> IterableByValue for Vec<T> {
+impl<T: Clone> IterateByValue for Vec<T> {
     fn iter_value(&self) -> Iter<'_, Self> {
         self.iter().cloned()
     }
 }
 
-impl<'a, T: Clone> IterableByValueFromGat<'a> for Vec<T> {
+impl<'a, T: Clone> IterateByValueFromGat<'a> for Vec<T> {
     type Item = T;
     type IterFrom = Cloned<Skip<core::slice::Iter<'a, T>>>;
 }
 
-impl<T: Clone> IterableByValueFrom for Vec<T> {
+impl<T: Clone> IterateByValueFrom for Vec<T> {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         self.iter().skip(from).cloned()
     }

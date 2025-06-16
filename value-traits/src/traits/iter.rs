@@ -14,19 +14,19 @@ use crate::{ImplBound, Ref};
 ///
 /// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
 /// more information.
-pub trait IterableByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+pub trait IterateByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     type Item;
     type Iter: 'a + Iterator<Item = Self::Item>;
 }
 
-pub type Iter<'a, T> = <T as IterableByValueGat<'a>>::Iter;
+pub type Iter<'a, T> = <T as IterateByValueGat<'a>>::Iter;
 
-impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &T {
+impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &T {
     type Item = T::Item;
     type Iter = T::Iter;
 }
 
-impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &mut T {
+impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
     type Item = T::Item;
     type Iter = T::Iter;
 }
@@ -36,24 +36,36 @@ impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &mut T {
 /// This trait necessary as all standard Rust containers already have
 /// [`IntoIterator`]-based methods for obtaining reference-based iterators.
 ///
-/// Note that [`iter_value`](IterableByValue::iter_value) returns a standard
+/// Note that [`iter_value`](IterateByValue::iter_value) returns a standard
 /// iterator. However, the intended semantics is that the iterator will return
 /// values.
 ///
 /// If you need to iterate from a given position, and you can implement such
-/// an iterator more efficiently, please consider [`IterableByValueFrom`].
-pub trait IterableByValue: for<'a> IterableByValueGat<'a> {
+/// an iterator more efficiently, please consider [`IterateByValueFrom`].
+///
+/// Note that to bound the iterator type you need to use higher-rank trait bounds:
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValue,
+///    S: for<'a> IterateByValueGat<'a, Iter: ExactSizeIterator>,
+/// {
+///     let _ = s.iter_value().len();
+/// }
+/// ```
+pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Iter<'_, Self>;
 }
 
-impl<T: IterableByValue> IterableByValue for &T {
+impl<T: IterateByValue> IterateByValue for &T {
     fn iter_value(&self) -> Iter<'_, Self> {
         (**self).iter_value()
     }
 }
 
-impl<T: IterableByValue> IterableByValue for &mut T {
+impl<T: IterateByValue> IterateByValue for &mut T {
     fn iter_value(&self) -> Iter<'_, Self> {
         (**self).iter_value()
     }
@@ -64,43 +76,55 @@ impl<T: IterableByValue> IterableByValue for &mut T {
 ///
 /// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
 /// more information.
-pub trait IterableByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+pub trait IterateByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     type Item;
     type IterFrom: 'a + Iterator<Item = Self::Item>;
 }
 
-impl<'a, T: IterableByValueFromGat<'a> + ?Sized> IterableByValueFromGat<'a> for &T {
+impl<'a, T: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for &T {
     type Item = T::Item;
     type IterFrom = T::IterFrom;
 }
 
-impl<'a, T: IterableByValueFromGat<'a> + ?Sized> IterableByValueFromGat<'a> for &mut T {
+impl<'a, T: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for &mut T {
     type Item = T::Item;
     type IterFrom = T::IterFrom;
 }
 
-pub type IterFrom<'a, T> = <T as IterableByValueFromGat<'a>>::IterFrom;
+pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 
 /// A trait for obtaining a value-based iterator starting from a given position.
 ///
-/// This is a version of [`IterableByValue::iter_value`] that is useful for
+/// This is a version of [`IterateByValue::iter_value`] that is useful for
 /// types in which obtaining a global iterator and skipping is expensive. Note
 /// that we cannot provide a skip-based default implementation because the
 /// returned type is not necessarily the same type as that returned by
-/// [`IterableByValue::iter_value`], but you are free to implement
-/// [`iter_value_from`](IterableByValueFrom::iter_value_from) that way.
-pub trait IterableByValueFrom: for<'a> IterableByValueFromGat<'a> {
+/// [`IterateByValue::iter_value`], but you are free to implement
+/// [`iter_value_from`](IterateByValueFrom::iter_value_from) that way.
+///
+/// Note that to bound the iterator type you need to use higher-rank trait bounds:
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValueFrom,
+///    S: for<'a> IterateByValueFromGat<'a, IterFrom: ExactSizeIterator>,
+/// {
+///     let _ = s.iter_value_from(0).len();
+/// }
+/// ```
+pub trait IterateByValueFrom: for<'a> IterateByValueFromGat<'a> {
     /// Returns an iterator on values starting at the given position.
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self>;
 }
 
-impl<T: IterableByValueFrom> IterableByValueFrom for &T {
+impl<T: IterateByValueFrom> IterateByValueFrom for &T {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         (**self).iter_value_from(from)
     }
 }
 
-impl<T: IterableByValueFrom> IterableByValueFrom for &mut T {
+impl<T: IterateByValueFrom> IterateByValueFrom for &mut T {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         (**self).iter_value_from(from)
     }

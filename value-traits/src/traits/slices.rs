@@ -303,10 +303,8 @@ pub trait ComposeRange: RangeBounds<usize> + core::fmt::Debug {
 
     /// Returns a new range that is the composition of `base` with the range.
     ///
-    /// More precisely, the returned range is obtained by adding `base.start` to
-    /// the bounds of `self`. The resulting range is guaranteed to be within the
-    /// bounds of `base` if `self` [is valid](ComposeRange::is_valid) for
-    /// `base.len()`.
+    /// The resulting range is guaranteed to be contained in `base` if `self` [is
+    /// valid](ComposeRange::is_valid) for `base.len()`.
     ///
     /// ```rust
     /// use value_traits::slices::ComposeRange;

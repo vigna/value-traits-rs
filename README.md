@@ -47,7 +47,7 @@ single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
 of slices.
 
-The other missing trait contained in this crate is [`IterableByValue`], which
+The other missing trait contained in this crate is [`IterateByValue`], which
 has the same logic for iterators. Rust has presently no trait specifying
 that you can iterate by value on some structure without consuming it
 as [`IntoIterator`] does. What one usually does is to implement [`IntoIterator`]
@@ -84,7 +84,7 @@ subslices of different depth to the same variable.
 [`index_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html#tymethod.index_value>
 [`get_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
 [`index_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
-[`IterableByValue`]: <https://docs.rs/value_traits/latest/value_traits/iter/trait.IterableByValue.html>
+[`IterateByValue`]: <https://docs.rs/value_traits/latest/value_traits/iter/trait.IterateByValue.html>
 [`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>

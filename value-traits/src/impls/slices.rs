@@ -19,8 +19,8 @@ use core::{
 
 use crate::{
     iter::{
-        Iter, IterFrom, IterableByValue, IterableByValueFrom, IterableByValueFromGat,
-        IterableByValueGat,
+        Iter, IterFrom, IterateByValue, IterateByValueFrom, IterateByValueFromGat,
+        IterateByValueGat,
     },
     slices::{
         SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
@@ -143,52 +143,52 @@ impl_range_slices!(RangeToInclusive<usize>);
 
 #[cfg(feature = "alloc")]
 mod alloc_impl {
-    use crate::iter::{Iter, IterFrom, IterableByValueFromGat, IterableByValueGat};
+    use crate::iter::{Iter, IterFrom, IterateByValueFromGat, IterateByValueGat};
 
     use super::*;
     #[cfg(all(feature = "alloc", not(feature = "std")))]
     use alloc::boxed::Box;
 
-    impl<'a, T: Clone> IterableByValueGat<'a> for Box<[T]> {
+    impl<'a, T: Clone> IterateByValueGat<'a> for Box<[T]> {
         type Item = T;
         type Iter = Cloned<core::slice::Iter<'a, T>>;
     }
 
-    impl<T: Clone> IterableByValue for Box<[T]> {
+    impl<T: Clone> IterateByValue for Box<[T]> {
         fn iter_value(&self) -> Iter<'_, Self> {
             self.iter().cloned()
         }
     }
 
-    impl<'a, T: Clone> IterableByValueFromGat<'a> for Box<[T]> {
+    impl<'a, T: Clone> IterateByValueFromGat<'a> for Box<[T]> {
         type Item = T;
         type IterFrom = Cloned<Skip<core::slice::Iter<'a, T>>>;
     }
 
-    impl<T: Clone> IterableByValueFrom for Box<[T]> {
+    impl<T: Clone> IterateByValueFrom for Box<[T]> {
         fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
             self.iter().skip(from).cloned()
         }
     }
 }
 
-impl<'a, T: Clone> IterableByValueGat<'a> for [T] {
+impl<'a, T: Clone> IterateByValueGat<'a> for [T] {
     type Item = T;
     type Iter = Cloned<core::slice::Iter<'a, T>>;
 }
 
-impl<T: Clone> IterableByValue for [T] {
+impl<T: Clone> IterateByValue for [T] {
     fn iter_value(&self) -> Iter<'_, Self> {
         self.iter().cloned()
     }
 }
 
-impl<'a, T: Clone> IterableByValueFromGat<'a> for [T] {
+impl<'a, T: Clone> IterateByValueFromGat<'a> for [T] {
     type Item = T;
     type IterFrom = Cloned<Skip<core::slice::Iter<'a, T>>>;
 }
 
-impl<T: Clone> IterableByValueFrom for [T] {
+impl<T: Clone> IterateByValueFrom for [T] {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         self.iter().skip(from).cloned()
     }

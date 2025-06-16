@@ -9,7 +9,7 @@
 use core::borrow::Borrow;
 
 use value_traits::{
-    iter::{Iter, IterFrom, IterableByValue, IterableByValueFrom},
+    iter::{Iter, IterFrom, IterateByValue, IterateByValueFrom},
     slices::*,
 };
 
@@ -159,11 +159,11 @@ where
 
 pub fn generic_iter<S>(s: &S, expected: &[i32])
 where
-    S: IterableByValue<Item = i32> + IterableByValueFrom<Item = i32>,
+    S: IterateByValue<Item = i32> + IterateByValueFrom<Item = i32>,
 {
     let s = s.borrow();
 
-    let mut iter = IterableByValue::iter_value(s);
+    let mut iter = IterateByValue::iter_value(s);
     let mut truth = expected.iter();
 
     for _ in 0..expected.len() + 2 {
@@ -171,7 +171,7 @@ where
     }
 
     for start in 0..expected.len() {
-        let mut iter = IterableByValueFrom::iter_value_from(s, start);
+        let mut iter = IterateByValueFrom::iter_value_from(s, start);
         let mut truth = expected[start..].iter();
 
         for _ in 0..truth.len() + 2 {
@@ -182,13 +182,13 @@ where
 
 pub fn generic_derived_iter<S>(s: S, expected: &[i32])
 where
-    S: IterableByValue<Item = i32> + IterableByValueFrom<Item = i32>,
+    S: IterateByValue<Item = i32> + IterateByValueFrom<Item = i32>,
     for<'a> Iter<'a, S>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
     for<'a> IterFrom<'a, S>: Iterator<Item = i32> + ExactSizeIterator + DoubleEndedIterator,
 {
     let s = s.borrow();
 
-    let mut iter = IterableByValue::iter_value(s);
+    let mut iter = IterateByValue::iter_value(s);
     let mut truth = expected.iter();
 
     for _ in 0..expected.len() + 2 {
@@ -196,7 +196,7 @@ where
         assert_eq!(truth.next().copied(), iter.next());
     }
 
-    let mut iter = IterableByValue::iter_value(s);
+    let mut iter = IterateByValue::iter_value(s);
     let mut truth = expected.iter();
 
     for i in 0..truth.len() + 2 {
@@ -209,7 +209,7 @@ where
     }
 
     for start in 0..expected.len() {
-        let mut iter = IterableByValueFrom::iter_value_from(s, start);
+        let mut iter = IterateByValueFrom::iter_value_from(s, start);
         let mut truth = expected[start..].iter();
 
         for _ in 0..truth.len() + 2 {
@@ -217,7 +217,7 @@ where
             assert_eq!(truth.next().copied(), iter.next());
         }
 
-        let mut iter = IterableByValueFrom::iter_value_from(s, start);
+        let mut iter = IterateByValueFrom::iter_value_from(s, start);
         let mut truth = expected[start..].iter();
         for i in 0..truth.len() + 2 {
             assert_eq!(truth.len(), iter.len());

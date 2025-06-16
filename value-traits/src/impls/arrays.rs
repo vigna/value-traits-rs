@@ -15,8 +15,8 @@ use core::{
 
 use crate::{
     iter::{
-        Iter, IterFrom, IterableByValue, IterableByValueFrom, IterableByValueFromGat,
-        IterableByValueGat,
+        Iter, IterFrom, IterateByValue, IterateByValueFrom, IterateByValueFromGat,
+        IterateByValueGat,
     },
     slices::{
         SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
@@ -136,23 +136,23 @@ impl_range_arrays!(Range<usize>);
 impl_range_arrays!(RangeInclusive<usize>);
 impl_range_arrays!(RangeToInclusive<usize>);
 
-impl<'a, T: Clone, const N: usize> IterableByValueGat<'a> for [T; N] {
+impl<'a, T: Clone, const N: usize> IterateByValueGat<'a> for [T; N] {
     type Item = T;
     type Iter = Cloned<core::slice::Iter<'a, T>>;
 }
 
-impl<T: Clone, const N: usize> IterableByValue for [T; N] {
+impl<T: Clone, const N: usize> IterateByValue for [T; N] {
     fn iter_value(&self) -> Iter<'_, Self> {
         self.iter().cloned()
     }
 }
 
-impl<'a, T: Clone, const N: usize> IterableByValueFromGat<'a> for [T; N] {
+impl<'a, T: Clone, const N: usize> IterateByValueFromGat<'a> for [T; N] {
     type Item = T;
     type IterFrom = Cloned<Skip<core::slice::Iter<'a, T>>>;
 }
 
-impl<T: Clone, const N: usize> IterableByValueFrom for [T; N] {
+impl<T: Clone, const N: usize> IterateByValueFrom for [T; N] {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         self.iter().skip(from).cloned()
     }
