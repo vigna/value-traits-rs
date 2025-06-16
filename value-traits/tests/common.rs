@@ -25,9 +25,10 @@ where
 
         assert_eq!(SliceByValueGet::index_value(&s, i), expected[i]);
 
-        unsafe {
-            assert_eq!(SliceByValueGet::get_value_unchecked(&s, i), expected[i]);
-        }
+        assert_eq!(
+            unsafe { SliceByValueGet::get_value_unchecked(&s, i) },
+            expected[i]
+        );
     }
 }
 
@@ -109,8 +110,8 @@ where
         // Test unsafe set_value_unchecked
         unsafe {
             SliceByValueSet::set_value_unchecked(&mut s, i, new_value);
-            assert_eq!(SliceByValueGet::index_value(&s, i), new_value);
         }
+        assert_eq!(SliceByValueGet::index_value(&s, i), new_value);
 
         s.set_value(i, old_value);
     }

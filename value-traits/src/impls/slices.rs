@@ -64,10 +64,8 @@ impl<T: Clone> SliceByValueSet for [T] {
     #[inline]
     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
-        unsafe {
-            let elem = self.get_unchecked_mut(index);
-            *elem = value;
-        }
+        let elem = unsafe { self.get_unchecked_mut(index) };
+        *elem = value;
     }
 }
 
@@ -84,10 +82,8 @@ impl<T: Clone> SliceByValueRepl for [T] {
     #[inline]
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
-        unsafe {
-            let elem = self.get_unchecked_mut(index);
-            core::mem::replace(elem, value)
-        }
+        let elem = unsafe { self.get_unchecked_mut(index) };
+        core::mem::replace(elem, value)
     }
 }
 
