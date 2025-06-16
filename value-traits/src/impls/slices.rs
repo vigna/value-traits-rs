@@ -1,3 +1,17 @@
+//! Implementations of by-value slice and iterator traits for standard Rust slices (`[T]`).
+//!
+//! This module provides implementations of traits like `SliceByValue`, `SliceByValueGet`,
+//! `SliceByValueSet`, `SliceByValueRepl`, `SliceByValueSubslice*`, and `IterableByValue*`
+//! for dynamically sized slices (`[T]`).
+//!
+//! For `SliceByValue*` traits that return values (e.g., `SliceByValueGet::get_value`),
+//! elements are returned by cloning if `T: Clone`.
+//! Subslice operations (`SliceByValueSubslice*`) on `[T]` return standard Rust slices
+//! (`&[T]` or `&mut [T]`).
+//! Iterators obtained via `IterableByValue*` also clone elements from the slice.
+//!
+//! Implementations for `Box<[T]>` are also included when the `alloc` feature is enabled.
+
 /*
  * SPDX-FileCopyrightText: 2025 Tommaso Fontana
  * SPDX-FileCopyrightText: 2025 Sebastiano Vigna

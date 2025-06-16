@@ -6,15 +6,28 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Traits for value-based iterators.
+//! Traits for value-based iterators, providing alternatives to Rust's standard reference-based iteration.
+//!
+//! These traits enable iteration over sequences where elements are produced by value,
+//! which is useful for virtual or implicitly defined sequences (e.g., functional, compressed).
+//! This contrasts with `std::iter::Iterator` which often yields references, especially when
+//! iterating over collections without consuming them.
 
 use crate::{ImplBound, Ref};
 
+/// GAT (Generic Associated Type) trait for `IterableByValue`.
+///
+/// This trait defines the associated types `Item` (the type of items yielded by the iterator)
+/// and `Iter` (the iterator type itself, bound by a lifetime `'a`).
+/// It's primarily an implementation detail for [`IterableByValue`].
 pub trait IterableByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+    /// The type of items yielded by the iterator.
     type Item;
+    /// The iterator type, bound by lifetime `'a` and yielding `Self::Item`.
     type Iter: 'a + Iterator<Item = Self::Item>;
 }
 
+/// Convenience type alias for the iterator type associated with `IterableByValueGat`.
 pub type Iter<'a, T> = <T as IterableByValueGat<'a>>::Iter;
 
 impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &T {
@@ -27,9 +40,9 @@ impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &mut T {
     type Iter = T::Iter;
 }
 
-/// A trait for obtaining a value-based iterator.
+/// Provides a method to get an iterator that yields items by value.
 ///
-/// This trait necessary as all standard Rust containers already have
+/// This trait is necessary as all standard Rust containers already have
 /// [`IntoIterator`]-based methods for obtaining reference-based iterators.
 ///
 /// Note that [`iter_value`](IterableByValue::iter_value) returns a standard
@@ -41,6 +54,18 @@ impl<'a, T: IterableByValueGat<'a> + ?Sized> IterableByValueGat<'a> for &mut T {
 pub trait IterableByValue: for<'a> IterableByValueGat<'a> {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Iter<'_, Self>;
+}
+
+/// GAT (Generic Associated Type) trait for `IterableByValueFrom`.
+///
+/// Similar to [`IterableByValueGat`], this defines associated types `Item` and `IterFrom`
+/// for iterators that can start from a specified index.
+/// It's primarily an implementation detail for [`IterableByValueFrom`].
+pub trait IterableByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+    /// The type of items yielded by the iterator.
+    type Item;
+    /// The iterator type, starting from a specified index, bound by lifetime `'a` and yielding `Self::Item`.
+    type IterFrom: 'a + Iterator<Item = Self::Item>;
 }
 
 impl<T: IterableByValue> IterableByValue for &T {
@@ -70,11 +95,12 @@ impl<'a, T: IterableByValueFromGat<'a> + ?Sized> IterableByValueFromGat<'a> for 
     type IterFrom = T::IterFrom;
 }
 
+/// Convenience type alias for the iterator type associated with `IterableByValueFromGat`.
 pub type IterFrom<'a, T> = <T as IterableByValueFromGat<'a>>::IterFrom;
 
-/// A trait for obtaining a value-based iterator starting from a given position.
+/// Provides a method to get an iterator that yields items by value, starting from a specified position.
 ///
-/// This is an version of [`IterableByValue::iter_value`] that is useful for
+/// This is a version of [`IterableByValue::iter_value`] that is useful for
 /// types in which obtaining a global iterator and skipping is expensive. Note
 /// that we cannot provide a skip-based default implementation because the
 /// returned type is not necessarily the same type as that returned by

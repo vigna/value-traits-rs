@@ -111,6 +111,8 @@ use crate::{ImplBound, Ref};
 
 /// Basic slice-by-value trait, specifying just the type of the values and the
 /// length of the slice.
+///
+/// This is the foundational trait for all by-value slice operations.
 pub trait SliceByValue {
     /// The type of the values in the slice.
     type Value;
@@ -155,9 +157,10 @@ fn assert_range(range: &impl ComposeRange, len: usize) {
     );
 }
 
-/// Read-only slice-by-value trait.
+/// A [`SliceByValue`] that can be read via `*_value` methods.
 ///
-/// The only method that must be implemented is
+/// Provides methods to get individual values from the slice, analogous to
+/// `&[T]::get` and `&[T]::index`. The primary method to implement is
 /// [`get_value_unchecked`](`SliceByValueGet::get_value_unchecked`).
 pub trait SliceByValueGet: SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
@@ -212,13 +215,13 @@ impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &mut S {
     }
 }
 
-/// Mutable slice-by-value trait providing setting methods.
+/// A [`SliceByValue`] that can be written to via `set_value*` methods.
 ///
-/// The only method that must be implemented is
+/// Provides methods to set individual values in the slice.
+/// The primary method to implement is
 /// [`set_value_unchecked`](`SliceByValueSet::set_value_unchecked`).
 ///
-/// If you need to set a value and get the previous value, use
-/// [`SliceByValueRepl`] instead.
+/// For operations that set a value and return the previous one, see [`SliceByValueRepl`].
 pub trait SliceByValueSet: SliceByValue {
     /// Sets the value at the given index to the given value without doing
     /// bounds checking.
@@ -253,9 +256,14 @@ impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     }
 }
 
-/// Mutable slice-by-value trait providing replacement methods.
+/// A [`SliceByValue`] that can be written to via `replace_value*` methods,
+/// which also return the replaced value.
 ///
-/// If you just need to set a value, use [`SliceByValueSet`] instead.
+/// Provides methods to replace values in the slice and retrieve the original value.
+/// The primary method to implement is
+/// [`replace_value_unchecked`](`SliceByValueRepl::replace_value_unchecked`).
+///
+/// If you only need to set a value without retrieving the old one, [`SliceByValueSet`] might be sufficient.
 pub trait SliceByValueRepl: SliceByValue {
     /// Sets the value at the given index to the given value and
     /// returns the previous value, without doing bounds checking.
@@ -375,9 +383,11 @@ impl ComposeRange for RangeToInclusive<usize> {
     }
 }
 
-/// A GAT-like trait specifying the subslice type.
+/// A GAT trait that defines the type of a non-mutable subslice.
 ///
-/// It implicitly restricts the lifetime `'a` used in `SliceByValueRange` to be
+/// This trait uses a Generic Associated Type (GAT) `Subslice` to represent
+/// the type of a subslice, which can depend on a lifetime `'a`.
+/// It implicitly restricts the lifetime `'a` used in `SliceByValueSubsliceRange` to be
 /// `where Self: 'a`. Moreover, it requires [`SliceByValueGet`].
 ///
 /// As in other theoretical applications of GATs (Generic Associated Types),
@@ -486,9 +496,11 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubs
 // TODO: can we implement traits conditionally on the associated type? Like,
 // replace only if it present in the root slice?
 
-/// A GAT-like trait specifying the mutable subslice type.
+/// A GAT trait that defines the type of a mutable subslice.
 ///
-/// See [`SliceByValueSubsliceGat`].
+/// Similar to [`SliceByValueSubsliceGat`], this trait uses a GAT `Subslice`
+/// for mutable subslices.
+/// See [`SliceByValueSubsliceGat`] for more details on the GAT pattern used.
 pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
     SliceByValueSet + SliceByValueRepl
 {
