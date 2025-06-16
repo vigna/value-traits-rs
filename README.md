@@ -75,22 +75,22 @@ the same type. This is not relevant if you pass the subslice to a function
 that accepts a by-value slice, but it is relevant if you want to assign
 subslices of different depth to the same variable.
 
-[`SliceByValue`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValue.html>
-[`SliceByValueGet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html>
-[`SliceByValueSet`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSet.html>
-[`SliceByValueReplace`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueReplace.html>
-[subslicing]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html>
-[`get_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.get_value>
-[`index_value`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueGet.html#tymethod.index_value>
-[`get_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
-[`index_subslice`]: <https://docs.rs/value_traits/latest/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
-[`IterableByValue`]: <https://docs.rs/value_traits/latest/iter/trait.IterableByValue.html>
+[`SliceByValue`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html>
+[`SliceByValueGet`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html>
+[`SliceByValueSet`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSet.html>
+[`SliceByValueReplace`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueReplace.html>
+[subslicing]: <https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html>
+[`get_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html#tymethod.get_value>
+[`index_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html#tymethod.index_value>
+[`get_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
+[`index_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
+[`IterableByValue`]: <https://docs.rs/value_traits/latest/value_traits/iter/trait.IterableByValue.html>
 [`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
 [`Index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html>
 [`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
-[`Subslices`]: <https://docs.rs/value_traits_derive/latest/derive.Subslices.html>
-[`SubslicesMut`]: <https://docs.rs/value_traits_derive/latest/derive.SubslicesMut.html>
-[`Iterators`]: <https://docs.rs/value_traits_derive/latest/derive.Iterators.html>
-[`IteratorsMut`]: <https://docs.rs/value_traits_derive/latest/derive.IteratorsMut.html>
+[`Subslices`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.Subslices.html>
+[`SubslicesMut`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.SubslicesMut.html>
+[`Iterators`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.Iterators.html>
+[`IteratorsMut`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.IteratorsMut.html>
