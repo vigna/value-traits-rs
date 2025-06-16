@@ -15,9 +15,9 @@ use syn::{parse2, parse_macro_input, AngleBracketedGenericArguments, Data, Deriv
 /// A procedural macro fully implementing subslices on top of a
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html).
 ///
-/// The macro defines a structure `SubsliceImpl` that keeps track of a reference
-/// to a slice, and of the start and end of the subslice. `SubsliceImpl` then
-/// implements
+/// The macro defines a structure `<YOUR TYPE>SubsliceImpl` that keeps track of
+/// a reference to a slice, and of the start and end of the subslice. `<YOUR
+/// TYPE>SubsliceImpl` then implements
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html)
 /// and
 /// [`SliceByValueSubslice`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html).
@@ -51,17 +51,17 @@ pub fn subslices(input: TokenStream) -> TokenStream {
         }
     };
     match input.data {
-        Data::Struct(_) => {
-            let subsliceimpl = quote::format_ident!("{}SubsliceImpl", input_ident);
+        _ => {
+            let subslice_impl = quote::format_ident!("{}SubsliceImpl", input_ident);
             let mut res = quote! {
                 #[automatically_derived]
-                pub struct #subsliceimpl<'__subslice_impl, #params> {
+                pub struct #subslice_impl<'__subslice_impl, #params> {
                     slice: &'__subslice_impl #input_ident #ty_generics,
                     range: ::core::ops::Range<usize>,
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subsliceimpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subslice_impl<'__subslice_impl, #names> #where_clause {
                     type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
@@ -71,20 +71,20 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueGet for #subsliceimpl<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueGet for #subslice_impl<'__subslice_impl, #names> #where_clause  {
                     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                         self.slice.get_value_unchecked(index + self.range.start)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_gat> for #subsliceimpl<'__subslice_impl, #names> #where_clause {
-                    type Subslice = #subsliceimpl<'__subslice_gat, #names>;
+                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_gat> for #subslice_impl<'__subslice_impl, #names> #where_clause {
+                    type Subslice = #subslice_impl<'__subslice_gat, #names>;
                 }
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
-                    type Subslice = #subsliceimpl<'__subslice_impl, #names>;
+                    type Subslice = #subslice_impl<'__subslice_impl, #names>;
                 }
             };
 
@@ -103,7 +103,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                             &self,
                             range: #range_type,
                         ) -> ::value_traits::slices::Subslice<'_, Self> {
-                            #subsliceimpl {
+                            #subslice_impl {
                                 slice: &self,
                                 range: ::value_traits::slices::ComposeRange::compose(&range, 0..self.len()),
                             }
@@ -111,13 +111,13 @@ pub fn subslices(input: TokenStream) -> TokenStream {
                     }
                     #[automatically_derived]
                     impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<#range_type>
-                        for #subsliceimpl<'__subslice_impl, #names> #where_clause
+                        for #subslice_impl<'__subslice_impl, #names> #where_clause
                     {
                         unsafe fn get_subslice_unchecked(
                             &self,
                             range: #range_type,
                         ) -> ::value_traits::slices::Subslice<'_, Self> {
-                            #subsliceimpl {
+                            #subslice_impl {
                                 slice: self.slice,
                                 range: ::value_traits::slices::ComposeRange::compose(&range, self.range.clone()),
                             }
@@ -128,7 +128,6 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
             res
         },
-        x => unimplemented!("Not yet supported: {:?}", x),
     }
     .into()
 }
@@ -137,9 +136,9 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 /// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html)/[`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html)
 /// for which the derive macro [`Subslices`] has been already applied.
 ///
-/// The macro defines a structure `SubsliceImplMut` that keeps track of a
+/// The macro defines a structure `<YOUR TYPE>SubsliceImplMut` that keeps track of a
 /// mutable reference to a slice, and of the start and end of the subslice.
-/// `SubsliceImplMut` then implements
+/// `<YOUR TYPE>SubsliceImplMut` then implements
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html),
 /// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html),
 /// [`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html),
@@ -148,8 +147,8 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 /// [`SliceByValueSubsliceMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubsliceMut.html).
 ///
 /// Note that
-/// [`SliceByValueuSubslice`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html)
-/// methods will return the `SubsliceImpl` structure generated by the
+/// [`SliceByValueSubslice`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html)
+/// methods will return the `<YOUR TYPE>SubsliceImpl` structure generated by the
 /// [`Subslices`] macro.
 #[proc_macro_derive(SubslicesMut)]
 pub fn subslices_mut(input: TokenStream) -> TokenStream {
@@ -181,18 +180,18 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
         }
     };
     match input.data {
-        Data::Struct(_) => {
-            let subsliceimpl = quote::format_ident!("{}SubsliceImpl", input_ident);
-            let subsliceimplmut = quote::format_ident!("{}SubsliceImplMut", input_ident);
+        _ => {
+            let subslice_impl = quote::format_ident!("{}SubsliceImpl", input_ident);
+            let subslice_impl_mut = quote::format_ident!("{}SubsliceImplMut", input_ident);
             let mut res = quote! {
                 #[automatically_derived]
-                pub struct #subsliceimplmut<'__subslice_impl, #params> {
+                pub struct #subslice_impl_mut<'__subslice_impl, #params> {
                     slice: &'__subslice_impl mut #input_ident #ty_generics,
                     range: ::core::ops::Range<usize>,
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
                     type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
                     #[inline]
@@ -202,39 +201,39 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueGet for #subsliceimplmut<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueGet for #subslice_impl_mut<'__subslice_impl, #names> #where_clause  {
                     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                         self.slice.get_value_unchecked(index + self.range.start)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSet for #subsliceimplmut<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSet for #subslice_impl_mut<'__subslice_impl, #names> #where_clause  {
                     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
                         self.slice.set_value_unchecked(index + self.range.start, value)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueRepl for #subsliceimplmut<'__subslice_impl, #names> #where_clause  {
+                impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueRepl for #subslice_impl_mut<'__subslice_impl, #names> #where_clause  {
                     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
                         self.slice.replace_value_unchecked(index + self.range.start, value)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_gat> for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
-                    type Subslice = #subsliceimpl<'__subslice_gat, #names>;
+                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGat<'__subslice_gat> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
+                    type Subslice = #subslice_impl<'__subslice_gat, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_gat> for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
-                    type Subslice = #subsliceimplmut<'__subslice_gat, #names>;
+                impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_gat> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
+                    type Subslice = #subslice_impl_mut<'__subslice_gat, #names>;
                 }
 
                 #[automatically_derived]
                 impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
-                    type Subslice = #subsliceimplmut<'__subslice_impl, #names>;
+                    type Subslice = #subslice_impl_mut<'__subslice_impl, #names>;
                 }
 
             };
@@ -257,7 +256,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                             range: #range_type,
                         ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
                             let len = self.len();
-                            #subsliceimplmut {
+                            #subslice_impl_mut {
                                 slice: self,
                                 range: ::value_traits::slices::ComposeRange::compose(&range, 0..len),
                             }
@@ -265,13 +264,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                     }
                     #[automatically_derived]
                     impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRange<#range_type>
-                        for #subsliceimplmut<'__subslice_impl, #names> #where_clause
+                        for #subslice_impl_mut<'__subslice_impl, #names> #where_clause
                     {
                         unsafe fn get_subslice_unchecked(
                             &self,
                             range: #range_type,
                         ) -> ::value_traits::slices::Subslice<'_, Self> {
-                            #subsliceimpl {
+                            #subslice_impl {
                                 slice: &*self.slice,
                                 range: ::value_traits::slices::ComposeRange::compose(&range, self.range.clone()),
                             }
@@ -279,13 +278,13 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
                     }
                     #[automatically_derived]
                     impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceRangeMut<#range_type>
-                        for #subsliceimplmut<'__subslice_impl, #names> #where_clause
+                        for #subslice_impl_mut<'__subslice_impl, #names> #where_clause
                     {
                         unsafe fn get_subslice_unchecked_mut(
                             &mut self,
                             range: #range_type,
                         ) -> ::value_traits::slices::SubsliceMut<'_, Self> {
-                            #subsliceimplmut {
+                            #subslice_impl_mut {
                                 slice: self.slice,
                                 range: ::value_traits::slices::ComposeRange::compose(&range, self.range.clone()),
                             }
@@ -296,7 +295,6 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 
             res
         },
-        x => unimplemented!("Not yet supported: {:?}", x),
     }
     .into()
 }
@@ -305,14 +303,14 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 /// [`IterableByValue`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterableByValue.html)
 /// and
 /// [`IterableByValueFrom`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterableByValueFrom.html)
-/// for subslices on top of a the `SubsliceImpl` structure generated by the
+/// for subslices on top of a the `<YOUR TYPE>SubsliceImpl` structure generated by the
 /// derive macro [`Subslices`].
 ///
-/// The macro defines a structure `Iter` that keeps track of a mutable reference
+/// The macro defines a structure `<YOUR TYPE>Iter` that keeps track of a mutable reference
 /// to a slice and of a current iteration range; the structure is used to
 /// implement
 /// [`IterableByValue`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterableByValue.html)
-/// on `SubsliceImpl`.
+/// on `<YOUR TYPE>SubsliceImpl`.
 #[proc_macro_derive(Iterators)]
 pub fn iterators(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
@@ -344,7 +342,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
     };
     match input.data {
         Data::Struct(_) => {
-            let subsliceimpl = quote::format_ident!("{}SubsliceImpl", input_ident);
+            let subslice_impl = quote::format_ident!("{}SubsliceImpl", input_ident);
             let iter = quote::format_ident!("{}Iter", input_ident);
             quote! {
                 #[automatically_derived]
@@ -457,13 +455,13 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for #subsliceimpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for #subslice_impl<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter = #iter<'__iter_ref, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for #subsliceimpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for #subslice_impl<'__subslice_impl, #names> #where_clause {
                     #[inline]
                     fn iter_value(&self) -> ::value_traits::iter::Iter<'_, Self> {
                         #iter::new(self.slice)
@@ -471,13 +469,13 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref,#params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for #subsliceimpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref,#params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for #subslice_impl<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type IterFrom = #iter<'__iter_ref, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for #subsliceimpl<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for #subslice_impl<'__subslice_impl, #names> #where_clause {
                     #[inline]
                     fn iter_value_from(&self, from: usize) -> ::value_traits::iter::IterFrom<'_, Self> {
                         let len = self.len();
@@ -498,11 +496,12 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 /// [`IterableByValue`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterableByValue.html)
 /// and
 /// [`IterableByValueFrom`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterableByValueFrom.html)
-/// for mutable subslices on top of the `SubsliceImplMut` structure generated by
-/// the derive macro [`SubslicesMut`].
+/// for mutable subslices on top of the `<YOUR TYPE>SubsliceImplMut` structure
+/// generated by the derive macro [`SubslicesMut`].
 ///
-/// To call this macro, you first need to derive both [`SubslicesMut`] and [`Iterators`]
-/// on the same struct, as this macro uses the `Iter` structure defined by [`Iterators`].
+/// To call this macro, you first need to derive both [`SubslicesMut`] and
+/// [`Iterators`] on the same struct, as this macro uses the `<YOUR TYPE>Iter`
+/// structure defined by [`Iterators`].
 #[proc_macro_derive(IteratorsMut)]
 pub fn iterators_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
@@ -534,30 +533,30 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
     };
     match input.data {
         Data::Struct(_) => {
-            let subsliceimplmut = quote::format_ident!("{}SubsliceImplMut", input_ident);
+            let subslice_impl_mut = quote::format_ident!("{}SubsliceImplMut", input_ident);
             let iter = quote::format_ident!("{}Iter", input_ident);
             quote!{
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueGat<'__iter_ref> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type Iter = #iter<'__iter_ref, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValue for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
                     fn iter_value(&self) -> ::value_traits::iter::Iter<'_, Self> {
                         #iter::new(self.slice)
                     }
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterableByValueFromGat<'__iter_ref> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
                     type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
                     type IterFrom = #iter<'__iter_ref, #names>;
                 }
 
                 #[automatically_derived]
-                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for #subsliceimplmut<'__subslice_impl, #names> #where_clause {
+                impl<'__subslice_impl, #params> ::value_traits::iter::IterableByValueFrom for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
                     fn iter_value_from(&self, from: usize) -> ::value_traits::iter::IterFrom<'_, Self> {
                         let len = self.len();
                         assert!(from <= len, "index out of bounds: the len is {len} but the starting index is {from}");
