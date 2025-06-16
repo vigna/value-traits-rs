@@ -79,31 +79,42 @@ use value_traits_derive::{Iterators, IteratorsMut, Subslices, SubslicesMut};
 #[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
 pub struct Sbv<T: Clone>(Vec<T>);
 
-impl<T: Clone> SliceByValue for Sbv<T> {
-    type Value = T;
+// Checks that we can derive for two different structs in the same module
+#[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
+pub struct Sbv2<T: Clone>(Vec<T>);
 
-    fn len(&self) -> usize {
-        self.0.len()
+macro_rules! impl_slice {
+    ($ty:ident) => {
+        impl<T: Clone> SliceByValue for $ty<T> {
+            type Value = T;
+
+            fn len(&self) -> usize {
+                self.0.len()
+            }
+        }
+
+        impl<T: Clone> SliceByValueGet for $ty<T> {
+            unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+                self.0.as_slice().get_value_unchecked(index)
+            }
+        }
+
+        impl<T: Clone> SliceByValueSet for $ty<T> {
+            unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+                self.0.as_mut_slice().set_value(index, value)
+            }
+        }
+
+        impl<T: Clone> SliceByValueRepl for $ty<T> {
+            unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+                self.0.as_mut_slice().replace_value(index, value)
+            }
+        }
     }
 }
 
-impl<T: Clone> SliceByValueGet for Sbv<T> {
-    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
-        self.0.as_slice().get_value_unchecked(index)
-    }
-}
-
-impl<T: Clone> SliceByValueSet for Sbv<T> {
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-        self.0.as_mut_slice().set_value(index, value)
-    }
-}
-
-impl<T: Clone> SliceByValueRepl for Sbv<T> {
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        self.0.as_mut_slice().replace_value(index, value)
-    }
-}
+impl_slice!(Sbv);
+impl_slice!(Sbv2);
 
 #[test]
 fn test_sbv_subslices() {
