@@ -181,7 +181,8 @@ pub trait SliceByValueGet: SliceByValue {
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         if index < self.len() {
             // SAFETY: index is without bounds
-            unsafe { Some(self.get_value_unchecked(index)) }
+            let value = unsafe { self.get_value_unchecked(index) };
+            Some(value)
         } else {
             None
         }
@@ -449,7 +450,8 @@ pub trait SliceByValueSubsliceRange<R: ComposeRange>: for<'a> SliceByValueSubsli
     /// See [`slice::get`].
     fn get_subslice(&self, range: R) -> Option<Subslice<'_, Self>> {
         if range.is_valid(self.len()) {
-            unsafe { Some(self.get_subslice_unchecked(range)) }
+            let subslice = unsafe { self.get_subslice_unchecked(range) };
+            Some(subslice)
         } else {
             None
         }
@@ -544,7 +546,8 @@ pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
         if range.is_valid(self.len()) {
             // SAFETY: range is checked to be within bounds.
-            unsafe { Some(self.get_subslice_unchecked_mut(range)) }
+            let subslice_mut = unsafe { self.get_subslice_unchecked_mut(range) };
+            Some(subslice_mut)
         } else {
             None
         }

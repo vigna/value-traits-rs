@@ -56,7 +56,8 @@ impl<T: Clone> SliceByValueGet for [T] {
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
         // slice.get_unchecked returns &T, which we dereference and copy.
-        unsafe { (*self).get_unchecked(index).clone() }
+        let value = unsafe { (*self).get_unchecked(index) };
+        value.clone()
     }
 }
 
@@ -70,10 +71,8 @@ impl<T: Clone> SliceByValueSet for [T] {
     #[inline]
     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
-        unsafe {
-            let elem = self.get_unchecked_mut(index);
-            *elem = value;
-        }
+        let val_mut = unsafe { self.get_unchecked_mut(index) };
+        *val_mut = value;
     }
 }
 
@@ -90,10 +89,8 @@ impl<T: Clone> SliceByValueRepl for [T] {
     #[inline]
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         // Safety: The caller must ensure that `*self` (the index) is in bounds.
-        unsafe {
-            let elem = self.get_unchecked_mut(index);
-            core::mem::replace(elem, value)
-        }
+        let val_mut = unsafe { self.get_unchecked_mut(index) };
+        core::mem::replace(val_mut, value)
     }
 }
 
