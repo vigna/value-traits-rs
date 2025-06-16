@@ -106,11 +106,15 @@ macro_rules! impl_slice {
         }
 
         impl<T: Clone> SliceByValueRepl for $ty<T> {
-            unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+            unsafe fn replace_value_unchecked(
+                &mut self,
+                index: usize,
+                value: Self::Value,
+            ) -> Self::Value {
                 self.0.as_mut_slice().replace_value(index, value)
             }
         }
-    }
+    };
 }
 
 impl_slice!(Sbv);
@@ -145,4 +149,44 @@ fn test_sbv_subslices() {
     let u = t.index_subslice(1..);
     assert_eq!(u.len(), 1);
     assert_eq!(u.index_value(0), 4);
+}
+
+// Checks that we can derive an enum.
+#[derive(Subslices, Iterators)]
+pub enum Sbv3 {
+    OnlyThis,
+}
+
+impl SliceByValue for Sbv3 {
+    type Value = usize;
+
+    fn len(&self) -> usize {
+        100
+    }
+}
+
+impl SliceByValueGet for Sbv3 {
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        index
+    }
+}
+
+// Checks that we can derive a union.
+#[derive(Subslices, Iterators)]
+pub union Sbv4 {
+    _only_this: usize,
+}
+
+impl SliceByValue for Sbv4 {
+    type Value = usize;
+
+    fn len(&self) -> usize {
+        100
+    }
+}
+
+impl SliceByValueGet for Sbv4 {
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        index
+    }
 }
