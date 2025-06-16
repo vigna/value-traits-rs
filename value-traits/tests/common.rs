@@ -59,20 +59,14 @@ where
     );
 
     let r = ..3;
-    generic_get(s.index_subslice(r.clone()), &expected[r.clone()]);
-    generic_get(s.get_subslice(r.clone()).unwrap(), &expected[r.clone()]);
-    generic_get(
-        unsafe { s.get_subslice_unchecked(r.clone()) },
-        &expected[r.clone()],
-    );
+    generic_get(s.index_subslice(r), &expected[r]);
+    generic_get(s.get_subslice(r).unwrap(), &expected[r]);
+    generic_get(unsafe { s.get_subslice_unchecked(r) }, &expected[r]);
 
     let r = ..=3;
-    generic_get(s.index_subslice(r.clone()), &expected[r.clone()]);
-    generic_get(s.get_subslice(r.clone()).unwrap(), &expected[r.clone()]);
-    generic_get(
-        unsafe { s.get_subslice_unchecked(r.clone()) },
-        &expected[r.clone()],
-    );
+    generic_get(s.index_subslice(r), &expected[r]);
+    generic_get(s.get_subslice(r).unwrap(), &expected[r]);
+    generic_get(unsafe { s.get_subslice_unchecked(r) }, &expected[r]);
 
     let r = 1..=4;
     generic_get(s.index_subslice(r.clone()), &expected[r.clone()]);
@@ -142,14 +136,14 @@ where
     generic_mut(unsafe { s.get_subslice_unchecked_mut(r.clone()) });
 
     let r = ..3;
-    generic_mut(s.index_subslice_mut(r.clone()));
-    generic_mut(s.get_subslice_mut(r.clone()).unwrap());
-    generic_mut(unsafe { s.get_subslice_unchecked_mut(r.clone()) });
+    generic_mut(s.index_subslice_mut(r));
+    generic_mut(s.get_subslice_mut(r).unwrap());
+    generic_mut(unsafe { s.get_subslice_unchecked_mut(r) });
 
     let r = ..=3;
-    generic_mut(s.index_subslice_mut(r.clone()));
-    generic_mut(s.get_subslice_mut(r.clone()).unwrap());
-    generic_mut(unsafe { s.get_subslice_unchecked_mut(r.clone()) });
+    generic_mut(s.index_subslice_mut(r));
+    generic_mut(s.get_subslice_mut(r).unwrap());
+    generic_mut(unsafe { s.get_subslice_unchecked_mut(r) });
 
     let r = 1..=4;
     generic_mut(s.index_subslice_mut(r.clone()));
@@ -178,7 +172,7 @@ where
 
     for start in 0..expected.len() {
         let mut iter = IterableByValueFrom::iter_value_from(s, start);
-        let mut truth = (&expected[start..]).into_iter();
+        let mut truth = expected[start..].iter();
 
         for _ in 0..truth.len() + 2 {
             assert_eq!(truth.next().copied(), iter.next());
@@ -216,7 +210,7 @@ where
 
     for start in 0..expected.len() {
         let mut iter = IterableByValueFrom::iter_value_from(s, start);
-        let mut truth = (&expected[start..]).into_iter();
+        let mut truth = expected[start..].iter();
 
         for _ in 0..truth.len() + 2 {
             assert_eq!(truth.len(), iter.len());
@@ -224,7 +218,7 @@ where
         }
 
         let mut iter = IterableByValueFrom::iter_value_from(s, start);
-        let mut truth = (&expected[start..]).into_iter();
+        let mut truth = expected[start..].iter();
         for i in 0..truth.len() + 2 {
             assert_eq!(truth.len(), iter.len());
             if i % 2 == 0 {
