@@ -6,6 +6,8 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
+//! Implementations of by-value traits for arrays of [cloneable](Clone) types.
+
 use core::{
     iter::{Cloned, Skip},
     ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},

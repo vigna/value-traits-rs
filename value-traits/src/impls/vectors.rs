@@ -1,3 +1,15 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Tommaso Fontana
+ * SPDX-FileCopyrightText: 2025 Sebastiano Vigna
+ * SPDX-FileCopyrightText: 2025 Inria
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
+ */
+
+//! Implementations of by-value traits for vectors of [cloneable](Clone) types.
+//!
+//! This module is only available if the `alloc` feature is enabled.
+
 #![cfg(feature = "alloc")]
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
