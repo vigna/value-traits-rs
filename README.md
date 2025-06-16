@@ -18,7 +18,7 @@ The problem with slices is that, by design, they are accessed by _reference_:
 the most used slice trait, [`Index`], gives a reference to an element of the
 slice. While this approach is elegant and makes several compiler optimizations
 possible, it also means that slices cannot be used as generic random-access
-lists, as access by reference means there must be an actual continuous segment
+lists, as access by reference means there must be an actual contiguous segment
 of memory locations containing explicit representations
 of the elements of the lists. However, there are also different list
 representations, such as compressed, succinct, functional, implicit, and so on.
