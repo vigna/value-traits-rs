@@ -51,7 +51,7 @@
 //!
 //! impl<'a> SliceByValueGet for CompSlice<'a> {
 //!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
-//!         self.0.get_value_unchecked(index) as usize
+//!         unsafe { self.0.get_value_unchecked(index) as usize }
 //!     }
 //! }
 //!
@@ -290,18 +290,23 @@ impl<S: SliceByValueRepl + ?Sized> SliceByValueRepl for &mut S {
     }
 }
 
-/// A range that can check whether it is within the bounds of a slice.
+/// A range that can check whether it is within the bounds of a slice, and
+/// intersect itself with another range.
 ///
-/// This traits makes it possible to monomorphize the six different
-/// range checks that are necessary to handle the six type of
-/// ranges available in [`core::ops`].
+/// This trait is implemented for the six Rust range types in [`core::ops`],
+/// making it possible to treat them uniformly in implementations, and in
+/// particular in procedural macros.
 pub trait ComposeRange: RangeBounds<usize> + core::fmt::Debug {
     /// Returns `true` if the range is within the bounds of a slice of given
     /// length
     fn is_valid(&self, len: usize) -> bool;
 
-    /// Return a new range that is the composition of `base` with this range.
-    /// The resulting range will always be a smaller or equal than `base`.
+    /// Returns a new range that is the composition of `base` with the range.
+    ///
+    /// More precisely, the returned range is obtained by adding `base.start` to
+    /// the bounds of `self`. The resulting range is guaranteed to be within the
+    /// bounds of `base` if `self` [is valid](ComposeRange::is_valid) for
+    /// `base.len()`.
     ///
     /// ```rust
     /// use value_traits::slices::ComposeRange;
@@ -384,9 +389,9 @@ impl ComposeRange for RangeToInclusive<usize> {
 /// As in other theoretical applications of GATs (Generic Associated Types),
 /// like [lenders](https://crates.io/crates/lender), using a GAT to express the
 /// type of a subslice is problematic because when bounding the type itself in a
-/// `where` clause using Higher-Ranked Trait Bounds (HRTBs) the bound must be
-/// true for all lifetimes, including `'static`, resulting in the sliced type
-/// having to be `'static` as well.
+/// `where` clause using Higher-Rank Trait Bounds (HRTBs) the bound must be true
+/// for all lifetimes, including `'static`, resulting in the sliced type having
+/// to be `'static` as well.
 ///
 /// This is a result of HRTBs not having a way to express qualifiers (`for<'any
 /// where Self: 'any> Self: Trait`) and effectively making HRTBs only useful
@@ -426,12 +431,28 @@ impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> fo
 ///
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked`](`SliceByValueSubsliceRange::get_subslice_unchecked`).
+///
+/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// ```rust
+/// use value_traits::slices::*;
+/// use core::ops::Range;
+///
+/// fn f<S>(s: S) where
+///    S: SliceByValueSubsliceRange<Range<usize>>,
+///    S: for<'a> SliceByValueSubsliceGat<'a, Subslice = &'a [u8]>,
+/// {
+///     let _: &[u8] = s.index_subslice(0..10);
+/// }
+/// ```
+/// However, such a bound is usually applied to the [`SliceByValueSubslice`]
+/// trait.
+
 pub trait SliceByValueSubsliceRange<R: ComposeRange>: for<'a> SliceByValueSubsliceGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
         assert_range(&range, self.len());
         unsafe {
-            // SAFETY: The range is checked to be within bounds.
+            // SAFETY: range is within bounds
             self.get_subslice_unchecked(range)
         }
     }
@@ -485,9 +506,6 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubs
     }
 }
 
-// TODO: can we implement traits conditionally on the associated type? Like,
-// replace only if it present in the root slice?
-
 /// A GAT-like trait specifying the mutable subslice type.
 ///
 /// See [`SliceByValueSubsliceGat`].
@@ -519,6 +537,22 @@ impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<
 ///
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked_mut`](`SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut`).
+///
+///
+/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// ```rust
+/// use value_traits::slices::*;
+/// use core::ops::Range;
+///
+/// fn f<S>(mut s: S) where
+///    S: SliceByValueSubsliceRangeMut<Range<usize>>,
+///    S: for<'a> SliceByValueSubsliceGatMut<'a, Subslice = &'a mut [u8]>,
+/// {
+///     let _: &mut [u8] = s.index_subslice_mut(0..10);
+/// }
+/// ```
+/// However, such a bound is usually applied to the [`SliceByValueSubsliceMut`]
+/// trait.
 pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     for<'a> SliceByValueSubsliceGatMut<'a>
 {
@@ -526,7 +560,7 @@ pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
         assert_range(&range, self.len());
         unsafe {
-            // SAFETY: The range is checked to be within bounds.
+            // SAFETY: range is within bounds
             self.get_subslice_unchecked_mut(range)
         }
     }
@@ -545,7 +579,7 @@ pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     /// See [`slice::get`].
     fn get_subslice_mut(&mut self, range: R) -> Option<SubsliceMut<'_, Self>> {
         if range.is_valid(self.len()) {
-            // SAFETY: range is checked to be within bounds.
+            // SAFETY: range is within bounds
             let subslice_mut = unsafe { self.get_subslice_unchecked_mut(range) };
             Some(subslice_mut)
         } else {
@@ -574,6 +608,19 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueS
 ///
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceRange`] are available.
+///
+/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// ```rust
+/// use value_traits::slices::*;
+///
+/// fn f<S>(s: S) where
+///    S: SliceByValueSubslice,
+///    S: for<'a> SliceByValueSubsliceGat<'a, Subslice = &'a [u8]>,
+/// {
+///     let _: &[u8] = s.index_subslice(0..10);
+/// }
+/// ```
+/// The bound applies uniformly to all type of ranges.
 pub trait SliceByValueSubslice:
     SliceByValueSubsliceRange<Range<usize>>
     + SliceByValueSubsliceRange<RangeFrom<usize>>
@@ -601,6 +648,19 @@ where
 ///
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceMut`] are available.
+///
+/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// ```rust
+/// use value_traits::slices::*;
+///
+/// fn f<S>(mut s: S) where
+///    S: SliceByValueSubsliceMut,
+///    S: for<'a> SliceByValueSubsliceGatMut<'a, Subslice = &'a mut [u8]>,
+/// {
+///     let _: &mut [u8] = s.index_subslice_mut(0..10);
+/// }
+/// ```
+/// The bound applies uniformly to all type of ranges.
 pub trait SliceByValueSubsliceMut:
     SliceByValueSubsliceRangeMut<Range<usize>>
     + SliceByValueSubsliceRangeMut<RangeFrom<usize>>

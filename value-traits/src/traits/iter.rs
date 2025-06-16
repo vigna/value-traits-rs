@@ -10,6 +10,10 @@
 
 use crate::{ImplBound, Ref};
 
+/// A GAT-like trait specifying the type of a value-based iterator.
+///
+/// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
+/// more information.
 pub trait IterableByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     type Item;
     type Iter: 'a + Iterator<Item = Self::Item>;
@@ -55,6 +59,11 @@ impl<T: IterableByValue> IterableByValue for &mut T {
     }
 }
 
+/// A GAT-like trait specifying the type of a value-based iterator starting from
+/// a given position.
+///
+/// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
+/// more information.
 pub trait IterableByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     type Item;
     type IterFrom: 'a + Iterator<Item = Self::Item>;
@@ -74,7 +83,7 @@ pub type IterFrom<'a, T> = <T as IterableByValueFromGat<'a>>::IterFrom;
 
 /// A trait for obtaining a value-based iterator starting from a given position.
 ///
-/// This is an version of [`IterableByValue::iter_value`] that is useful for
+/// This is a version of [`IterableByValue::iter_value`] that is useful for
 /// types in which obtaining a global iterator and skipping is expensive. Note
 /// that we cannot provide a skip-based default implementation because the
 /// returned type is not necessarily the same type as that returned by
