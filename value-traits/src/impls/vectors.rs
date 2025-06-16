@@ -1,3 +1,17 @@
+//! Implementations of by-value slice and iterator traits for `std::vec::Vec<T>`.
+//!
+//! This module is only available when the `alloc` feature is enabled.
+//!
+//! It provides implementations of traits like `SliceByValue`, `SliceByValueGet`,
+//! `SliceByValueSet`, `SliceByValueRepl`, `SliceByValueSubslice*`, and `IterableByValue*`
+//! for `Vec<T>`.
+//!
+//! For `SliceByValue*` traits that return values (e.g., `SliceByValueGet::get_value`),
+//! elements are returned by cloning if `T: Clone`.
+//! Subslice operations (`SliceByValueSubslice*`) on `Vec<T>` return standard Rust slices
+//! (`&[T]` or `&mut [T]`), deferring to the slice implementations.
+//! Iterators obtained via `IterableByValue*` also clone elements from the vector.
+
 #![cfg(feature = "alloc")]
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
