@@ -100,6 +100,20 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 ///     let _: Option<usize> = s.iter_value().next();
 /// }
 /// ```
+///
+/// Once again, the [`Iter`] type alias can be used to make the bound more
+/// concise:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValue,
+///    for<'a> Iter<'a, S>: Iterator<Item = usize>,
+/// {
+///     let _: Option<usize> = s.iter_value().next();
+/// }
+/// ```
 pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Iter<'_, Self>;
@@ -202,6 +216,20 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 ///
 /// fn f<S>(s: S) where
 ///    S: IterateByValueFrom + for<'a> IterateByValueFromGat<'a, Item = usize>,
+/// {
+///     let _: Option<usize> = s.iter_value_from(0).next();
+/// }
+/// ```
+///
+/// Once again, the [`IterFrom`] type alias can be used to make the bound more
+/// concise:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValueFrom,
+///    for<'a> IterFrom<'a, S>: Iterator<Item = usize>,
 /// {
 ///     let _: Option<usize> = s.iter_value_from(0).next();
 /// }
