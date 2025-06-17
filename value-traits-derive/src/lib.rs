@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Procedural macros for the [`value-traits`](https://docs.rs/value-traits/latest/value_traits/) crate.
+//! Derive macros for the [`value-traits`](https://docs.rs/value-traits/latest/value_traits/) crate.
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -25,7 +25,7 @@ fn get_names(ty_generics_token_stream: proc_macro2::TokenStream) -> proc_macro2:
     }
 }
 
-/// A procedural macro fully implementing subslices on top of a
+/// A derive macro fully implementing subslices on top of a
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html).
 ///
 /// The macro defines a structure `<YOUR TYPE>SubsliceImpl` that keeps track of
@@ -129,7 +129,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
     res.into()
 }
 
-/// A procedural macro fully implementing mutable subslices on top of a
+/// A derive macro fully implementing mutable subslices on top of a
 /// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html)/[`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html)
 /// for which the derive macro [`Subslices`] has been already applied.
 ///
@@ -279,7 +279,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
     res.into()
 }
 
-/// A procedural macro fully implementing
+/// A derive macro fully implementing
 /// [`IterateByValue`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterateByValue.html)
 /// and
 /// [`IterateByValueFrom`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterateByValueFrom.html)
@@ -449,7 +449,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
     }.into()
 }
 
-/// A procedural macro that implements
+/// A derive macro that implements
 /// [`IterateByValue`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterateByValue.html)
 /// and
 /// [`IterateByValueFrom`](https://docs.rs/value-traits/latest/value_traits/iter/trait.IterateByValueFrom.html)

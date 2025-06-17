@@ -57,16 +57,16 @@ it is possible to implement [`IntoIterator`] in such a way to return values,
 many standard types as slices, vectors, etc., already have implementations
 returning references, so a different trait is necessary.
 
-Implementing subslices is tricky, so [`Subslices`] is a procedural macro that
+Implementing subslices is tricky, so [`Subslices`] is a derive macro that
 provides a complete implementation of subslicing for a type that implements
 [`SliceByValueGet`]; [`SubslicesMut`] similarly provides a complete
 implementation of subslicing for a type that implements [`SliceByValueSet`] and
 [`SliceByValueReplace`]. Note that a custom implementation might be more
-efficient if your type can directly represent an inner range. Analogous
-procedural macros [`Iterators`] and  [`IteratorsMut`] implement the by-value
-iteration traits for the structures created by [`Subslices`] and
-[`SubslicesMut`]. All these procedural macros are independent to make
-specialized, more efficient implementation possible at every step.
+efficient if your type can directly represent an inner range. Analogous derive
+macros [`Iterators`] and  [`IteratorsMut`] implement the by-value iteration
+traits for the structures created by [`Subslices`] and [`SubslicesMut`]. All
+these derive macros are independent to make specialized, more efficient
+implementation possible at every step.
 
 One important difference with slices is that iterating subslicing will lead
 to different types. We could not find any way to express in the current Rust
