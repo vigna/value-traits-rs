@@ -125,10 +125,11 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 
 /// A trait for obtaining a value-based iterator starting from a given position.
 ///
-/// This is a version of [`IterateByValue::iter_value`] that is useful for
-/// types in which obtaining a global iterator and skipping is expensive. Note
-/// that we cannot provide a skip-based default implementation because the
-/// returned type is not necessarily the same type as that returned by
+/// This is a version of [`IterateByValue`] that is useful for types in which
+/// obtaining a global iterator and skipping is expensive.
+///
+/// We cannot provide a skip-based default implementation because the returned
+/// type is not necessarily the same type as that returned by
 /// [`IterateByValue::iter_value`], but you are free to implement
 /// [`iter_value_from`](IterateByValueFrom::iter_value_from) that way.
 ///
@@ -157,8 +158,8 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 /// }
 /// ```
 ///
-/// In this case, you can equivalently use the [`IterFrom`] type alias, which might
-/// be more concise:
+/// In this case, you can equivalently use the [`IterFrom`] type alias, which
+/// might be more concise:
 ///
 /// ```rust
 /// use value_traits::iter::*;

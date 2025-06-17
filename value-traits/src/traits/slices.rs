@@ -429,22 +429,6 @@ impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> fo
 ///
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked`](`SliceByValueSubsliceRange::get_subslice_unchecked`).
-///
-/// Note that to bind the subslice type you need to use higher-rank trait bounds:
-/// ```rust
-/// use value_traits::slices::*;
-/// use core::ops::Range;
-///
-/// fn f<S>(s: S) where
-///    S: SliceByValueSubsliceRange<Range<usize>>,
-///    S: for<'a> SliceByValueSubsliceGat<'a, Subslice = &'a [u8]>,
-/// {
-///     let _: &[u8] = s.index_subslice(0..10);
-/// }
-/// ```
-/// However, such a bound is usually applied to the [`SliceByValueSubslice`]
-/// trait.
-
 pub trait SliceByValueSubsliceRange<R: ComposeRange>: for<'a> SliceByValueSubsliceGat<'a> {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
@@ -535,22 +519,6 @@ impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<
 ///
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked_mut`](`SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut`).
-///
-///
-/// Note that to bind the subslice type you need to use higher-rank trait bounds:
-/// ```rust
-/// use value_traits::slices::*;
-/// use core::ops::Range;
-///
-/// fn f<S>(mut s: S) where
-///    S: SliceByValueSubsliceRangeMut<Range<usize>>,
-///    S: for<'a> SliceByValueSubsliceGatMut<'a, Subslice = &'a mut [u8]>,
-/// {
-///     let _: &mut [u8] = s.index_subslice_mut(0..10);
-/// }
-/// ```
-/// However, such a bound is usually applied to the [`SliceByValueSubsliceMut`]
-/// trait.
 pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     for<'a> SliceByValueSubsliceGatMut<'a>
 {
@@ -607,18 +575,46 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueS
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceRange`] are available.
 ///
-/// Note that to bind the subslice type you need to use higher-rank trait bounds:
+/// Note that to bind the subslice type you need to use higher-rank trait
+/// bounds, as in:
+///
+/// ```rust
+/// use value_traits::slices::*;
+///
+/// fn f<S>(s: S) where
+///    S: SliceByValueSubslice + for<'a> SliceByValueSubsliceGat<'a, Subslice = &'a [u8]>,
+/// {
+///     let _: &[u8] = s.index_subslice(0..10);
+/// }
+/// ```
+///
+/// The bound applies uniformly to all type of ranges.
+///
+/// You can also bind the subslice using traits:
+///
+/// ```rust
+/// use value_traits::slices::*;
+///
+/// fn f<S>(s: S) where
+///    S: SliceByValueSubslice + for<'a> SliceByValueSubsliceGat<'a, Subslice: AsRef<[u8]>>,
+/// {
+///     let _: &[u8] = s.index_subslice(0..10).as_ref();
+/// }
+/// ```
+///
+/// In this case, you can equivalently use the [`Subslice`] type alias, which might
+/// be more concise:
+///
 /// ```rust
 /// use value_traits::slices::*;
 ///
 /// fn f<S>(s: S) where
 ///    S: SliceByValueSubslice,
-///    S: for<'a> SliceByValueSubsliceGat<'a, Subslice = &'a [u8]>,
+///    for<'a> Subslice<'a, S>: AsRef<[u8]>,
 /// {
-///     let _: &[u8] = s.index_subslice(0..10);
+///     let _: &[u8] = s.index_subslice(0..10).as_ref();
 /// }
 /// ```
-/// The bound applies uniformly to all type of ranges.
 pub trait SliceByValueSubslice:
     SliceByValueSubsliceRange<Range<usize>>
     + SliceByValueSubsliceRange<RangeFrom<usize>>
@@ -647,18 +643,46 @@ where
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceMut`] are available.
 ///
-/// Note that to bind the subslice type you need to use higher-rank trait bounds:
+/// Note that to bind the subslice type you need to use higher-rank trait
+/// bounds, as in:
+///
+/// ```rust
+/// use value_traits::slices::*;
+///
+/// fn f<S>(mut s: S) where
+///    S: SliceByValueSubsliceMut + for<'a> SliceByValueSubsliceGatMut<'a, Subslice = &'a mut [u8]>,
+/// {
+///     let _: &mut [u8] = s.index_subslice_mut(0..10);
+/// }
+/// ```
+///
+/// The bound applies uniformly to all type of ranges.
+///
+/// You can also bind the subslice using traits:
+///
+/// ```rust
+/// use value_traits::slices::*;
+///
+/// fn f<S>(mut s: S) where
+///    S: SliceByValueSubsliceMut + for<'a> SliceByValueSubsliceGatMut<'a, Subslice: AsMut<[u8]>>,
+/// {
+///     let _: &mut [u8] = s.index_subslice_mut(0..10).as_mut();
+/// }
+/// ```
+///
+/// In this case, you can equivalently use the [`SubsliceMut`] type alias, which might
+/// be more concise:
+///
 /// ```rust
 /// use value_traits::slices::*;
 ///
 /// fn f<S>(mut s: S) where
 ///    S: SliceByValueSubsliceMut,
-///    S: for<'a> SliceByValueSubsliceGatMut<'a, Subslice = &'a mut [u8]>,
+///    for<'a> SubsliceMut<'a, S>: AsMut<[u8]>,
 /// {
-///     let _: &mut [u8] = s.index_subslice_mut(0..10);
+///     let _: &mut [u8] = s.index_subslice_mut(0..10).as_mut();
 /// }
 /// ```
-/// The bound applies uniformly to all type of ranges.
 pub trait SliceByValueSubsliceMut:
     SliceByValueSubsliceRangeMut<Range<usize>>
     + SliceByValueSubsliceRangeMut<RangeFrom<usize>>
