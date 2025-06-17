@@ -47,8 +47,8 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 ///
 /// ## Binding the Iterator Type
 ///
-/// To bind the iterator type you need to use higher-rank trait
-/// bounds, as in:
+/// To bind the iterator type or the type of its items you need to use
+/// higher-rank trait bounds, as in:
 ///
 /// ```rust
 /// use value_traits::iter::*;
@@ -83,6 +83,21 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 ///    for<'a> Iter<'a, S>: ExactSizeIterator,
 /// {
 ///     let _ = s.iter_value().len();
+/// }
+/// ```
+///
+/// As it happens for
+/// [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html),
+/// it is possible to bind the type of the items returned by the iterator
+/// without referring to the iterator type itself:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValue + for<'a> IterateByValueGat<'a, Item = usize>,
+/// {
+///     let _: Option<usize> = s.iter_value().next();
 /// }
 /// ```
 pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
@@ -136,8 +151,8 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 ///
 /// ## Binding the Iterator Type
 ///
-/// To bind the iterator type you need to use higher-rank trait
-/// bounds, as in:
+/// To bind the iterator type or the type of its items you need to use
+/// higher-rank trait bounds, as in:
 ///
 /// ```rust
 /// use value_traits::iter::*;
@@ -172,6 +187,21 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 ///    for<'a> IterFrom<'a, S>: ExactSizeIterator,
 /// {
 ///     let _ = s.iter_value_from(0).len();
+/// }
+/// ```
+///
+/// As it happens for
+/// [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html),
+/// it is possible to bind the type of the items returned by the iterator
+/// without referring to the iterator type itself:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValueFrom + for<'a> IterateByValueFromGat<'a, Item = usize>,
+/// {
+///     let _: Option<usize> = s.iter_value_from(0).next();
 /// }
 /// ```
 pub trait IterateByValueFrom: for<'a> IterateByValueFromGat<'a> {

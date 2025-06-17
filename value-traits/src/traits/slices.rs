@@ -654,7 +654,7 @@ where
 /// use value_traits::slices::*;
 ///
 /// fn f<S>(mut s: S) where
-///    S: SliceByValueSubsliceMut + for<'a> SliceByValueSubsliceGatMut<'a, Subslice = &'a mut [u8]>,
+///    S: SliceByValueSubsliceMut + for<'a> SliceByValueSubsliceGatMut<'a, SubsliceMut = &'a mut [u8]>,
 /// {
 ///     let _: &mut [u8] = s.index_subslice_mut(0..10);
 /// }
@@ -668,7 +668,7 @@ where
 /// use value_traits::slices::*;
 ///
 /// fn f<S>(mut s: S) where
-///    S: SliceByValueSubsliceMut + for<'a> SliceByValueSubsliceGatMut<'a, Subslice: AsMut<[u8]>>,
+///    S: SliceByValueSubsliceMut + for<'a> SliceByValueSubsliceGatMut<'a, SubsliceMut: AsMut<[u8]>>,
 /// {
 ///     let _: &mut [u8] = s.index_subslice_mut(0..10).as_mut();
 /// }
