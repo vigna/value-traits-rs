@@ -19,6 +19,8 @@ pub trait IterateByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     type Iter: 'a + Iterator<Item = Self::Item>;
 }
 
+/// A convenience type representing the type of iterator returned by a type
+/// implementing [`IterateByValueGat`].
 pub type Iter<'a, T> = <T as IterateByValueGat<'a>>::Iter;
 
 impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &T {
@@ -40,20 +42,48 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 /// iterator. However, the intended semantics is that the iterator will return
 /// values.
 ///
-/// If you need to iterate from a given position, and you can implement such
-/// an iterator more efficiently, please consider [`IterateByValueFrom`].
+/// If you need to iterate from a given position, and you can implement such an
+/// iterator more efficiently, please consider [`IterateByValueFrom`].
 ///
-/// Note that to bound the iterator type you need to use higher-rank trait bounds:
+/// Note that to bind the iterator type you need to use higher-rank trait
+/// bounds, as in:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValue + for<'a> IterateByValueGat<'a, Iter = std::slice::Iter<'a, usize>>,
+/// {
+///     let _: std::slice::Iter<'_, usize> = s.iter_value();
+/// }
+/// ```
+///
+/// You can also bind the iterator using traits:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValue + for<'a> IterateByValueGat<'a, Iter: ExactSizeIterator>,
+/// {
+///     let _ = s.iter_value().len();
+/// }
+/// ```
+///
+/// In this case, you can equivalently use the [`Iter`] type alias, which might
+/// be more concise:
+///
 /// ```rust
 /// use value_traits::iter::*;
 ///
 /// fn f<S>(s: S) where
 ///    S: IterateByValue,
-///    S: for<'a> IterateByValueGat<'a, Iter: ExactSizeIterator>,
+///    for<'a> Iter<'a, S>: ExactSizeIterator,
 /// {
 ///     let _ = s.iter_value().len();
 /// }
 /// ```
+
 pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Iter<'_, Self>;
@@ -102,13 +132,40 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 /// [`IterateByValue::iter_value`], but you are free to implement
 /// [`iter_value_from`](IterateByValueFrom::iter_value_from) that way.
 ///
-/// Note that to bound the iterator type you need to use higher-rank trait bounds:
+/// Note that to bind the iterator type you need to use higher-rank trait
+/// bounds, as in:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValueFrom + for<'a> IterateByValueFromGat<'a, IterFrom = std::slice::Iter<'a, usize>>,
+/// {
+///     let _: std::slice::Iter<'_, usize> = s.iter_value_from(0);
+/// }
+/// ```
+///
+/// You can also bind the iterator using traits:
+///
+/// ```rust
+/// use value_traits::iter::*;
+///
+/// fn f<S>(s: S) where
+///    S: IterateByValueFrom + for<'a> IterateByValueFromGat<'a, IterFrom: ExactSizeIterator>,
+/// {
+///     let _ = s.iter_value_from(0).len();
+/// }
+/// ```
+///
+/// In this case, you can equivalently use the [`IterFrom`] type alias, which might
+/// be more concise:
+///
 /// ```rust
 /// use value_traits::iter::*;
 ///
 /// fn f<S>(s: S) where
 ///    S: IterateByValueFrom,
-///    S: for<'a> IterateByValueFromGat<'a, IterFrom: ExactSizeIterator>,
+///    for<'a> IterFrom<'a, S>: ExactSizeIterator,
 /// {
 ///     let _ = s.iter_value_from(0).len();
 /// }

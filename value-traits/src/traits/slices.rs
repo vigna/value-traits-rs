@@ -430,7 +430,7 @@ impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> fo
 /// The only method that must be implemented is
 /// [`get_subslice_unchecked`](`SliceByValueSubsliceRange::get_subslice_unchecked`).
 ///
-/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// Note that to bind the subslice type you need to use higher-rank trait bounds:
 /// ```rust
 /// use value_traits::slices::*;
 /// use core::ops::Range;
@@ -537,7 +537,7 @@ impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<
 /// [`get_subslice_unchecked_mut`](`SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut`).
 ///
 ///
-/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// Note that to bind the subslice type you need to use higher-rank trait bounds:
 /// ```rust
 /// use value_traits::slices::*;
 /// use core::ops::Range;
@@ -607,7 +607,7 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueS
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceRange`] are available.
 ///
-/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// Note that to bind the subslice type you need to use higher-rank trait bounds:
 /// ```rust
 /// use value_traits::slices::*;
 ///
@@ -647,7 +647,7 @@ where
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceMut`] are available.
 ///
-/// Note that to bound the subslice type you need to use higher-rank trait bounds:
+/// Note that to bind the subslice type you need to use higher-rank trait bounds:
 /// ```rust
 /// use value_traits::slices::*;
 ///

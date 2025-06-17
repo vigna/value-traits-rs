@@ -47,14 +47,14 @@ single elements, you have methods such as [`get_subslice`] and
 [`index_subslice`], which have the same semantics as the corresponding methods
 of slices.
 
-The other missing trait contained in this crate is [`IterateByValue`], which
-has the same logic for iterators. Rust has presently no trait specifying
-that you can iterate by value on some structure without consuming it
-as [`IntoIterator`] does. What one usually does is to implement [`IntoIterator`]
-on a reference, providing an iterator on references on the element, which
-brings back the problem of constraining such implementations to explicit
-representations. While it is possible to implement [`IntoIterator`] in such
-a way to return values, slices, vectors, etc., already have implementations
+The other missing trait contained in this crate is [`IterateByValue`], which has
+the same logic for iterators. Rust has presently no trait specifying that you
+can iterate by value on some structure without consuming it as [`IntoIterator`]
+does. What one usually does is to implement [`IntoIterator`] on a reference,
+providing an iterator on references on the elements, which brings back the
+problem of constraining such implementations to explicit representations. While
+it is possible to implement [`IntoIterator`] in such a way to return values,
+many standard types as slices, vectors, etc., already have implementations
 returning references, so a different trait is necessary.
 
 Implementing subslices is tricky, so [`Subslices`] is a procedural macro that
