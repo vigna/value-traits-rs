@@ -494,10 +494,10 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubs
 pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
     SliceByValueSet + SliceByValueRepl
 {
-    type Subslice: 'a
+    type SubsliceMut: 'a
         + SliceByValueSet<Value = Self::Value>
         + SliceByValueRepl<Value = Self::Value>
-        + SliceByValueSubsliceGatMut<'a, Subslice = Self::Subslice> // recursion
+        + SliceByValueSubsliceGatMut<'a, SubsliceMut = Self::SubsliceMut> // recursion
         + SliceByValueSubsliceMut;
 }
 
@@ -505,10 +505,10 @@ pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
 /// of a type implementing [`SliceByValueSubsliceGatMut`].
 #[allow(type_alias_bounds)] // yeah the type alias bounds are not enforced, but they are useful for documentation
 pub type SubsliceMut<'a, T: SliceByValueSubsliceGatMut<'a>> =
-    <T as SliceByValueSubsliceGatMut<'a>>::Subslice;
+    <T as SliceByValueSubsliceGatMut<'a>>::SubsliceMut;
 
 impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<'a> for &mut T {
-    type Subslice = T::Subslice;
+    type SubsliceMut = T::SubsliceMut;
 }
 
 /// A trait implementing mutable subslicing for a specific range parameter.
@@ -762,7 +762,7 @@ mod alloc_impls {
         type Subslice = S::Subslice;
     }
     impl<'a, S: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<'a> for Box<S> {
-        type Subslice = S::Subslice;
+        type SubsliceMut = S::SubsliceMut;
     }
 
     macro_rules! impl_range_alloc {

@@ -212,12 +212,12 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 
         #[automatically_derived]
         impl<'__subslice_impl, '__subslice_gat, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_gat> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
-            type Subslice = #subslice_impl_mut<'__subslice_gat, #names>;
+            type SubsliceMut = #subslice_impl_mut<'__subslice_gat, #names>;
         }
 
         #[automatically_derived]
         impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueSubsliceGatMut<'__subslice_impl> for #input_ident #ty_generics #where_clause  {
-            type Subslice = #subslice_impl_mut<'__subslice_impl, #names>;
+            type SubsliceMut = #subslice_impl_mut<'__subslice_impl, #names>;
         }
 
     };

@@ -43,7 +43,7 @@ where
 fn test_range_mut<'a, S>(s: &mut S) -> &mut [i32]
 where
     S: SliceByValueSubsliceRangeMut<Range<usize>> + ?Sized,
-    S: for<'b> SliceByValueSubsliceGatMut<'b, Subslice = &'b mut [i32]>,
+    S: for<'b> SliceByValueSubsliceGatMut<'b, SubsliceMut = &'b mut [i32]>,
 {
     let a = s.index_subslice_mut(0..2);
     // let _ = s.index_subslice_mut(0..2); // this instead should not compile

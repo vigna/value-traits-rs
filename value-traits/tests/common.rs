@@ -117,7 +117,7 @@ where
         + SliceByValueSet
         + SliceByValueRepl
         + SliceByValueSubsliceMut,
-    for<'a> <S as SliceByValueSubsliceGatMut<'a>>::Subslice:
+    for<'a> <S as SliceByValueSubsliceGatMut<'a>>::SubsliceMut:
         SliceByValue<Value = i32> + SliceByValueGet + SliceByValueSet + SliceByValueRepl,
 {
     let r = ..;

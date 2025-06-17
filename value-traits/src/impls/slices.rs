@@ -90,7 +90,7 @@ impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for [T] {
 }
 
 impl<'a, T: Clone> SliceByValueSubsliceGatMut<'a> for [T] {
-    type Subslice = &'a mut [T];
+    type SubsliceMut = &'a mut [T];
 }
 
 macro_rules! impl_range_slices {

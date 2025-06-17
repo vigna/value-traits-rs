@@ -85,7 +85,7 @@ impl<'a, T: Clone, const N: usize> SliceByValueSubsliceGat<'a> for [T; N] {
 }
 
 impl<'a, T: Clone, const N: usize> SliceByValueSubsliceGatMut<'a> for [T; N] {
-    type Subslice = &'a mut [T];
+    type SubsliceMut = &'a mut [T];
 }
 
 macro_rules! impl_range_arrays {
