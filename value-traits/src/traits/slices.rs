@@ -393,7 +393,7 @@ impl ComposeRange for RangeToInclusive<usize> {
 ///
 /// This is a result of HRTBs not having a way to express qualifiers (`for<'any
 /// where Self: 'any> Self: Trait`) and effectively making HRTBs only useful
-/// when you want to express a trait constraint on ALL lifetimes, including
+/// when you want to express a trait constraint on *all* lifetimes, including
 /// `'static` (`for<'all> Self: trait`)
 ///
 /// Please see [Sabrina's Blog][1] for more information, and how a trait like

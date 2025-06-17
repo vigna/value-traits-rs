@@ -137,6 +137,8 @@ impl<'a, T: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for &m
     type IterFrom = T::IterFrom;
 }
 
+/// A convenience type representing the type of iterator returned by a type
+/// implementing [`IterateByValueFromGat`].
 pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 
 /// A trait for obtaining a by-value iterator starting from a given position.
