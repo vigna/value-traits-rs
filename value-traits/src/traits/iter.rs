@@ -6,11 +6,11 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Traits for value-based iterators.
+//! Traits for by-value iterators.
 
 use crate::{ImplBound, Ref};
 
-/// A GAT-like trait specifying the type of a value-based iterator.
+/// A GAT-like trait specifying the type of a by-value iterator.
 ///
 /// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
 /// more information.
@@ -33,7 +33,7 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
     type Iter = T::Iter;
 }
 
-/// A trait for obtaining a value-based iterator.
+/// A trait for obtaining a by-value iterator.
 ///
 /// This trait necessary as all standard Rust containers already have
 /// [`IntoIterator`]-based methods for obtaining reference-based iterators.
@@ -45,7 +45,9 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 /// If you need to iterate from a given position, and you can implement such an
 /// iterator more efficiently, please consider [`IterateByValueFrom`].
 ///
-/// Note that to bind the iterator type you need to use higher-rank trait
+/// ## Binding the Iterator Type
+///
+/// To bind the iterator type you need to use higher-rank trait
 /// bounds, as in:
 ///
 /// ```rust
@@ -83,7 +85,6 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 ///     let _ = s.iter_value().len();
 /// }
 /// ```
-
 pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Iter<'_, Self>;
@@ -101,7 +102,7 @@ impl<T: IterateByValue> IterateByValue for &mut T {
     }
 }
 
-/// A GAT-like trait specifying the type of a value-based iterator starting from
+/// A GAT-like trait specifying the type of a by-value iterator starting from
 /// a given position.
 ///
 /// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
@@ -123,7 +124,7 @@ impl<'a, T: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for &m
 
 pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 
-/// A trait for obtaining a value-based iterator starting from a given position.
+/// A trait for obtaining a by-value iterator starting from a given position.
 ///
 /// This is a version of [`IterateByValue`] that is useful for types in which
 /// obtaining a global iterator and skipping is expensive.
@@ -133,7 +134,9 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 /// [`IterateByValue::iter_value`], but you are free to implement
 /// [`iter_value_from`](IterateByValueFrom::iter_value_from) that way.
 ///
-/// Note that to bind the iterator type you need to use higher-rank trait
+/// ## Binding the Iterator Type
+///
+/// To bind the iterator type you need to use higher-rank trait
 /// bounds, as in:
 ///
 /// ```rust

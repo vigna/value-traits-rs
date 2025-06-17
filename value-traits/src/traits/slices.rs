@@ -6,16 +6,16 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Traits for value-based slices.
+//! Traits for by-value slices.
 //!
-//! Value-based slices are analogous to Rust's built-in slices, but they operate
+//! By-value slices are analogous to Rust's built-in slices, but they operate
 //! on values rather than references. This allows for more flexibility in how
 //! slices are used and manipulated.
 //!
-//! For example, a value-based slice can be defined functionally, implicitly, or
+//! For example, a by-value slice can be defined functionally, implicitly, or
 //! using a succinct/compressed representation.
 //!
-//! The fundamental trait for value-based slices is [`SliceByValue`], which
+//! The fundamental trait for by-value slices is [`SliceByValue`], which
 //! specifies the type of the values and the length of the slice. Additional
 //! functionality is provided by the [`SliceByValueGet`], [`SliceByValueSet`],
 //! and [`SliceByValueRepl`] traits, which allow for getting, setting, and
@@ -109,7 +109,7 @@ use core::ops::{
 
 use crate::{ImplBound, Ref};
 
-/// Basic slice-by-value trait, specifying just the type of the values and the
+/// Basic by-value slice trait, specifying just the type of the values and the
 /// length of the slice.
 pub trait SliceByValue {
     /// The type of the values in the slice.
@@ -155,7 +155,7 @@ fn assert_range(range: &impl ComposeRange, len: usize) {
     );
 }
 
-/// Read-only slice-by-value trait.
+/// Read-only by-value slice trait.
 ///
 /// The only method that must be implemented is
 /// [`get_value_unchecked`](`SliceByValueGet::get_value_unchecked`).
@@ -213,7 +213,7 @@ impl<S: SliceByValueGet + ?Sized> SliceByValueGet for &mut S {
     }
 }
 
-/// Mutable slice-by-value trait providing setting methods.
+/// Mutable by-value slice trait providing setting methods.
 ///
 /// The only method that must be implemented is
 /// [`set_value_unchecked`](`SliceByValueSet::set_value_unchecked`).
@@ -254,7 +254,7 @@ impl<S: SliceByValueSet + ?Sized> SliceByValueSet for &mut S {
     }
 }
 
-/// Mutable slice-by-value trait providing replacement methods.
+/// Mutable by-value slice trait providing replacement methods.
 ///
 /// If you just need to set a value, use [`SliceByValueSet`] instead.
 pub trait SliceByValueRepl: SliceByValue {
@@ -575,7 +575,9 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueS
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceRange`] are available.
 ///
-/// Note that to bind the subslice type you need to use higher-rank trait
+/// ## Binding the Subslice Type
+///
+/// To bind the iterator type you need to use higher-rank trait
 /// bounds, as in:
 ///
 /// ```rust
@@ -643,7 +645,9 @@ where
 /// A blanket implementation automatically implements the trait if all necessary
 /// implementations of [`SliceByValueSubsliceMut`] are available.
 ///
-/// Note that to bind the subslice type you need to use higher-rank trait
+/// ## Binding the Subslice Type
+///
+/// To bind the iterator type you need to use higher-rank trait
 /// bounds, as in:
 ///
 /// ```rust
