@@ -7,5 +7,5 @@ members = [
 ]
 
 [workspace.dependencies]
-value-traits = {path="./value-traits", version="0.1.1"}
-value-traits-derive = {path="./value-traits-derive", version="0.1.0"}
+value-traits = {path="./value-traits", version="0.1.2"}
+value-traits-derive = {path="./value-traits-derive", version="0.1.2"}
