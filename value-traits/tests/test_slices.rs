@@ -74,7 +74,7 @@ fn test_iter() {
     generic_iter(&s.to_vec(), &s);
 }
 
-use value_traits_derive::{Iterators, IteratorsMut, Subslices, SubslicesMut};
+use value_traits::{Iterators, IteratorsMut, Subslices, SubslicesMut};
 
 #[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
 pub struct Sbv<T: Clone>(Vec<T>);
