@@ -13,7 +13,7 @@ authors = [
 ]
 
 [dependencies]
-value-traits-derive.workspace = true
+value-traits-derive = { workspace = true, optional = true }
 
 [features]
 default = ["std", "derive"]
