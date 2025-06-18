@@ -16,6 +16,9 @@
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
+#[cfg(feature = "derive")]
+pub use value_traits_derive::{Iterators, IteratorsMut, Subslices, SubslicesMut};
+
 // Impls are not re-exported
 pub mod impls;
 
