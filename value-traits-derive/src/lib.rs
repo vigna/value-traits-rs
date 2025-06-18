@@ -6,6 +6,10 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
+#![warn(missing_docs)]
+#![warn(clippy::missing_errors_doc)]
+#![warn(clippy::missing_panics_doc)]
+
 //! Derive macros for the [`value-traits`](https://docs.rs/value-traits/latest/value_traits/) crate.
 
 use proc_macro::TokenStream;

@@ -404,6 +404,7 @@ impl ComposeRange for RangeToInclusive<usize> {
 pub trait SliceByValueSubsliceGat<'a, __Implicit: ImplBound = Ref<'a, Self>>:
     SliceByValueGet
 {
+    /// The type of the subslice.
     type Subslice: 'a + SliceByValueGet<Value = Self::Value> + SliceByValueSubslice;
 }
 
@@ -494,6 +495,7 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubs
 pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
     SliceByValueSet + SliceByValueRepl
 {
+    /// The type of the mutable subslice.
     type SubsliceMut: 'a
         + SliceByValueSet<Value = Self::Value>
         + SliceByValueRepl<Value = Self::Value>

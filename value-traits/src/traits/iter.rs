@@ -15,7 +15,10 @@ use crate::{ImplBound, Ref};
 /// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
 /// more information.
 pub trait IterateByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+    /// The type of the items returned by the iterator.
     type Item;
+    /// The type of the iterator returned by
+    /// [`iter_value`](IterateByValue::iter_value).
     type Iter: 'a + Iterator<Item = Self::Item>;
 }
 
@@ -137,7 +140,10 @@ impl<T: IterateByValue> IterateByValue for &mut T {
 /// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
 /// more information.
 pub trait IterateByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
+    /// The type of the items returned by the iterator.
     type Item;
+    /// The type of the iterator returned by
+    /// [`iter_value_from`](IterateByValueFrom::iter_value_from).
     type IterFrom: 'a + Iterator<Item = Self::Item>;
 }
 

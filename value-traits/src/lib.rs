@@ -6,6 +6,9 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
+#![warn(missing_docs)]
+#![warn(clippy::missing_errors_doc)]
+#![warn(clippy::missing_panics_doc)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unconditional_recursion)]
 #![doc = include_str!("../README.md")]
