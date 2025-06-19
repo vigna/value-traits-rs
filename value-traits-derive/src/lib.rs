@@ -14,7 +14,7 @@
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse2, parse_macro_input, AngleBracketedGenericArguments, DeriveInput};
+use syn::{parse2, parse_macro_input, punctuated::Punctuated, AngleBracketedGenericArguments, DeriveInput};
 
 /// Helper function returning the list of parameter names without angle brackets.
 fn get_names(ty_generics_token_stream: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
@@ -67,6 +67,25 @@ fn add_bounds_to_where_clause(
     }
 }
 
+fn get_params_without_defaults(
+    generics: &syn::Generics,
+) -> Punctuated<syn::GenericParam, syn::token::Comma> {
+    // Remove default type parameters
+    let mut params= generics.params.clone();
+    params.iter_mut().for_each(|param| {
+        match param {
+            syn::GenericParam::Type(ty_param) => {
+                ty_param.default = None;
+            }
+            syn::GenericParam::Const(const_param) => {
+                const_param.default = None;
+            }
+            _ => {}
+        }
+    });
+    params
+}
+
 /// A derive macro fully implementing subslices on top of a
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html).
 ///
@@ -97,7 +116,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 
     let input_ident = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let params = &input.generics.params;
+    let params = get_params_without_defaults(&input.generics);
     let ty_generics_token_stream = ty_generics.clone().into_token_stream();
 
     let names = get_names(ty_generics_token_stream);
@@ -218,7 +237,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 
     let input_ident = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let params = &input.generics.params;
+    let params = get_params_without_defaults(&input.generics);
     let ty_generics_token_stream = ty_generics.clone().into_token_stream();
 
     let names = get_names(ty_generics_token_stream);
@@ -372,7 +391,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
     let input_ident = input.ident;
     input.generics.make_where_clause();
     let (_impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let params = &input.generics.params;
+    let params = get_params_without_defaults(&input.generics);
     let ty_generics_token_stream = ty_generics.clone().into_token_stream();
 
     let names = get_names(ty_generics_token_stream);
@@ -554,7 +573,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
     let input_ident = input.ident;
     input.generics.make_where_clause();
     let (_impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let params = &input.generics.params;
+    let params = get_params_without_defaults(&input.generics);
     let ty_generics_token_stream = ty_generics.clone().into_token_stream();
 
     let names = get_names(ty_generics_token_stream);

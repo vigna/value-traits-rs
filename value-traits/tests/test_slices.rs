@@ -79,7 +79,7 @@ use value_traits::{Iterators, IteratorsMut, Subslices, SubslicesMut};
 #[derive(Subslices, Iterators, SubslicesMut, IteratorsMut)]
 #[value_traits_subslices_mut(bound = "T: Copy")]
 #[value_traits_iterators_mut(bound = "T: Copy")]
-pub struct Sbv<T: Clone>(Vec<T>);
+pub struct Sbv<T: Clone = usize>(Vec<T>);
 
 // Checks that we can derive for two different structs in the same module
 #[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
