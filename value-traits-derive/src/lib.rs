@@ -14,7 +14,9 @@
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse2, parse_macro_input, punctuated::Punctuated, AngleBracketedGenericArguments, DeriveInput};
+use syn::{
+    parse2, parse_macro_input, punctuated::Punctuated, AngleBracketedGenericArguments, DeriveInput,
+};
 
 /// Helper function returning the list of parameter names without angle brackets.
 fn get_names(ty_generics_token_stream: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
@@ -71,17 +73,15 @@ fn get_params_without_defaults(
     generics: &syn::Generics,
 ) -> Punctuated<syn::GenericParam, syn::token::Comma> {
     // Remove default type parameters
-    let mut params= generics.params.clone();
-    params.iter_mut().for_each(|param| {
-        match param {
-            syn::GenericParam::Type(ty_param) => {
-                ty_param.default = None;
-            }
-            syn::GenericParam::Const(const_param) => {
-                const_param.default = None;
-            }
-            _ => {}
+    let mut params = generics.params.clone();
+    params.iter_mut().for_each(|param| match param {
+        syn::GenericParam::Type(ty_param) => {
+            ty_param.default = None;
         }
+        syn::GenericParam::Const(const_param) => {
+            const_param.default = None;
+        }
+        _ => {}
     });
     params
 }
