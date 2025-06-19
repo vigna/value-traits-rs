@@ -171,8 +171,9 @@ impl SliceByValueGet for Sbv3 {
     }
 }
 
-// Checks that we can derive a union.
+// Checks that we can derive a union and that bounds work.
 #[derive(Subslices, Iterators)]
+#[value_trait(bound = "usize: TryFrom<u8>")]
 pub union Sbv4 {
     _only_this: usize,
 }
