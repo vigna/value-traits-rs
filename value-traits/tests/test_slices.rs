@@ -76,11 +76,15 @@ fn test_iter() {
 
 use value_traits::{Iterators, IteratorsMut, Subslices, SubslicesMut};
 
-#[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
+#[derive(Subslices, Iterators, SubslicesMut, IteratorsMut)]
+#[value_traits_subslices_mut(bound = "T: Copy")]
+#[value_traits_iterators_mut(bound = "T: Copy")]
 pub struct Sbv<T: Clone>(Vec<T>);
 
 // Checks that we can derive for two different structs in the same module
 #[derive(Subslices, SubslicesMut, Iterators, IteratorsMut)]
+#[value_traits_subslices_mut(bound = "T: Copy")]
+#[value_traits_iterators_mut(bound = "T: Copy")]
 pub struct Sbv2<T: Clone>(Vec<T>);
 
 macro_rules! impl_slice {
@@ -99,7 +103,10 @@ macro_rules! impl_slice {
             }
         }
 
-        impl<T: Clone> SliceByValueSet for $ty<T> {
+        impl<T: Clone> SliceByValueSet for $ty<T>
+        where
+            T: Copy,
+        {
             unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
                 self.0.as_mut_slice().set_value(index, value)
             }
@@ -171,9 +178,8 @@ impl SliceByValueGet for Sbv3 {
     }
 }
 
-// Checks that we can derive a union and that bounds work.
+// Checks that we can derive a union
 #[derive(Subslices, Iterators)]
-#[value_trait(bound = "usize: TryFrom<u8>")]
 pub union Sbv4 {
     _only_this: usize,
 }

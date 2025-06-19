@@ -30,10 +30,13 @@ fn get_names(ty_generics_token_stream: proc_macro2::TokenStream) -> proc_macro2:
 }
 
 /// Helper function to extract additional bounds from attributes
-fn extract_additional_bounds(input: &DeriveInput) -> Vec<proc_macro2::TokenStream> {
+fn extract_additional_bounds(
+    input: &DeriveInput,
+    attr_name: &str,
+) -> Vec<proc_macro2::TokenStream> {
     let mut additional_bounds = Vec::new();
     for attr in &input.attrs {
-        if attr.path().is_ident("value_trait") {
+        if attr.path().is_ident(attr_name) {
             attr.parse_nested_meta(|meta| {
                 if meta.path.is_ident("bound") {
                     let bound: syn::LitStr = meta.value()?.parse()?;
@@ -43,7 +46,7 @@ fn extract_additional_bounds(input: &DeriveInput) -> Vec<proc_macro2::TokenStrea
                 }
                 Ok(())
             })
-            .expect("Failed to parse value_trait attribute");
+            .expect("Failed to parse attribute {attr_name}");
         }
     }
     additional_bounds
@@ -82,14 +85,14 @@ fn add_bounds_to_where_clause(
 /// and
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_trait(bound = "<BOUND>")]` attribute. Multiple bounds can
+/// using the `#[value_traits_subslices(bound = "<BOUND>")]` attribute. Multiple bounds can
 /// be specified with multiple attributes.
-#[proc_macro_derive(Subslices, attributes(value_trait))]
+#[proc_macro_derive(Subslices, attributes(value_traits_subslices))]
 pub fn subslices(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
 
     // Extract and add additional bounds
-    let additional_bounds = extract_additional_bounds(&input);
+    let additional_bounds = extract_additional_bounds(&input, "value_traits_subslices");
     add_bounds_to_where_clause(&mut input.generics, additional_bounds);
 
     let input_ident = input.ident;
@@ -202,14 +205,14 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 /// and
 /// [`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_trait(bound = "<BOUND>")]` attribute. Multiple bounds can
+/// using the `#[value_trait_subslice_mut(bound = "<BOUND>")]` attribute. Multiple bounds can
 /// be specified with multiple attributes.
-#[proc_macro_derive(SubslicesMut, attributes(value_trait))]
+#[proc_macro_derive(SubslicesMut, attributes(value_traits_subslices_mut))]
 pub fn subslices_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
 
     // Extract and add additional bounds
-    let additional_bounds = extract_additional_bounds(&input);
+    let additional_bounds = extract_additional_bounds(&input, "value_traits_subslices_mut");
     add_bounds_to_where_clause(&mut input.generics, additional_bounds);
 
     let input_ident = input.ident;
@@ -355,14 +358,14 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 /// and
 /// [`SliceByValueGet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueGet.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_trait(bound = "<BOUND>")]` attribute. Multiple bounds can
+/// using the `#[value_traits_iterators(bound = "<BOUND>")]` attribute. Multiple bounds can
 /// be specified with multiple attributes.
-#[proc_macro_derive(Iterators, attributes(value_trait))]
+#[proc_macro_derive(Iterators, attributes(value_traits_iterators))]
 pub fn iterators(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
 
     // Extract and add additional bounds
-    let additional_bounds = extract_additional_bounds(&input);
+    let additional_bounds = extract_additional_bounds(&input, "value_traits_iterators");
     add_bounds_to_where_clause(&mut input.generics, additional_bounds);
 
     let input_ident = input.ident;
@@ -536,14 +539,14 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 /// and
 /// [`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_trait(bound = "<BOUND>")]` attribute. Multiple bounds can
+/// using the `#[value_traits_iterators_mut(bound = "<BOUND>")]` attribute. Multiple bounds can
 /// be specified with multiple attributes.
-#[proc_macro_derive(IteratorsMut, attributes(value_trait))]
+#[proc_macro_derive(IteratorsMut, attributes(value_traits_iterators_mut))]
 pub fn iterators_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
 
     // Extract and add additional bounds
-    let additional_bounds = extract_additional_bounds(&input);
+    let additional_bounds = extract_additional_bounds(&input, "value_traits_iterators_mut");
     add_bounds_to_where_clause(&mut input.generics, additional_bounds);
 
     let input_ident = input.ident;
