@@ -199,14 +199,15 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 ///
 /// ## Additional Bounds
 ///
-/// Since this macro has no knowledge of the bounds of the generic
-/// parameters in the implementations of
-/// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html)
+/// Since this macro has no knowledge of the bounds of the generic parameters in
+/// the implementations of
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html),
+/// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html),
 /// and
 /// [`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_trait_subslice_mut(bound = "<BOUND>")]` attribute. Multiple bounds can
-/// be specified with multiple attributes.
+/// using the `#[value_trait_subslice_mut(bound = "<BOUND>")]` attribute.
+/// Multiple bounds can be specified with multiple attributes.
 #[proc_macro_derive(SubslicesMut, attributes(value_traits_subslices_mut))]
 pub fn subslices_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
@@ -533,14 +534,15 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 ///
 /// ## Additional Bounds
 ///
-/// Since this macro has no knowledge of the bounds of the generic
-/// parameters in the implementations of
-/// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html)
+/// Since this macro has no knowledge of the bounds of the generic parameters in
+/// the implementations of
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html),
+/// [`SliceByValueSet`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSet.html),
 /// and
 /// [`SliceByValueRepl`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueRepl.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_traits_iterators_mut(bound = "<BOUND>")]` attribute. Multiple bounds can
-/// be specified with multiple attributes.
+/// using the `#[value_traits_iterators_mut(bound = "<BOUND>")]` attribute.
+/// Multiple bounds can be specified with multiple attributes.
 #[proc_macro_derive(IteratorsMut, attributes(value_traits_iterators_mut))]
 pub fn iterators_mut(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
