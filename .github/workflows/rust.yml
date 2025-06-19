@@ -20,9 +20,9 @@ jobs:
       - name: Run clippy
         run: cargo clippy #-- -Dclippy::all -Dclippy::cargo
       - name: Run tests no_std & no_alloc
-        run: RUST_BACKTRACE=full cargo test --verbose --no-default-features
+        run: RUST_BACKTRACE=full cargo test --verbose --no-default-features--features "derive"
       - name: Run tests no_std & alloc
-        run: RUST_BACKTRACE=full cargo test --verbose --no-default-features --features "alloc"
+        run: RUST_BACKTRACE=full cargo test --verbose --no-default-features --features "alloc,derive"
       - name: Run tests std & alloc
         run: RUST_BACKTRACE=full cargo test --verbose
 
