@@ -1,6 +1,11 @@
 # Change Log
 
-## [0.1.3] -
+## [0.1.3] 2025-06-20
+
+### New
+
+* Four attributes makes it possible to add trait bounds to the
+  derive-based implementations of subslices and iterators.
 
 ### Improved
 
