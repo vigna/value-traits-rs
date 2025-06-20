@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.1.4] -
+
+### New
+
+* Implemented access and iteration traits for `VecDeque`.
+
+
 ## [0.1.3] 2025-06-20
 
 ### New

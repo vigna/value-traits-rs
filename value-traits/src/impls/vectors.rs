@@ -19,6 +19,7 @@ use core::{
     iter::{Cloned, Skip},
     ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
 };
+use std::collections::VecDeque;
 
 use crate::{
     iter::{
@@ -158,6 +159,83 @@ impl<'a, T: Clone> IterateByValueFromGat<'a> for Vec<T> {
 }
 
 impl<T: Clone> IterateByValueFrom for Vec<T> {
+    fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+        self.iter().skip(from).cloned()
+    }
+}
+
+impl<T> SliceByValue for VecDeque<T> {
+    type Value = T;
+    #[inline]
+    fn len(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<T: Clone> SliceByValueGet for VecDeque<T> {
+    #[inline]
+    fn get_value(&self, index: usize) -> Option<Self::Value> {
+        (*self).get(index).cloned()
+    }
+
+    #[inline]
+    fn index_value(&self, index: usize) -> Self::Value {
+        self[index].clone()
+    }
+
+    #[inline]
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        // SAFETY: index is within bounds
+        let val_ref = unsafe { (*self).get(index).unwrap_unchecked() };
+        val_ref.clone()
+    }
+}
+
+impl<T: Clone> SliceByValueRepl for VecDeque<T> {
+    #[inline]
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        core::mem::replace(&mut self[index], value)
+    }
+
+    #[inline]
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        // SAFETY: index is within bounds
+        let val_mut = unsafe { self.get_mut(index).unwrap_unchecked() };
+        core::mem::replace(val_mut, value)
+    }
+}
+
+impl<T: Clone> SliceByValueSet for VecDeque<T> {
+    #[inline]
+    fn set_value(&mut self, index: usize, value: Self::Value) {
+        self[index] = value;
+    }
+
+    #[inline]
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+        // SAFETY: index is within bounds
+        let val_mut = { self.get_mut(index).unwrap_unchecked() };
+        *val_mut = value;
+    }
+}
+
+impl<'a, T: Clone> IterateByValueGat<'a> for VecDeque<T> {
+    type Item = T;
+    type Iter = Cloned<std::collections::vec_deque::Iter<'a, T>>;
+}
+
+impl<T: Clone> IterateByValue for VecDeque<T> {
+    fn iter_value(&self) -> Iter<'_, Self> {
+        self.iter().cloned()
+    }
+}
+
+impl<'a, T: Clone> IterateByValueFromGat<'a> for VecDeque<T> {
+    type Item = T;
+    type IterFrom = Cloned<Skip<std::collections::vec_deque::Iter<'a, T>>>;
+}
+
+impl<T: Clone> IterateByValueFrom for VecDeque<T> {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         self.iter().skip(from).cloned()
     }
