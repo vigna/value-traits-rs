@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.1.5]
+
+### Fixed
+
+* `VecDeque` implementations now are gated by the `std` feature, rather than
+  the `alloc` feature.
+
 ## [0.1.4] 2025-06-21
 
 ### New
