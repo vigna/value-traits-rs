@@ -44,7 +44,7 @@ fn test_vecs() {
 }
 
 #[test]
-#[cfg(feature = "alloc")]
+#[cfg(feature = "std")]
 fn test_vec_deques() {
     use std::collections::VecDeque;
     generic_get(Into::<VecDeque<_>>::into(EXPECTED.to_vec()), &EXPECTED);
