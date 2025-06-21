@@ -122,13 +122,13 @@ pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
     fn iter_value(&self) -> Iter<'_, Self>;
 }
 
-impl<T: IterateByValue> IterateByValue for &T {
+impl<T: IterateByValue + ?Sized> IterateByValue for &T {
     fn iter_value(&self) -> Iter<'_, Self> {
         (**self).iter_value()
     }
 }
 
-impl<T: IterateByValue> IterateByValue for &mut T {
+impl<T: IterateByValue + ?Sized> IterateByValue for &mut T {
     fn iter_value(&self) -> Iter<'_, Self> {
         (**self).iter_value()
     }
@@ -245,13 +245,13 @@ pub trait IterateByValueFrom: for<'a> IterateByValueFromGat<'a> {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self>;
 }
 
-impl<T: IterateByValueFrom> IterateByValueFrom for &T {
+impl<T: IterateByValueFrom + ?Sized> IterateByValueFrom for &T {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         (**self).iter_value_from(from)
     }
 }
 
-impl<T: IterateByValueFrom> IterateByValueFrom for &mut T {
+impl<T: IterateByValueFrom + ?Sized> IterateByValueFrom for &mut T {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
         (**self).iter_value_from(from)
     }
