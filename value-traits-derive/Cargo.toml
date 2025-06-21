@@ -1,6 +1,6 @@
 [package]
 name = "value-traits-derive"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Derive macros for the value-traits crate"
 repository = "https://github.com/vigna/value-traits-rs/"

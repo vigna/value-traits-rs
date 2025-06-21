@@ -1,11 +1,14 @@
 # Change Log
 
-## [0.1.4] -
+## [0.1.4] 2025-06-21
 
 ### New
 
 * Implemented access and iteration traits for `VecDeque`.
 
+### Fixed
+
+* `IterateByValueFrom` delegations were missing a `?Sized`.
 
 ## [0.1.3] 2025-06-20
 
