@@ -81,6 +81,15 @@ impl<T: Clone> SliceByValueMut for [T] {
         let val_mut = unsafe { self.get_unchecked_mut(index) };
         core::mem::replace(val_mut, value)
     }
+
+    type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+    where
+        Self: 'a;
+
+    #[inline]
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+        Ok(self.chunks_mut(chunk_size))
+    }
 }
 
 impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for [T] {

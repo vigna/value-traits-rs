@@ -118,6 +118,14 @@ macro_rules! impl_slice {
             ) -> Self::Value {
                 self.0.as_mut_slice().replace_value(index, value)
             }
+
+            type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+            where
+                Self: 'a;
+
+            fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+                Ok(self.0.chunks_mut(chunk_size))
+            }
         }
     };
 }

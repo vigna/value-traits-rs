@@ -277,6 +277,15 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
             unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
                 self.slice.replace_value_unchecked(index + self.range.start, value)
             }
+
+            type ChunksMut<'a> = ::core::iter::Empty<&'a mut Self>
+            where
+                Self: 'a;
+
+            fn try_chunks_mut(&mut self, _chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+                // Derived subslice types cannot provide mutable chunks
+                Err(())
+            }
         }
 
         #[automatically_derived]

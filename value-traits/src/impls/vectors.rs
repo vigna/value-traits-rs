@@ -86,6 +86,15 @@ impl<T: Clone> SliceByValueMut for Vec<T> {
         let val_mut = unsafe { self.get_unchecked_mut(index) };
         core::mem::replace(val_mut, value)
     }
+
+    type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+    where
+        Self: 'a;
+
+    #[inline]
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+        Ok(self.chunks_mut(chunk_size))
+    }
 }
 
 impl<'a, T: Clone> SliceByValueSubsliceGat<'a> for Vec<T> {
@@ -223,6 +232,16 @@ mod vec_deque {
             // SAFETY: index is within bounds
             let val_mut = unsafe { self.get_mut(index).unwrap_unchecked() };
             core::mem::replace(val_mut, value)
+        }
+
+        type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+        where
+            Self: 'a;
+
+        #[inline]
+        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+            // Make the VecDeque contiguous so we can use chunks_mut
+            Ok(self.make_contiguous().chunks_mut(chunk_size))
         }
     }
 

@@ -222,7 +222,7 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
 /// The only methods that must be implemented are
 /// [`set_value_unchecked`](`SliceByValueMut::set_value_unchecked`) and
 /// [`replace_value_unchecked`](`SliceByValueMut::replace_value_unchecked`).
-pub trait SliceByValueMut: SliceByValueCore {
+pub trait SliceByValueMut: SliceByValue {
     /// Sets the value at the given index to the given value without doing
     /// bounds checking.
     ///
@@ -267,6 +267,131 @@ pub trait SliceByValueMut: SliceByValueCore {
         // SAFETY: index is without bounds
         unsafe { self.replace_value_unchecked(index, value) }
     }
+
+    /// Copy part of the content of the slice to another slice.
+    ///
+    /// At most `len` elements are copied, compatibly with the elements
+    /// available in both vectors.
+    ///
+    /// # Arguments
+    ///
+    /// * `from`: the index of the first element to copy.
+    ///
+    /// * `dst`: the destination vector.
+    ///
+    /// * `to`: the index of the first element in the destination vector.
+    ///
+    /// * `len`: the maximum number of elements to copy.
+    ///
+    /// # Implementation Notes
+    ///
+    /// The default implementation is a simple loop that copies the elements one
+    /// by one. It is expected to be implemented in a more efficient way.
+    fn copy(&self, from: usize, dst: &mut Self, to: usize, len: usize) {
+        // Reduce len to the elements available in both vectors
+        let len = Ord::min(Ord::min(len, dst.len() - to), self.len() - from);
+        for i in 0..len {
+            dst.set_value(to + i, self.index_value(from + i));
+        }
+    }
+
+    /// Applies a function to all elements of the slice in place without
+    /// checks.
+    ///
+    /// This method is semantically equivalent to:
+    /// ```ignore
+    /// for i in 0..self.len() {
+    ///     self.set_unchecked(i, f(self.get_unchecked(i)));
+    /// }
+    /// ```
+    /// and this is indeed the default implementation.
+    ///
+    /// See [`apply_in_place`](SliceByValueMut::apply_in_place) for examples.
+    ///
+    /// # Safety
+    /// The function must return a value that fits the the [bit
+    ///  width](BitFieldSliceCore::bit_width) of the slice.
+    unsafe fn apply_in_place_unchecked<F>(&mut self, mut f: F)
+    where
+        F: FnMut(Self::Value) -> Self::Value,
+    {
+        for idx in 0..self.len() {
+            let value = unsafe { self.get_value_unchecked(idx) };
+            let new_value = f(value);
+            unsafe { self.set_value_unchecked(idx, new_value) };
+        }
+    }
+
+    /// Applies a function to all elements of the slice in place.
+    ///
+    /// This method is semantically equivalent to:
+    /// ```ignore
+    /// for i in 0..self.len() {
+    ///     self.set(i, f(self.get(i)));
+    /// }
+    /// ```
+    /// and this is indeed the default implementation.
+    ///
+    /// The function is applied from the first element to the last: thus,
+    /// it possible to compute cumulative sums as follows:
+    ///
+    /// ```
+    /// # use sux::bits::BitFieldVec;
+    /// # use sux::traits::BitFieldSliceMut;
+    ///
+    /// let mut vec = BitFieldVec::<u16>::new(9, 10);
+    ///
+    /// for i in 0..10 {
+    ///     vec.set(i, i as u16);
+    /// }
+    ///
+    /// let mut total = 0;
+    /// vec.apply_in_place(|x| {
+    ///     total += x;
+    ///     total
+    /// });
+    /// ```
+    fn apply_in_place<F>(&mut self, mut f: F)
+    where
+        F: FnMut(Self::Value) -> Self::Value,
+    {
+        for idx in 0..self.len() {
+            let value = unsafe { self.get_value_unchecked(idx) };
+            let new_value = f(value);
+            unsafe { self.set_value_unchecked(idx, new_value) };
+        }
+    }
+
+    /// The iterator type returned by [`try_chunks_mut`](SliceByValueMut::try_chunks_mut).
+    type ChunksMut<'a>: Iterator<Item: SliceByValueMut<Value = Self::Value>>
+    where
+        Self: 'a;
+
+    /// Tries and returns an iterator over mutable chunks of a slice, starting
+    /// at the beginning of the slice.
+    ///
+    /// This might not always be possible; implementations must document when
+    /// the method will success (see, for example, [the implementation for
+    /// `BitFieldVec`](https://docs.rs/sux/latest/sux/bits/bit_field_vec/struct.BitFieldVec.html#impl-BitFieldSliceMut<W>-for-BitFieldVec<W,+B>)).
+    ///
+    /// When the slice len is not evenly divided by the chunk size, the last
+    /// chunk of the iteration will be the remainder.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use sux::prelude::*;
+    /// # use bit_field_slice::*;
+    /// # fn main() -> Result<(), ()> {
+    /// let mut b = bit_field_vec![32; 4, 500, 2, 3, 1];
+    /// for mut c in b.try_chunks_mut(2)? {
+    ///     c.set(0, 5);
+    /// }
+    /// assert_eq!(b, bit_field_vec![32; 5, 500, 5, 3, 5]);
+    /// # Ok(())
+    /// # }
+    /// ```
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()>;
 }
 
 impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
@@ -281,6 +406,14 @@ impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
     }
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         (**self).replace_value_unchecked(index, value)
+    }
+
+    type ChunksMut<'a> = S::ChunksMut<'a>
+    where
+        Self: 'a;
+
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+        (**self).try_chunks_mut(chunk_size)
     }
 }
 
@@ -395,9 +528,7 @@ impl ComposeRange for RangeToInclusive<usize> {
 ///
 /// [1]:
 ///     <https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats>
-pub trait SliceByValueSubsliceGat<'a, __Implicit: ImplBound = Ref<'a, Self>>:
-    SliceByValue
-{
+pub trait SliceByValueSubsliceGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByValue {
     /// The type of the subslice.
     type Subslice: 'a + SliceByValue<Value = Self::Value> + SliceByValueSubslice;
 }
@@ -486,9 +617,7 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubs
 /// A GAT-like trait specifying the mutable subslice type.
 ///
 /// See [`SliceByValueSubsliceGat`].
-pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>:
-    SliceByValueMut
-{
+pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>: SliceByValueMut {
     /// The type of the mutable subslice.
     type SubsliceMut: 'a
         + SliceByValueMut<Value = Self::Value>
@@ -747,6 +876,14 @@ mod alloc_impls {
             value: Self::Value,
         ) -> Self::Value {
             unsafe { (**self).replace_value_unchecked(index, value) }
+        }
+
+        type ChunksMut<'a> = S::ChunksMut<'a>
+        where
+            Self: 'a;
+
+        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+            (**self).try_chunks_mut(chunk_size)
         }
     }
 
