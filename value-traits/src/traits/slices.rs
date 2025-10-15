@@ -15,13 +15,13 @@
 //! For example, a by-value slice can be defined functionally, implicitly, or
 //! using a succinct/compressed representation.
 //!
-//! The fundamental trait for by-value slices is [`SliceByValueCore`], which
-//! specifies the type of the values and the length of the slice. Additional
-//! functionality is provided by the [`SliceByValue`] trait for read access,
-//! and the [`SliceByValueMut`] trait for write access (both setting and
-//! replacing values). Note that, contrarily to the standard slices, replacement
-//! can be obtained by a pair of get/set operations: [`SliceByValueMut`] provides
-//! both methods for efficiency.
+//! The fundamental trait for by-value slices is [`SliceByValue`], which
+//! specifies the type of the values, the length of the slice, and provide
+//! read-only access. Additional functionality is provided by the
+//! [`SliceByValueMut`] trait, which provides mutation methods. Note that,
+//! contrarily to the standard slices, replacement can be obtained by a pair of
+//! get/set operations: [`SliceByValueMut`] provides both methods for
+//! efficiency.
 //!
 //! The [`SliceByValueSubslice`] trait provides methods for obtaining subslices
 //! given a range of indices, and the [`SliceByValueSubsliceMut`] trait provides
@@ -42,14 +42,12 @@
 //!
 //! struct CompSlice<'a>(&'a [u8]);
 //!
-//! impl<'a> SliceByValueCore for CompSlice<'a> {
+//! impl<'a> SliceByValue for CompSlice<'a> {
 //!     type Value = usize;
 //!     fn len(&self) -> usize {
 //!         self.0.len()
 //!     }
-//! }
-//!
-//! impl<'a> SliceByValue for CompSlice<'a> {
+
 //!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
 //!         unsafe { self.0.get_value_unchecked(index) as usize }
 //!     }
@@ -78,14 +76,12 @@
 //!
 //! struct Squares();
 //!
-//! impl<'a> SliceByValueCore for Squares {
+//! impl<'a> SliceByValue for Squares {
 //!     type Value = usize;
 //!     fn len(&self) -> usize {
 //!         100
 //!     }
-//! }
 //!
-//! impl<'a> SliceByValue for Squares {
 //!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
 //!         index * index
 //!     }
@@ -109,35 +105,22 @@ use core::ops::{
 
 use crate::{ImplBound, Ref};
 
-/// Basic by-value slice trait, specifying just the type of the values and the
-/// length of the slice.
-pub trait SliceByValueCore {
-    /// The type of the values in the slice.
-    type Value;
-    /// See [`slice::len`].
-    fn len(&self) -> usize;
+/// Error type returned when [`try_chunks_mut`](SliceByValueMut::try_chunks_mut)
+/// is not supported by a type.
+///
+/// This error is typically returned by derived subslice types which cannot
+/// provide mutable chunks due to their implementation constraints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ChunksMutNotSupported;
 
-    /// See [`slice::is_empty`].
-    fn is_empty(&self) -> bool {
-        self.len() == 0
+impl core::fmt::Display for ChunksMutNotSupported {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "try_chunks_mut is not supported on subslices")
     }
 }
 
-impl<S: SliceByValueCore + ?Sized> SliceByValueCore for &S {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
-
-impl<S: SliceByValueCore + ?Sized> SliceByValueCore for &mut S {
-    type Value = S::Value;
-    #[inline]
-    fn len(&self) -> usize {
-        (**self).len()
-    }
-}
+#[cfg(feature = "std")]
+impl std::error::Error for ChunksMutNotSupported {}
 
 #[inline(always)]
 fn assert_index(index: usize, len: usize) {
@@ -158,8 +141,19 @@ fn assert_range(range: &impl ComposeRange, len: usize) {
 /// Read-only by-value slice trait.
 ///
 /// The only method that must be implemented is
-/// [`get_value_unchecked`](`SliceByValue::get_value_unchecked`).
-pub trait SliceByValue: SliceByValueCore {
+/// [`get_value_unchecked`](`SliceByValue::get_value_unchecked`) and
+/// [`len`](`SliceByValue::len`).
+pub trait SliceByValue {
+    /// The type of the values in the slice.
+    type Value;
+
+    /// See [`slice::len`].
+    fn len(&self) -> usize;
+
+    /// See [`slice::is_empty`].
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_value(&self, index: usize) -> Self::Value {
         assert_index(index, self.len());
@@ -190,6 +184,13 @@ pub trait SliceByValue: SliceByValueCore {
 }
 
 impl<S: SliceByValue + ?Sized> SliceByValue for &S {
+    type Value = S::Value;
+
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (**self).get_value(index)
     }
@@ -202,6 +203,13 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &S {
 }
 
 impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
+    type Value = S::Value;
+
+    #[inline]
+    fn len(&self) -> usize {
+        (**self).len()
+    }
+
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (**self).get_value(index)
     }
@@ -251,10 +259,18 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// For a safe alternative see [`replace_value`](SliceByValueMut::replace_value).
     ///
+    /// This default implementation uses
+    /// [`get_value_unchecked`](SliceByValue::get_value_unchecked) and
+    /// [`set_value_unchecked`](SliceByValueMut::set_value_unchecked).
+    ///
     /// # Safety
     ///
     /// The index must be within bounds.
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value;
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        let old_value = unsafe { self.get_value_unchecked(index) };
+        unsafe { self.set_value_unchecked(index, value) };
+        old_value
+    }
 
     /// Sets the value at the given index to the given value and
     /// returns the previous value.
@@ -336,13 +352,11 @@ pub trait SliceByValueMut: SliceByValue {
     /// it possible to compute cumulative sums as follows:
     ///
     /// ```
-    /// # use sux::bits::BitFieldVec;
-    /// # use sux::traits::BitFieldSliceMut;
-    ///
-    /// let mut vec = BitFieldVec::<u16>::new(9, 10);
+    /// use value_traits::slices::SliceByValueMut;
+    /// let mut vec = vec![0; 10];
     ///
     /// for i in 0..10 {
-    ///     vec.set(i, i as u16);
+    ///     vec.set_value(i, i as u16);
     /// }
     ///
     /// let mut total = 0;
@@ -371,7 +385,7 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// For implementations that always succeed (like slices, arrays, and vectors),
     /// this should be [`core::convert::Infallible`].
-    type ChunksMutError;
+    type ChunksMutError: std::fmt::Debug;
 
     /// Tries and returns an iterator over mutable chunks of a slice, starting
     /// at the beginning of the slice.
@@ -386,18 +400,18 @@ pub trait SliceByValueMut: SliceByValue {
     /// # Examples
     ///
     /// ```
-    /// # use sux::prelude::*;
-    /// # use bit_field_slice::*;
-    /// # fn main() -> Result<(), ()> {
-    /// let mut b = bit_field_vec![32; 4, 500, 2, 3, 1];
+    /// use value_traits::slices::SliceByValueMut;
+    /// let mut b = vec![4, 500, 2, 3, 1];
     /// for mut c in b.try_chunks_mut(2)? {
-    ///     c.set(0, 5);
+    ///     c.set_value(0, 5);
     /// }
-    /// assert_eq!(b, bit_field_vec![32; 5, 500, 5, 3, 5]);
-    /// # Ok(())
-    /// # }
+    /// assert_eq!(b, vec![5, 500, 5, 3, 5]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError>;
+    fn try_chunks_mut(
+        &mut self,
+        chunk_size: usize,
+    ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError>;
 }
 
 impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
@@ -414,13 +428,17 @@ impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
         (**self).replace_value_unchecked(index, value)
     }
 
-    type ChunksMut<'a> = S::ChunksMut<'a>
+    type ChunksMut<'a>
+        = S::ChunksMut<'a>
     where
         Self: 'a;
 
     type ChunksMutError = S::ChunksMutError;
 
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
+    fn try_chunks_mut(
+        &mut self,
+        chunk_size: usize,
+    ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
         (**self).try_chunks_mut(chunk_size)
     }
 }
@@ -846,15 +864,14 @@ mod alloc_impls {
     #[cfg(all(feature = "alloc", not(feature = "std")))]
     use alloc::boxed::Box;
 
-    impl<S: SliceByValueCore + ?Sized> SliceByValueCore for Box<S> {
+    impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
         type Value = S::Value;
+
         #[inline]
         fn len(&self) -> usize {
             (**self).len()
         }
-    }
 
-    impl<S: SliceByValue + ?Sized> SliceByValue for Box<S> {
         fn get_value(&self, index: usize) -> Option<Self::Value> {
             (**self).get_value(index)
         }
@@ -886,13 +903,17 @@ mod alloc_impls {
             unsafe { (**self).replace_value_unchecked(index, value) }
         }
 
-        type ChunksMut<'a> = S::ChunksMut<'a>
+        type ChunksMut<'a>
+            = S::ChunksMut<'a>
         where
             Self: 'a;
 
         type ChunksMutError = S::ChunksMutError;
 
-        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
+        fn try_chunks_mut(
+            &mut self,
+            chunk_size: usize,
+        ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
             (**self).try_chunks_mut(chunk_size)
         }
     }
@@ -961,15 +982,14 @@ mod std_impls {
     use super::*;
     use std::{rc::Rc, sync::Arc};
 
-    impl<S: SliceByValueCore + ?Sized> SliceByValueCore for Arc<S> {
+    impl<S: SliceByValue + ?Sized> SliceByValue for Arc<S> {
         type Value = S::Value;
+
         #[inline]
         fn len(&self) -> usize {
             (**self).len()
         }
-    }
 
-    impl<S: SliceByValue + ?Sized> SliceByValue for Arc<S> {
         fn get_value(&self, index: usize) -> Option<Self::Value> {
             (**self).get_value(index)
         }
@@ -984,15 +1004,14 @@ mod std_impls {
         type Subslice = S::Subslice;
     }
 
-    impl<S: SliceByValueCore + ?Sized> SliceByValueCore for Rc<S> {
+    impl<S: SliceByValue + ?Sized> SliceByValue for Rc<S> {
         type Value = S::Value;
+
         #[inline]
         fn len(&self) -> usize {
             (**self).len()
         }
-    }
 
-    impl<S: SliceByValue + ?Sized> SliceByValue for Rc<S> {
         fn get_value(&self, index: usize) -> Option<Self::Value> {
             (**self).get_value(index)
         }

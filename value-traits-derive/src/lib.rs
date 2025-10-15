@@ -129,17 +129,14 @@ pub fn subslices(input: TokenStream) -> TokenStream {
         }
 
         #[automatically_derived]
-        impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueCore for #subslice_impl<'__subslice_impl, #names> #where_clause {
-            type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+        impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subslice_impl<'__subslice_impl, #names> #where_clause {
+            type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
             #[inline]
             fn len(&self) -> usize {
                 self.range.len()
             }
-        }
 
-        #[automatically_derived]
-        impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subslice_impl<'__subslice_impl, #names> #where_clause  {
             unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                 self.slice.get_value_unchecked(index + self.range.start)
             }
@@ -256,17 +253,14 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
         }
 
         #[automatically_derived]
-        impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValueCore for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
-            type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+        impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
+            type Value = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
             #[inline]
             fn len(&self) -> usize {
                 self.range.len()
             }
-        }
 
-        #[automatically_derived]
-        impl<'__subslice_impl, #params> ::value_traits::slices::SliceByValue for #subslice_impl_mut<'__subslice_impl, #names> #where_clause  {
             unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                 self.slice.get_value_unchecked(index + self.range.start)
             }
@@ -287,11 +281,11 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
             where
                 Self: 'a;
 
-            type ChunksMutError = ();
+            type ChunksMutError = ::value_traits::slices::ChunksMutNotSupported;
 
             fn try_chunks_mut(&mut self, _chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
                 // Derived subslice types cannot provide mutable chunks
-                Err(())
+                Err(::value_traits::slices::ChunksMutNotSupported)
             }
         }
 
@@ -470,7 +464,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
         /// as we can do it more efficiently, but the [`::core::iter::Iterator`] trait definition
         /// doesn't allow to return an arbitrary type.
         impl<'__iter_ref, #params> ::core::iter::Iterator for #iter<'__iter_ref, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
 
             #[inline]
             fn next(&mut self) -> Option<Self::Item> {
@@ -523,7 +517,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 
         #[automatically_derived]
         impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterateByValueGat<'__iter_ref> for #subslice_impl<'__subslice_impl, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
             type Iter = #iter<'__iter_ref, #names>;
         }
 
@@ -537,7 +531,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 
         #[automatically_derived]
         impl<'__subslice_impl, '__iter_ref,#params> ::value_traits::iter::IterateByValueFromGat<'__iter_ref> for #subslice_impl<'__subslice_impl, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
             type IterFrom = #iter<'__iter_ref, #names>;
         }
 
@@ -596,7 +590,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
     quote!{
         #[automatically_derived]
         impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterateByValueGat<'__iter_ref> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
             type Iter = #iter<'__iter_ref, #names>;
         }
 
@@ -609,7 +603,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
 
         #[automatically_derived]
         impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterateByValueFromGat<'__iter_ref> for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
-            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValueCore>::Value;
+            type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
             type IterFrom = #iter<'__iter_ref, #names>;
         }
 

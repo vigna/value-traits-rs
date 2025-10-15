@@ -10,8 +10,8 @@
 ### Changed
 
 * `SliceByValueSet` and `SliceByValueRepl` have been merged
-  into `SliceByValueMut`. `SliceByValue` has been renamed `SliceByValueCore`
-  and `SliceByValueGet` has been renamed `SliceByValue`.
+  into `SliceByValueMut`. `SliceByValue` now contains the former
+  `SliceByValueCore`.
 
 ### Fixed
 

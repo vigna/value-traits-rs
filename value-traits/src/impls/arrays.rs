@@ -19,21 +19,19 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueCore, SliceByValueMut, SliceByValueSubsliceGat,
+        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat,
         SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
         Subslice, SubsliceMut,
     },
 };
 
-impl<T, const N: usize> SliceByValueCore for [T; N] {
+impl<T: Clone, const N: usize> SliceByValue for [T; N] {
     type Value = T;
+
     #[inline(always)]
     fn len(&self) -> usize {
         N
     }
-}
-
-impl<T: Clone, const N: usize> SliceByValue for [T; N] {
     #[inline]
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (*self).get(index).cloned()

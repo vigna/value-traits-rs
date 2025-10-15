@@ -23,22 +23,20 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueCore, SliceByValueMut, SliceByValueSubsliceGat,
+        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat,
         SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
         Subslice, SubsliceMut,
     },
 };
 
-impl<T> SliceByValueCore for [T] {
+// --- Implementations for standard slices [T] and usize index ---
+impl<T: Clone> SliceByValue for [T] {
     type Value = T;
+
     #[inline]
     fn len(&self) -> usize {
         <[T]>::len(self)
     }
-}
-
-// --- Implementations for standard slices [T] and usize index ---
-impl<T: Clone> SliceByValue for [T] {
     #[inline]
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (*self).get(index).cloned()

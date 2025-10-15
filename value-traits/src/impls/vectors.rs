@@ -29,21 +29,18 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueCore, SliceByValueMut, SliceByValueSubsliceGat,
-        SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
-        Subslice, SubsliceMut,
+        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat, SliceByValueSubsliceGatMut,
+        SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice, SubsliceMut,
     },
 };
 
-impl<T> SliceByValueCore for Vec<T> {
+impl<T: Clone> SliceByValue for Vec<T> {
     type Value = T;
+
     #[inline]
     fn len(&self) -> usize {
         <[T]>::len(self)
     }
-}
-
-impl<T: Clone> SliceByValue for Vec<T> {
     #[inline]
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (*self).get(index).cloned()
@@ -87,14 +84,18 @@ impl<T: Clone> SliceByValueMut for Vec<T> {
         core::mem::replace(val_mut, value)
     }
 
-    type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+    type ChunksMut<'a>
+        = core::slice::ChunksMut<'a, T>
     where
         Self: 'a;
 
     type ChunksMutError = core::convert::Infallible;
 
     #[inline]
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
+    fn try_chunks_mut(
+        &mut self,
+        chunk_size: usize,
+    ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
         Ok(self.chunks_mut(chunk_size))
     }
 }
@@ -180,15 +181,13 @@ mod vec_deque {
     use super::*;
     use std::collections::VecDeque;
 
-    impl<T> SliceByValueCore for VecDeque<T> {
+    impl<T: Clone> SliceByValue for VecDeque<T> {
         type Value = T;
+
         #[inline]
         fn len(&self) -> usize {
             self.len()
         }
-    }
-
-    impl<T: Clone> SliceByValue for VecDeque<T> {
         #[inline]
         fn get_value(&self, index: usize) -> Option<Self::Value> {
             (*self).get(index).cloned()
@@ -236,14 +235,18 @@ mod vec_deque {
             core::mem::replace(val_mut, value)
         }
 
-        type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+        type ChunksMut<'a>
+            = core::slice::ChunksMut<'a, T>
         where
             Self: 'a;
 
         type ChunksMutError = core::convert::Infallible;
 
         #[inline]
-        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
+        fn try_chunks_mut(
+            &mut self,
+            chunk_size: usize,
+        ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
             // Make the VecDeque contiguous so we can use chunks_mut
             Ok(self.make_contiguous().chunks_mut(chunk_size))
         }

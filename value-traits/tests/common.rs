@@ -15,9 +15,9 @@ use value_traits::{
 
 pub fn generic_get<S>(s: S, expected: &[i32])
 where
-    S: SliceByValueCore<Value = i32> + SliceByValue,
+    S: SliceByValue<Value = i32>,
 {
-    assert_eq!(SliceByValueCore::len(&s), expected.len());
+    assert_eq!(SliceByValue::len(&s), expected.len());
 
     for i in 0..expected.len() {
         assert_eq!(SliceByValue::get_value(&s, i), Some(expected[i]));
@@ -33,9 +33,9 @@ where
 
 pub fn generic_slice<S>(s: S, expected: &[i32])
 where
-    S: SliceByValueCore<Value = i32> + SliceByValue + SliceByValueSubslice,
+    S: SliceByValue<Value = i32> + SliceByValueSubslice,
 {
-    assert_eq!(SliceByValueCore::len(&s), expected.len());
+    assert_eq!(SliceByValue::len(&s), expected.len());
 
     let r = ..;
     generic_get(s.index_subslice(r), expected);
@@ -79,7 +79,7 @@ where
 
 pub fn generic_mut<S>(mut s: S)
 where
-    S: SliceByValueCore<Value = i32> + SliceByValue + SliceByValueMut,
+    S: SliceByValue<Value = i32> + SliceByValueMut,
 {
     for i in 0..s.len() {
         let old_value = SliceByValue::index_value(&s, i);
@@ -112,12 +112,11 @@ where
 
 pub fn generic_slice_mut<S>(mut s: S)
 where
-    S: SliceByValueCore<Value = i32>
-        + SliceByValue
+    S: SliceByValue<Value = i32>
         + SliceByValueMut
         + SliceByValueSubsliceMut,
     for<'a> <S as SliceByValueSubsliceGatMut<'a>>::SubsliceMut:
-        SliceByValueCore<Value = i32> + SliceByValue + SliceByValueMut,
+        SliceByValue<Value = i32> + SliceByValueMut,
 {
     let r = ..;
     generic_mut(s.index_subslice_mut(r));
