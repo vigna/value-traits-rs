@@ -4,14 +4,16 @@
 
 ### New
 
-* Several new default methods in `SliceByValueMut`, borrowed
+* Radical trait simplification: `SliceByValue` now contains the former
+  `SliceByValueCore`; `SliceByValueSet` and `SliceByValueRepl` have been merged
+  into `SliceByValueMut`.
+
+* Several new default (mostly default) methods in `SliceByValueMut`, borrowed
   from the `BitFieldSlice` trait of `sux`.
 
 ### Changed
 
-* `SliceByValueSet` and `SliceByValueRepl` have been merged
-  into `SliceByValueMut`. `SliceByValue` now contains the former
-  `SliceByValueCore`.
+* We moved to the 2024 edition.
 
 ### Fixed
 

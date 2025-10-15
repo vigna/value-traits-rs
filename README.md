@@ -24,21 +24,22 @@ of the elements of the lists. However, there are also different list
 representations, such as compressed, succinct, functional, implicit, and so on.
 
 For this reason, this crate provides traits parallel to slices and iterators,
-but by value, rather than by reference. [`SliceByValue`] simply specify the type
-of values of the slice by value and its length. A [`SliceByValueGet`] provides
-methods that are exactly analogous of [`std::slice::get`] and [`Index::index`],
-but return values, rather than references, and are named [`get_value`] and
+but by value, rather than by reference. [`SliceByValue`] specifies the type of
+values of the slice (via an associated type), its length, ad provides methods
+that are exactly analogous of [`std::slice::get`] and [`Index::index`], but
+return values, rather than references; they are named [`get_value`] and
 [`index_value`] instead. The longer names are necessary to avoid ambiguity, as
-all slices of cloneable elements implement our by-value traits. It might be argued
-`RandomAccessList` or `Sequence` might be more standard name, but we want to
-underline the fact that the read access is closely modeled after slices. Note
+all slices of cloneable elements implement our by-value traits. It might be
+argued `RandomAccessList` or `Sequence` might be more standard name, but we want
+to underline the fact that the read access is closely modeled after slices. Note
 that we cannot overload the `[]` operator, as [`Index`] methods must necessarily
 return references.
 
-Write access is a different issue because [`SliceByValueSet`] has necessarily a
-completely different setup than [`IndexMut::index_mut`]. We also have a
-[`SliceByValueReplace`] trait whose setter return the original value, which
-might be more efficient in some circumstances.
+Write access is a different issue because [`SliceByValueMut`] has necessarily a
+completely different setup than [`IndexMut::index_mut`]. It provides ways
+to [set], [replace], or even [apply a function to an element of the slice], plus
+a [few convenience methods]. All methods except for the set methods have
+default implementations.
 
 Finally, like slices, slices by value can provide [subslicing]. Subslicing
 traits are distinct traits, as you might be contented, for your application, of
@@ -59,14 +60,13 @@ returning references, so a different trait is necessary.
 
 Implementing subslices is tricky, so [`Subslices`] is a derive macro that
 provides a complete implementation of subslicing for a type that implements
-[`SliceByValueGet`]; [`SubslicesMut`] similarly provides a complete
-implementation of subslicing for a type that implements [`SliceByValueSet`] and
-[`SliceByValueReplace`]. Note that a custom implementation might be more
-efficient if your type can directly represent an inner range. Analogous derive
-macros [`Iterators`] and  [`IteratorsMut`] implement the by-value iteration
-traits for the structures created by [`Subslices`] and [`SubslicesMut`]. All
-these derive macros are independent to make specialized, more efficient
-implementation possible at every step.
+[`SliceByValue`]; [`SubslicesMut`] similarly provides a complete implementation
+of subslicing for a type that implements [`SliceByValueMut`]. Note that a custom
+implementation might be more efficient if your type can directly represent an
+inner range. Analogous derive macros [`Iterators`] and [`IteratorsMut`]
+implement the by-value iteration traits for the structures created by
+[`Subslices`] and [`SubslicesMut`]. All these derive macros are independent to
+make specialized, more efficient implementation possible at every step.
 
 One important difference with slices is that iterating subslicing will lead
 to different types. We could not find any way to express in the current Rust
@@ -76,12 +76,10 @@ that accepts a by-value slice, but it is relevant if you want to assign
 subslices of different depth to the same variable.
 
 [`SliceByValue`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html>
-[`SliceByValueGet`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html>
-[`SliceByValueSet`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSet.html>
-[`SliceByValueReplace`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueReplace.html>
+[`SliceByValueMut`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html>
 [subslicing]: <https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html>
-[`get_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html#tymethod.get_value>
-[`index_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueGet.html#tymethod.index_value>
+[`get_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html#tymethod.get_value>
+[`index_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html#tymethod.index_value>
 [`get_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
 [`index_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
 [`IterateByValue`]: <https://docs.rs/value_traits/latest/value_traits/iter/trait.IterateByValue.html>
@@ -94,3 +92,7 @@ subslices of different depth to the same variable.
 [`SubslicesMut`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.SubslicesMut.html>
 [`Iterators`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.Iterators.html>
 [`IteratorsMut`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.IteratorsMut.html>
+[set]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.set>
+[replace]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.replace>
+[apply a function to an element of the slice]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.apply_in_place>
+[few convenience methods]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut#method.copy>

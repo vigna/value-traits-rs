@@ -325,8 +325,10 @@ pub trait SliceByValueMut: SliceByValue {
     /// See [`apply_in_place`](SliceByValueMut::apply_in_place) for examples.
     ///
     /// # Safety
-    /// The function must return a value that fits the the [bit
-    ///  width](BitFieldSliceCore::bit_width) of the slice.
+    ///
+    /// The function must return a value that agrees with the safety
+    /// requirements of
+    /// [`set_value_unchecked`](SliceByValueMut::set_value_unchecked).
     unsafe fn apply_in_place_unchecked<F>(&mut self, mut f: F)
     where
         F: FnMut(Self::Value) -> Self::Value,
@@ -385,7 +387,7 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// For implementations that always succeed (like slices, arrays, and vectors),
     /// this should be [`core::convert::Infallible`].
-    type ChunksMutError: std::fmt::Debug;
+    type ChunksMutError: core::fmt::Debug;
 
     /// Tries and returns an iterator over mutable chunks of a slice, starting
     /// at the beginning of the slice.
@@ -396,6 +398,12 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// When the slice len is not evenly divided by the chunk size, the last
     /// chunk of the iteration will be the remainder.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type [`ChunksMutError`](SliceByValueMut::ChunksMutError)
+    /// if the operation is not supported by the implementation. For example,
+    /// derived subslice types return [`ChunksMutNotSupported`].
     ///
     /// # Examples
     ///
@@ -418,15 +426,15 @@ impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
     fn set_value(&mut self, index: usize, value: Self::Value) {
         (**self).set_value(index, value);
     }
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) { unsafe {
         (**self).set_value_unchecked(index, value);
-    }
+    }}
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         (**self).replace_value(index, value)
     }
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value { unsafe {
         (**self).replace_value_unchecked(index, value)
-    }
+    }}
 
     type ChunksMut<'a>
         = S::ChunksMut<'a>
@@ -713,9 +721,9 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueS
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
         (**self).index_subslice_mut(range)
     }
-    unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
+    unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> { unsafe {
         (**self).get_subslice_unchecked_mut(range)
-    }
+    }}
 }
 
 /// A convenience trait combining all instances of [`SliceByValueSubsliceRange`]
@@ -996,9 +1004,9 @@ mod std_impls {
         fn index_value(&self, index: usize) -> Self::Value {
             (**self).index_value(index)
         }
-        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value { unsafe {
             (**self).get_value_unchecked(index)
-        }
+        }}
     }
     impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Arc<S> {
         type Subslice = S::Subslice;
@@ -1018,9 +1026,9 @@ mod std_impls {
         fn index_value(&self, index: usize) -> Self::Value {
             (**self).index_value(index)
         }
-        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value { unsafe {
             (**self).get_value_unchecked(index)
-        }
+        }}
     }
 
     impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Rc<S> {

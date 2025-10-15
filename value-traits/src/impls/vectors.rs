@@ -66,11 +66,11 @@ impl<T: Clone> SliceByValueMut for Vec<T> {
     }
 
     #[inline]
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) { unsafe {
         // SAFETY: index is within bounds
         let val_mut = { self.get_unchecked_mut(index) };
         *val_mut = value;
-    }
+    }}
 
     #[inline]
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
@@ -213,11 +213,11 @@ mod vec_deque {
         }
 
         #[inline]
-        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) { unsafe {
             // SAFETY: index is within bounds
             let val_mut = { self.get_mut(index).unwrap_unchecked() };
             *val_mut = value;
-        }
+        }}
 
         #[inline]
         fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {

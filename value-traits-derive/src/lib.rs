@@ -87,12 +87,12 @@ fn get_params_without_defaults(
 }
 
 /// A derive macro fully implementing subslices on top of a
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html).
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html).
 ///
 /// The macro defines a structure `<YOUR TYPE>SubsliceImpl` that keeps track of
 /// a reference to a slice, and of the start and end of the subslice.
 /// `<YOUR TYPE>SubsliceImpl` then implements
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html)
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html)
 /// and
 /// [`SliceByValueSubslice`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html).
 ///
@@ -100,9 +100,7 @@ fn get_params_without_defaults(
 ///
 /// Since this macro has no knowledge of the bounds of the generic
 /// parameters in the implementations of
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html)
-/// and
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html),
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html),
 /// additional bounds with respect to the type declaration must be specified
 /// using the `#[value_traits_subslices(bound = "<BOUND>")]` attribute. Multiple bounds can
 /// be specified with multiple attributes.
@@ -195,14 +193,12 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 }
 
 /// A derive macro fully implementing mutable subslices on top of a
-/// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html)/[`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html)
+/// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html)
 /// for which the derive macro [`Subslices`] has been already applied.
 ///
 /// The macro defines a structure `<YOUR TYPE>SubsliceImplMut` that keeps track
 /// of a mutable reference to a slice, and of the start and end of the subslice.
 /// `<YOUR TYPE>SubsliceImplMut` then implements
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html),
-/// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
 /// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
 /// [`SliceByValueSubslice`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html),
 /// and
@@ -222,8 +218,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 ///
 /// Since this macro has no knowledge of the bounds of the generic parameters in
 /// the implementations of
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html),
-/// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html)
 /// and
 /// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
 /// additional bounds with respect to the type declaration must be specified
@@ -382,9 +377,7 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
 ///
 /// Since this macro has no knowledge of the bounds of the generic
 /// parameters in the implementations of
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html)
-/// and
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html),
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html),
 /// additional bounds with respect to the type declaration must be specified
 /// using the `#[value_traits_iterators(bound = "<BOUND>")]` attribute. Multiple bounds can
 /// be specified with multiple attributes.
@@ -431,7 +424,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 
         /*#[automatically_derived]
         impl<#params> ::value_traits::iter::IterateByValue for #input_ident #ty_generics #where_clause {
-            type Item = <Self as ::value_traits::slices::SliceByValueCore>::Value;
+            type Item = <Self as ::value_traits::slices::SliceByValue>::Value;
             type Iter<'__iter_ref>
                 = #iter<'__iter_ref, #names>
             where
@@ -563,9 +556,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
 ///
 /// Since this macro has no knowledge of the bounds of the generic parameters in
 /// the implementations of
-/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueCore.html),
-/// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
-/// and
+/// [`SliceByValue`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValue.html) and
 /// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
 /// additional bounds with respect to the type declaration must be specified
 /// using the `#[value_traits_iterators_mut(bound = "<BOUND>")]` attribute.
