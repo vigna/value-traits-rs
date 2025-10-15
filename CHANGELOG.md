@@ -1,6 +1,17 @@
 # Change Log
 
-## [0.1.5]
+## [0.2.0]
+
+### New
+
+* Several new default methods in `SliceByValueMut`, borrowed
+  from the `BitFieldSlice` trait of `sux`.
+
+### Changed
+
+* `SliceByValueSet` and `SliceByValueRepl` have been merged
+  into `SliceByValueMut`. `SliceByValue` has been renamed `SliceByValueCore`
+  and `SliceByValueGet` has been renamed `SliceByValue`.
 
 ### Fixed
 

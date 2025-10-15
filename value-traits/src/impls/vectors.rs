@@ -29,13 +29,13 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
+        SliceByValue, SliceByValueCore, SliceByValueMut, SliceByValueSubsliceGat,
         SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
         Subslice, SubsliceMut,
     },
 };
 
-impl<T> SliceByValue for Vec<T> {
+impl<T> SliceByValueCore for Vec<T> {
     type Value = T;
     #[inline]
     fn len(&self) -> usize {
@@ -43,7 +43,7 @@ impl<T> SliceByValue for Vec<T> {
     }
 }
 
-impl<T: Clone> SliceByValueGet for Vec<T> {
+impl<T: Clone> SliceByValue for Vec<T> {
     #[inline]
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (*self).get(index).cloned()
@@ -62,21 +62,7 @@ impl<T: Clone> SliceByValueGet for Vec<T> {
     }
 }
 
-impl<T: Clone> SliceByValueRepl for Vec<T> {
-    #[inline]
-    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        core::mem::replace(&mut self[index], value)
-    }
-
-    #[inline]
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
-        // SAFETY: index is within bounds
-        let val_mut = unsafe { self.get_unchecked_mut(index) };
-        core::mem::replace(val_mut, value)
-    }
-}
-
-impl<T: Clone> SliceByValueSet for Vec<T> {
+impl<T: Clone> SliceByValueMut for Vec<T> {
     #[inline]
     fn set_value(&mut self, index: usize, value: Self::Value) {
         self[index] = value;
@@ -87,6 +73,18 @@ impl<T: Clone> SliceByValueSet for Vec<T> {
         // SAFETY: index is within bounds
         let val_mut = { self.get_unchecked_mut(index) };
         *val_mut = value;
+    }
+
+    #[inline]
+    fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        core::mem::replace(&mut self[index], value)
+    }
+
+    #[inline]
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        // SAFETY: index is within bounds
+        let val_mut = unsafe { self.get_unchecked_mut(index) };
+        core::mem::replace(val_mut, value)
     }
 }
 
@@ -171,7 +169,7 @@ mod vec_deque {
     use super::*;
     use std::collections::VecDeque;
 
-    impl<T> SliceByValue for VecDeque<T> {
+    impl<T> SliceByValueCore for VecDeque<T> {
         type Value = T;
         #[inline]
         fn len(&self) -> usize {
@@ -179,7 +177,7 @@ mod vec_deque {
         }
     }
 
-    impl<T: Clone> SliceByValueGet for VecDeque<T> {
+    impl<T: Clone> SliceByValue for VecDeque<T> {
         #[inline]
         fn get_value(&self, index: usize) -> Option<Self::Value> {
             (*self).get(index).cloned()
@@ -198,7 +196,19 @@ mod vec_deque {
         }
     }
 
-    impl<T: Clone> SliceByValueRepl for VecDeque<T> {
+    impl<T: Clone> SliceByValueMut for VecDeque<T> {
+        #[inline]
+        fn set_value(&mut self, index: usize, value: Self::Value) {
+            self[index] = value;
+        }
+
+        #[inline]
+        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+            // SAFETY: index is within bounds
+            let val_mut = { self.get_mut(index).unwrap_unchecked() };
+            *val_mut = value;
+        }
+
         #[inline]
         fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
             core::mem::replace(&mut self[index], value)
@@ -213,20 +223,6 @@ mod vec_deque {
             // SAFETY: index is within bounds
             let val_mut = unsafe { self.get_mut(index).unwrap_unchecked() };
             core::mem::replace(val_mut, value)
-        }
-    }
-
-    impl<T: Clone> SliceByValueSet for VecDeque<T> {
-        #[inline]
-        fn set_value(&mut self, index: usize, value: Self::Value) {
-            self[index] = value;
-        }
-
-        #[inline]
-        unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
-            // SAFETY: index is within bounds
-            let val_mut = { self.get_mut(index).unwrap_unchecked() };
-            *val_mut = value;
         }
     }
 

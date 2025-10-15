@@ -19,13 +19,13 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueGet, SliceByValueRepl, SliceByValueSet, SliceByValueSubsliceGat,
+        SliceByValue, SliceByValueCore, SliceByValueMut, SliceByValueSubsliceGat,
         SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
         Subslice, SubsliceMut,
     },
 };
 
-impl<T, const N: usize> SliceByValue for [T; N] {
+impl<T, const N: usize> SliceByValueCore for [T; N] {
     type Value = T;
     #[inline(always)]
     fn len(&self) -> usize {
@@ -33,7 +33,7 @@ impl<T, const N: usize> SliceByValue for [T; N] {
     }
 }
 
-impl<T: Clone, const N: usize> SliceByValueGet for [T; N] {
+impl<T: Clone, const N: usize> SliceByValue for [T; N] {
     #[inline]
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         (*self).get(index).cloned()
@@ -52,7 +52,7 @@ impl<T: Clone, const N: usize> SliceByValueGet for [T; N] {
     }
 }
 
-impl<T: Clone, const N: usize> SliceByValueSet for [T; N] {
+impl<T: Clone, const N: usize> SliceByValueMut for [T; N] {
     #[inline]
     fn set_value(&mut self, index: usize, value: Self::Value) {
         self[index] = value;
@@ -64,9 +64,7 @@ impl<T: Clone, const N: usize> SliceByValueSet for [T; N] {
         let val_mut = unsafe { self.get_unchecked_mut(index) };
         *val_mut = value;
     }
-}
 
-impl<T: Clone, const N: usize> SliceByValueRepl for [T; N] {
     #[inline]
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         core::mem::replace(&mut self[index], value)

@@ -26,7 +26,7 @@ fn test_slices() {
     assert_eq!(test_range_mut(t), &mut [1, 2]);
 }
 
-fn test_usize(s: impl SliceByValueGet<Value = i32>) -> i32 {
+fn test_usize(s: impl SliceByValue<Value = i32>) -> i32 {
     s.index_value(0_usize)
 }
 
@@ -52,7 +52,7 @@ where
 
 fn test_usize_range<'a, S>(s: &S) -> (i32, &[i32])
 where
-    S: SliceByValueGet<Value = i32>,
+    S: SliceByValueCore<Value = i32>,
     S: SliceByValueSubslice,
     S: for<'b> SliceByValueSubsliceGat<'b, Subslice = &'b [i32]>,
 {
@@ -89,7 +89,7 @@ pub struct Sbv2<T: Clone>(Vec<T>);
 
 macro_rules! impl_slice {
     ($ty:ident) => {
-        impl<T: Clone> SliceByValue for $ty<T> {
+        impl<T: Clone> SliceByValueCore for $ty<T> {
             type Value = T;
 
             fn len(&self) -> usize {
@@ -97,22 +97,20 @@ macro_rules! impl_slice {
             }
         }
 
-        impl<T: Clone> SliceByValueGet for $ty<T> {
+        impl<T: Clone> SliceByValue for $ty<T> {
             unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
                 self.0.as_slice().get_value_unchecked(index)
             }
         }
 
-        impl<T: Clone> SliceByValueSet for $ty<T>
+        impl<T: Clone> SliceByValueMut for $ty<T>
         where
             T: Copy,
         {
             unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
                 self.0.as_mut_slice().set_value(index, value)
             }
-        }
 
-        impl<T: Clone> SliceByValueRepl for $ty<T> {
             unsafe fn replace_value_unchecked(
                 &mut self,
                 index: usize,
@@ -164,7 +162,7 @@ pub enum Sbv3 {
     OnlyThis,
 }
 
-impl SliceByValue for Sbv3 {
+impl SliceByValueCore for Sbv3 {
     type Value = usize;
 
     fn len(&self) -> usize {
@@ -172,7 +170,7 @@ impl SliceByValue for Sbv3 {
     }
 }
 
-impl SliceByValueGet for Sbv3 {
+impl SliceByValue for Sbv3 {
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
         index
     }
@@ -184,7 +182,7 @@ pub union Sbv4 {
     _only_this: usize,
 }
 
-impl SliceByValue for Sbv4 {
+impl SliceByValueCore for Sbv4 {
     type Value = usize;
 
     fn len(&self) -> usize {
@@ -192,7 +190,7 @@ impl SliceByValue for Sbv4 {
     }
 }
 
-impl SliceByValueGet for Sbv4 {
+impl SliceByValue for Sbv4 {
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
         index
     }
