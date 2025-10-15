@@ -45,9 +45,9 @@ where
     S: SliceByValueSubsliceRangeMut<Range<usize>> + ?Sized,
     S: for<'b> SliceByValueSubsliceGatMut<'b, SubsliceMut = &'b mut [i32]>,
 {
-    let a = s.index_subslice_mut(0..2);
+    
     // let _ = s.index_subslice_mut(0..2); // this instead should not compile
-    a
+    (s.index_subslice_mut(0..2)) as _
 }
 
 fn test_usize_range<'a, S>(s: &S) -> (i32, &[i32])
@@ -96,9 +96,9 @@ macro_rules! impl_slice {
                 self.0.len()
             }
 
-            unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+            unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value { unsafe {
                 self.0.as_slice().get_value_unchecked(index)
-            }
+            }}
         }
 
         impl<T: Clone> SliceByValueMut for $ty<T>
