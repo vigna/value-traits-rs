@@ -123,7 +123,9 @@ macro_rules! impl_slice {
             where
                 Self: 'a;
 
-            fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+            type ChunksMutError = core::convert::Infallible;
+
+            fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
                 Ok(self.0.chunks_mut(chunk_size))
             }
         }

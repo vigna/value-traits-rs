@@ -282,7 +282,9 @@ pub fn subslices_mut(input: TokenStream) -> TokenStream {
             where
                 Self: 'a;
 
-            fn try_chunks_mut(&mut self, _chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+            type ChunksMutError = ();
+
+            fn try_chunks_mut(&mut self, _chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
                 // Derived subslice types cannot provide mutable chunks
                 Err(())
             }

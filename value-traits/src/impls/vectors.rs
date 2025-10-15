@@ -91,8 +91,10 @@ impl<T: Clone> SliceByValueMut for Vec<T> {
     where
         Self: 'a;
 
+    type ChunksMutError = core::convert::Infallible;
+
     #[inline]
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
         Ok(self.chunks_mut(chunk_size))
     }
 }
@@ -238,8 +240,10 @@ mod vec_deque {
         where
             Self: 'a;
 
+        type ChunksMutError = core::convert::Infallible;
+
         #[inline]
-        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
             // Make the VecDeque contiguous so we can use chunks_mut
             Ok(self.make_contiguous().chunks_mut(chunk_size))
         }

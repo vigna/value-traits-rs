@@ -367,6 +367,12 @@ pub trait SliceByValueMut: SliceByValue {
     where
         Self: 'a;
 
+    /// The error type returned by [`try_chunks_mut`](SliceByValueMut::try_chunks_mut).
+    ///
+    /// For implementations that always succeed (like slices, arrays, and vectors),
+    /// this should be [`core::convert::Infallible`].
+    type ChunksMutError;
+
     /// Tries and returns an iterator over mutable chunks of a slice, starting
     /// at the beginning of the slice.
     ///
@@ -391,7 +397,7 @@ pub trait SliceByValueMut: SliceByValue {
     /// # Ok(())
     /// # }
     /// ```
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()>;
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError>;
 }
 
 impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
@@ -412,7 +418,9 @@ impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
     where
         Self: 'a;
 
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+    type ChunksMutError = S::ChunksMutError;
+
+    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
         (**self).try_chunks_mut(chunk_size)
     }
 }
@@ -882,7 +890,9 @@ mod alloc_impls {
         where
             Self: 'a;
 
-        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, ()> {
+        type ChunksMutError = S::ChunksMutError;
+
+        fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
             (**self).try_chunks_mut(chunk_size)
         }
     }
