@@ -11,6 +11,7 @@ authors = [
 	"Tommaso Fontana <tommaso.fontana.96@gmail.com>",
 	"Sebastiano Vigna <sebastiano.vigna@unimi.it>",
 ]
+rust-version = "1.85"
 
 [dependencies]
 value-traits-derive = { workspace = true, optional = true }

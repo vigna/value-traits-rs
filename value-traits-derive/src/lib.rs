@@ -222,7 +222,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 /// and
 /// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_traits_subslice_mut(bound = "<BOUND>")]` attribute.
+/// using the `#[value_traits_subslices_mut(bound = "<BOUND>")]` attribute.
 /// Multiple bounds can be specified with multiple attributes.
 #[proc_macro_derive(SubslicesMut, attributes(value_traits_subslices_mut))]
 pub fn subslices_mut(input: TokenStream) -> TokenStream {
@@ -487,6 +487,41 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 let len = self.range.len();
                 (len, Some(len))
             }
+
+            #[inline]
+            fn count(self) -> usize {
+                self.range.len()
+            }
+
+            #[inline]
+            fn last(self) -> ::core::option::Option<Self::Item> {
+                if self.range.is_empty() {
+                    return ::core::option::Option::None;
+                }
+                ::core::option::Option::Some(unsafe { self.subslice.get_value_unchecked(self.range.end - 1) })
+            }
+
+            fn fold<__FoldB, __FoldF>(self, init: __FoldB, mut f: __FoldF) -> __FoldB
+            where
+                __FoldF: FnMut(__FoldB, Self::Item) -> __FoldB,
+            {
+                let subslice = self.subslice;
+                let mut acc = init;
+                for idx in self.range {
+                    acc = f(acc, unsafe { subslice.get_value_unchecked(idx) });
+                }
+                acc
+            }
+
+            fn for_each<__ForEachF>(self, mut f: __ForEachF)
+            where
+                __ForEachF: FnMut(Self::Item),
+            {
+                let subslice = self.subslice;
+                for idx in self.range {
+                    f(unsafe { subslice.get_value_unchecked(idx) });
+                }
+            }
         }
 
         impl<'__iter_ref, #params> ::core::iter::DoubleEndedIterator for #iter<'__iter_ref, #names> #where_clause {
@@ -498,6 +533,28 @@ pub fn iterators(input: TokenStream) -> TokenStream {
                 self.range.end -= 1;
                 let value = unsafe { self.subslice.get_value_unchecked(self.range.end) };
                 ::core::option::Option::Some(value)
+            }
+
+            #[inline]
+            fn nth_back(&mut self, n: usize) -> ::core::option::Option<Self::Item> {
+                if n >= self.range.len() {
+                    self.range.end = self.range.start;
+                    return ::core::option::Option::None;
+                }
+                self.range.end -= n + 1;
+                ::core::option::Option::Some(unsafe { self.subslice.get_value_unchecked(self.range.end) })
+            }
+
+            fn rfold<__RFoldB, __RFoldF>(self, init: __RFoldB, mut f: __RFoldF) -> __RFoldB
+            where
+                __RFoldF: FnMut(__RFoldB, Self::Item) -> __RFoldB,
+            {
+                let subslice = self.subslice;
+                let mut acc = init;
+                for idx in self.range.rev() {
+                    acc = f(acc, unsafe { subslice.get_value_unchecked(idx) });
+                }
+                acc
             }
         }
 

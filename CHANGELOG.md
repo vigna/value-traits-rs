@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.2.1] - 2026-02-16
+## [0.2.1] - 2026-02-15
 
 ### Fixed
 
@@ -12,6 +12,8 @@
 
 * Delegation for iterators now match delegations for
   structures (`Rc`, `Arc`, etc.).
+
+* Optimized methods for iterators (`fold`, `map`, etc.).
 
 ## [0.2.0] - 2025-10-15
 

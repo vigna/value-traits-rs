@@ -95,4 +95,4 @@ subslices of different depth to the same variable.
 [set]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.set_value>
 [replace]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.replace_value>
 [apply a function to an element of the slice]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.apply_in_place>
-[few convenience methods]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut#method.copy>
+[few convenience methods]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.copy>

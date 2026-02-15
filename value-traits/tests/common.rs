@@ -157,8 +157,6 @@ pub fn generic_iter<S>(s: &S, expected: &[i32])
 where
     S: IterateByValue<Item = i32> + IterateByValueFrom<Item = i32>,
 {
-    let s = s.borrow();
-
     let mut iter = IterateByValue::iter_value(s);
     let mut truth = expected.iter();
 

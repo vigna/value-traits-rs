@@ -119,8 +119,7 @@ impl core::fmt::Display for ChunksMutNotSupported {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for ChunksMutNotSupported {}
+impl core::error::Error for ChunksMutNotSupported {}
 
 #[inline(always)]
 fn assert_index(index: usize, len: usize) {
@@ -140,7 +139,7 @@ fn assert_range(range: &impl ComposeRange, len: usize) {
 
 /// Read-only by-value slice trait.
 ///
-/// The only method that must be implemented is
+/// The only methods that must be implemented are
 /// [`get_value_unchecked`](`SliceByValue::get_value_unchecked`) and
 /// [`len`](`SliceByValue::len`).
 pub trait SliceByValue {
@@ -320,7 +319,7 @@ pub trait SliceByValueMut: SliceByValue {
     /// This method is semantically equivalent to:
     /// ```ignore
     /// for i in 0..self.len() {
-    ///     self.set_unchecked(i, f(self.get_unchecked(i)));
+    ///     self.set_value_unchecked(i, f(self.get_value_unchecked(i)));
     /// }
     /// ```
     /// and this is indeed the default implementation.
@@ -348,7 +347,7 @@ pub trait SliceByValueMut: SliceByValue {
     /// This method is semantically equivalent to:
     /// ```ignore
     /// for i in 0..self.len() {
-    ///     self.set(i, f(self.get(i)));
+    ///     self.set_value(i, f(self.index_value(i)));
     /// }
     /// ```
     /// and this is indeed the default implementation.

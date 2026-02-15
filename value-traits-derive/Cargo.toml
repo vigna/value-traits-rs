@@ -11,6 +11,7 @@ authors = [
 	"Sebastiano Vigna <sebastiano.vigna@unimi.it>",
 ]
 categories = ["development-tools::procedural-macro-helpers"]
+rust-version = "1.85"
 
 [lib]
 proc-macro = true

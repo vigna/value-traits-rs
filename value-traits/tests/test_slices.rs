@@ -393,3 +393,205 @@ impl SliceByValue for Sbv4 {
         index
     }
 }
+
+/// Test optimized `count()` on derived iterators.
+#[test]
+fn test_derived_iter_count() {
+    let s = Sbv(vec![10, 20, 30, 40, 50]);
+
+    // Full subslice
+    let sub = s.index_subslice(..);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).count(),
+        5
+    );
+
+    // Partial subslice
+    let sub = s.index_subslice(1..4);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).count(),
+        3
+    );
+
+    // Empty subslice
+    let sub = s.index_subslice(2..2);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).count(),
+        0
+    );
+
+    // count() after partial consumption
+    let sub = s.index_subslice(..);
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    iter.next();
+    iter.next();
+    assert_eq!(iter.count(), 3);
+}
+
+/// Test optimized `last()` on derived iterators.
+#[test]
+fn test_derived_iter_last() {
+    let s = Sbv(vec![10, 20, 30, 40, 50]);
+
+    // Full subslice
+    let sub = s.index_subslice(..);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).last(),
+        Some(50)
+    );
+
+    // Partial subslice
+    let sub = s.index_subslice(1..4);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).last(),
+        Some(40)
+    );
+
+    // Single-element subslice
+    let sub = s.index_subslice(3..4);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).last(),
+        Some(40)
+    );
+
+    // Empty subslice
+    let sub = s.index_subslice(2..2);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&sub).last(),
+        None
+    );
+}
+
+/// Test optimized `nth_back()` on derived iterators.
+#[test]
+fn test_derived_iter_nth_back() {
+    let s = Sbv(vec![10, 20, 30, 40, 50]);
+
+    // nth_back(0) = next_back()
+    let sub = s.index_subslice(1..4); // [20, 30, 40]
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    assert_eq!(iter.nth_back(0), Some(40));
+    assert_eq!(iter.nth_back(0), Some(30));
+    assert_eq!(iter.nth_back(0), Some(20));
+    assert_eq!(iter.nth_back(0), None);
+
+    // nth_back skipping
+    let sub = s.index_subslice(..); // [10, 20, 30, 40, 50]
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    assert_eq!(iter.nth_back(1), Some(40)); // skip 50, return 40
+    assert_eq!(iter.len(), 3); // [10, 20, 30] remain
+    assert_eq!(iter.nth_back(2), Some(10)); // skip 30 and 20, return 10
+    assert_eq!(iter.nth_back(0), None); // exhausted
+
+    // nth_back at boundary
+    let sub = s.index_subslice(2..5); // [30, 40, 50], len=3
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    assert_eq!(iter.nth_back(3), None); // exactly at boundary
+    assert_eq!(iter.len(), 0);
+
+    // nth_back overshoot
+    let sub = s.index_subslice(2..5);
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    assert_eq!(iter.nth_back(100), None);
+    assert_eq!(iter.len(), 0);
+
+    // nth_back mixed with next
+    let sub = s.index_subslice(..); // [10, 20, 30, 40, 50]
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    assert_eq!(iter.next(), Some(10));
+    assert_eq!(iter.nth_back(0), Some(50));
+    assert_eq!(iter.len(), 3); // [20, 30, 40]
+    assert_eq!(iter.nth_back(1), Some(30)); // skip 40, return 30
+    assert_eq!(iter.len(), 1); // [20]
+    assert_eq!(iter.next(), Some(20));
+    assert_eq!(iter.next(), None);
+
+    // Mutable subslice
+    let mut s = Sbv(vec![10, 20, 30, 40, 50]);
+    let sub_mut = s.index_subslice_mut(1..4); // [20, 30, 40]
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub_mut);
+    assert_eq!(iter.nth_back(1), Some(30)); // skip 40, return 30
+    assert_eq!(iter.nth_back(0), Some(20));
+    assert_eq!(iter.nth_back(0), None);
+}
+
+/// Test optimized `fold()` on derived iterators.
+#[test]
+#[allow(clippy::unnecessary_fold)] // We intentionally test fold, not sum
+fn test_derived_iter_fold() {
+    let s = Sbv(vec![10, 20, 30, 40, 50]);
+
+    // Sum via fold on full subslice
+    let sub = s.index_subslice(..);
+    let sum = value_traits::iter::IterateByValue::iter_value(&sub).fold(0_i32, |acc, x| acc + x);
+    assert_eq!(sum, 150);
+
+    // Sum via fold on partial subslice
+    let sub = s.index_subslice(1..4); // [20, 30, 40]
+    let sum = value_traits::iter::IterateByValue::iter_value(&sub).fold(0_i32, |acc, x| acc + x);
+    assert_eq!(sum, 90);
+
+    // Collect via fold
+    let sub = s.index_subslice(2..5); // [30, 40, 50]
+    let collected =
+        value_traits::iter::IterateByValue::iter_value(&sub).fold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+    assert_eq!(collected, vec![30, 40, 50]);
+
+    // Fold on empty subslice
+    let sub = s.index_subslice(3..3);
+    let sum = value_traits::iter::IterateByValue::iter_value(&sub).fold(42_i32, |acc, x| acc + x);
+    assert_eq!(sum, 42);
+}
+
+/// Test optimized `for_each()` on derived iterators.
+#[test]
+fn test_derived_iter_for_each() {
+    let s = Sbv(vec![10, 20, 30, 40, 50]);
+
+    // Collect via for_each on partial subslice
+    let sub = s.index_subslice(1..4); // [20, 30, 40]
+    let mut collected = Vec::new();
+    value_traits::iter::IterateByValue::iter_value(&sub).for_each(|x| collected.push(x));
+    assert_eq!(collected, vec![20, 30, 40]);
+
+    // for_each on empty subslice
+    let sub = s.index_subslice(2..2);
+    let mut collected = Vec::new();
+    value_traits::iter::IterateByValue::iter_value(&sub).for_each(|x| collected.push(x));
+    assert!(collected.is_empty());
+}
+
+/// Test optimized `rfold()` on derived iterators.
+#[test]
+fn test_derived_iter_rfold() {
+    let s = Sbv(vec![10, 20, 30, 40, 50]);
+
+    // Collect in reverse via rfold
+    let sub = s.index_subslice(1..4); // [20, 30, 40]
+    let reversed =
+        value_traits::iter::IterateByValue::iter_value(&sub).rfold(Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+    assert_eq!(reversed, vec![40, 30, 20]);
+
+    // Sum via rfold (should equal fold sum)
+    let sub = s.index_subslice(..);
+    let sum = value_traits::iter::IterateByValue::iter_value(&sub).rfold(0_i32, |acc, x| acc + x);
+    assert_eq!(sum, 150);
+
+    // rfold on empty subslice
+    let sub = s.index_subslice(3..3);
+    let sum = value_traits::iter::IterateByValue::iter_value(&sub).rfold(42_i32, |acc, x| acc + x);
+    assert_eq!(sum, 42);
+
+    // rfold processes elements back-to-front; prepending each yields forward order
+    let s = Sbv(vec![1, 2, 3]);
+    let sub = s.index_subslice(..);
+    let result = value_traits::iter::IterateByValue::iter_value(&sub)
+        .rfold(String::new(), |acc, x| format!("{x}{acc}"));
+    assert_eq!(result, "123");
+}
