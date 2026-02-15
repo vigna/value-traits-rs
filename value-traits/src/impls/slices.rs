@@ -23,9 +23,8 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat,
-        SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
-        Subslice, SubsliceMut,
+        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat, SliceByValueSubsliceGatMut,
+        SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice, SubsliceMut,
     },
 };
 
@@ -80,14 +79,18 @@ impl<T: Clone> SliceByValueMut for [T] {
         core::mem::replace(val_mut, value)
     }
 
-    type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+    type ChunksMut<'a>
+        = core::slice::ChunksMut<'a, T>
     where
         Self: 'a;
 
     type ChunksMutError = core::convert::Infallible;
 
     #[inline]
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
+    fn try_chunks_mut(
+        &mut self,
+        chunk_size: usize,
+    ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
         Ok(self.chunks_mut(chunk_size))
     }
 }
@@ -147,37 +150,6 @@ impl_range_slices!(RangeTo<usize>);
 impl_range_slices!(Range<usize>);
 impl_range_slices!(RangeInclusive<usize>);
 impl_range_slices!(RangeToInclusive<usize>);
-
-#[cfg(feature = "alloc")]
-mod alloc_impl {
-    use crate::iter::{Iter, IterFrom, IterateByValueFromGat, IterateByValueGat};
-
-    use super::*;
-    #[cfg(all(feature = "alloc", not(feature = "std")))]
-    use alloc::boxed::Box;
-
-    impl<'a, T: Clone> IterateByValueGat<'a> for Box<[T]> {
-        type Item = T;
-        type Iter = Cloned<core::slice::Iter<'a, T>>;
-    }
-
-    impl<T: Clone> IterateByValue for Box<[T]> {
-        fn iter_value(&self) -> Iter<'_, Self> {
-            self.iter().cloned()
-        }
-    }
-
-    impl<'a, T: Clone> IterateByValueFromGat<'a> for Box<[T]> {
-        type Item = T;
-        type IterFrom = Cloned<Skip<core::slice::Iter<'a, T>>>;
-    }
-
-    impl<T: Clone> IterateByValueFrom for Box<[T]> {
-        fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
-            self.iter().skip(from).cloned()
-        }
-    }
-}
 
 impl<'a, T: Clone> IterateByValueGat<'a> for [T] {
     type Item = T;

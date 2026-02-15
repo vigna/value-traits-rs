@@ -80,3 +80,53 @@ fn test_boxed_slice() {
     generic_mut(x.clone());
     generic_slice_mut(x.clone());
 }
+
+/// Test that `Box<[T]>` iterator delegation works (via the blanket impl for
+/// `Box<S>` where `S: IterateByValue`).
+#[test]
+#[cfg(feature = "alloc")]
+fn test_boxed_slice_iter() {
+    let x = EXPECTED.to_vec().into_boxed_slice();
+    generic_iter(&x, &EXPECTED);
+}
+
+/// Test that `Arc<[T]>` iterator delegation works.
+#[test]
+#[cfg(feature = "std")]
+fn test_arc_iter() {
+    use std::sync::Arc;
+    let x = <Arc<[i32]>>::from(EXPECTED);
+    generic_iter(&x, &EXPECTED);
+}
+
+/// Test that `Rc<[T]>` iterator delegation works.
+#[test]
+#[cfg(feature = "std")]
+fn test_rc_iter() {
+    use std::rc::Rc;
+    let x = <Rc<[i32]>>::from(EXPECTED);
+    generic_iter(&x, &EXPECTED);
+}
+
+/// Test that `Vec<T>` iteration works.
+#[test]
+#[cfg(feature = "alloc")]
+fn test_vec_iter() {
+    let x = EXPECTED.to_vec();
+    generic_iter(&x, &EXPECTED);
+}
+
+/// Test that `[T; N]` iteration works.
+#[test]
+fn test_array_iter() {
+    generic_iter(&EXPECTED, &EXPECTED);
+}
+
+/// Test that `VecDeque<T>` iteration works.
+#[test]
+#[cfg(feature = "std")]
+fn test_vec_deque_iter() {
+    use std::collections::VecDeque;
+    let x = Into::<VecDeque<_>>::into(EXPECTED.to_vec());
+    generic_iter(&x, &EXPECTED);
+}

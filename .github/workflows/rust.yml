@@ -18,7 +18,7 @@ jobs:
       - name: Check formatting
         run: cargo fmt -- --check
       - name: Run clippy
-        run: cargo clippy #-- -Dclippy::all -Dclippy::cargo
+        run: cargo clippy --all-features --all-targets
       - name: Run tests no_std & no_alloc
         run: RUST_BACKTRACE=full cargo test --verbose --no-default-features --features "derive"
       - name: Run tests no_std & alloc

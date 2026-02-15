@@ -13,9 +13,9 @@
 //! Derive macros for the [`value-traits`](https://docs.rs/value-traits/latest/value_traits/) crate.
 
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{
-    parse2, parse_macro_input, punctuated::Punctuated, AngleBracketedGenericArguments, DeriveInput,
+    AngleBracketedGenericArguments, DeriveInput, parse_macro_input, parse2, punctuated::Punctuated,
 };
 
 /// Helper function returning the list of parameter names without angle brackets.
@@ -48,7 +48,7 @@ fn extract_additional_bounds(
                 }
                 Ok(())
             })
-            .expect("Failed to parse attribute {attr_name}");
+            .unwrap_or_else(|e| panic!("Failed to parse attribute {attr_name}: {e}"));
         }
     }
     additional_bounds
@@ -152,12 +152,12 @@ pub fn subslices(input: TokenStream) -> TokenStream {
     };
 
     for range_type in [
-        quote! { core::ops::Range<usize> },
-        quote! { core::ops::RangeFrom<usize> },
-        quote! { core::ops::RangeToInclusive<usize> },
-        quote! { core::ops::RangeFull },
-        quote! { core::ops::RangeInclusive<usize> },
-        quote! { core::ops::RangeTo<usize> },
+        quote! { ::core::ops::Range<usize> },
+        quote! { ::core::ops::RangeFrom<usize> },
+        quote! { ::core::ops::RangeToInclusive<usize> },
+        quote! { ::core::ops::RangeFull },
+        quote! { ::core::ops::RangeInclusive<usize> },
+        quote! { ::core::ops::RangeTo<usize> },
     ] {
         res.extend(quote! {
             #[automatically_derived]
@@ -222,7 +222,7 @@ pub fn subslices(input: TokenStream) -> TokenStream {
 /// and
 /// [`SliceByValueMut`](https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueMut.html),
 /// additional bounds with respect to the type declaration must be specified
-/// using the `#[value_trait_subslice_mut(bound = "<BOUND>")]` attribute.
+/// using the `#[value_traits_subslice_mut(bound = "<BOUND>")]` attribute.
 /// Multiple bounds can be specified with multiple attributes.
 #[proc_macro_derive(SubslicesMut, attributes(value_traits_subslices_mut))]
 pub fn subslices_mut(input: TokenStream) -> TokenStream {
@@ -473,8 +473,8 @@ pub fn iterators(input: TokenStream) -> TokenStream {
             /// [`::core::iter::Iterator::nth`] without needing to consume the first `n` elements.
             #[inline]
             fn nth(&mut self, n: usize) -> Option<Self::Item> {
-                if n >= self.range.end {
-                    self.range.start = self.range.end; // consume the ::core::iter::iterator
+                if n >= self.range.len() {
+                    self.range.start = self.range.end; // consume the iterator
                     return ::core::option::Option::None;
                 }
                 let value = unsafe { self.subslice.get_value_unchecked(self.range.start + n) };
@@ -508,6 +508,8 @@ pub fn iterators(input: TokenStream) -> TokenStream {
             }
         }
 
+        impl<'__iter_ref, #params> ::core::iter::FusedIterator for #iter<'__iter_ref, #names> #where_clause {}
+
         #[automatically_derived]
         impl<'__subslice_impl, '__iter_ref, #params> ::value_traits::iter::IterateByValueGat<'__iter_ref> for #subslice_impl<'__subslice_impl, #names> #where_clause {
             type Item = <#input_ident #ty_generics as ::value_traits::slices::SliceByValue>::Value;
@@ -518,7 +520,7 @@ pub fn iterators(input: TokenStream) -> TokenStream {
         impl<'__subslice_impl, #params> ::value_traits::iter::IterateByValue for #subslice_impl<'__subslice_impl, #names> #where_clause {
             #[inline]
             fn iter_value(&self) -> ::value_traits::iter::Iter<'_, Self> {
-                #iter::new(self.slice)
+                #iter::new_with_range(self.slice, self.range.clone())
             }
         }
 
@@ -588,7 +590,7 @@ pub fn iterators_mut(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         impl<'__subslice_impl, #params> ::value_traits::iter::IterateByValue for #subslice_impl_mut<'__subslice_impl, #names> #where_clause {
             fn iter_value(&self) -> ::value_traits::iter::Iter<'_, Self> {
-                #iter::new(self.slice)
+                #iter::new_with_range(self.slice, self.range.clone())
             }
         }
 

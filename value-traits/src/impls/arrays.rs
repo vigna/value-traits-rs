@@ -19,9 +19,8 @@ use crate::{
         IterateByValueGat,
     },
     slices::{
-        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat,
-        SliceByValueSubsliceGatMut, SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut,
-        Subslice, SubsliceMut,
+        SliceByValue, SliceByValueMut, SliceByValueSubsliceGat, SliceByValueSubsliceGatMut,
+        SliceByValueSubsliceRange, SliceByValueSubsliceRangeMut, Subslice, SubsliceMut,
     },
 };
 
@@ -75,14 +74,18 @@ impl<T: Clone, const N: usize> SliceByValueMut for [T; N] {
         core::mem::replace(val_mut, value)
     }
 
-    type ChunksMut<'a> = core::slice::ChunksMut<'a, T>
+    type ChunksMut<'a>
+        = core::slice::ChunksMut<'a, T>
     where
         Self: 'a;
 
     type ChunksMutError = core::convert::Infallible;
 
     #[inline]
-    fn try_chunks_mut(&mut self, chunk_size: usize) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
+    fn try_chunks_mut(
+        &mut self,
+        chunk_size: usize,
+    ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
         Ok(self.chunks_mut(chunk_size))
     }
 }

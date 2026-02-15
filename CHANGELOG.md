@@ -1,6 +1,19 @@
 # Change Log
 
-## [0.2.0]
+## [0.2.1] - 2026-02-16
+
+### Fixed
+
+* Fixed iteration on subslices.
+
+* Fixed underflow in `copy`.
+
+### Improved
+
+* Delegation for iterators now match delegations for
+  structures (`Rc`, `Arc`, etc.).
+
+## [0.2.0] - 2025-10-15
 
 ### New
 

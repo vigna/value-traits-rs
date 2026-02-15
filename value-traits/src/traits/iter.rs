@@ -256,3 +256,82 @@ impl<T: IterateByValueFrom + ?Sized> IterateByValueFrom for &mut T {
         (**self).iter_value_from(from)
     }
 }
+
+#[cfg(feature = "alloc")]
+mod alloc_impls {
+    use super::*;
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::boxed::Box;
+
+    impl<'a, S: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for Box<S> {
+        type Item = S::Item;
+        type Iter = S::Iter;
+    }
+
+    impl<S: IterateByValue + ?Sized> IterateByValue for Box<S> {
+        fn iter_value(&self) -> Iter<'_, Self> {
+            (**self).iter_value()
+        }
+    }
+
+    impl<'a, S: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for Box<S> {
+        type Item = S::Item;
+        type IterFrom = S::IterFrom;
+    }
+
+    impl<S: IterateByValueFrom + ?Sized> IterateByValueFrom for Box<S> {
+        fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+            (**self).iter_value_from(from)
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+mod std_impls {
+    use super::*;
+    use std::{rc::Rc, sync::Arc};
+
+    impl<'a, S: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for Arc<S> {
+        type Item = S::Item;
+        type Iter = S::Iter;
+    }
+
+    impl<S: IterateByValue + ?Sized> IterateByValue for Arc<S> {
+        fn iter_value(&self) -> Iter<'_, Self> {
+            (**self).iter_value()
+        }
+    }
+
+    impl<'a, S: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for Arc<S> {
+        type Item = S::Item;
+        type IterFrom = S::IterFrom;
+    }
+
+    impl<S: IterateByValueFrom + ?Sized> IterateByValueFrom for Arc<S> {
+        fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+            (**self).iter_value_from(from)
+        }
+    }
+
+    impl<'a, S: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for Rc<S> {
+        type Item = S::Item;
+        type Iter = S::Iter;
+    }
+
+    impl<S: IterateByValue + ?Sized> IterateByValue for Rc<S> {
+        fn iter_value(&self) -> Iter<'_, Self> {
+            (**self).iter_value()
+        }
+    }
+
+    impl<'a, S: IterateByValueFromGat<'a> + ?Sized> IterateByValueFromGat<'a> for Rc<S> {
+        type Item = S::Item;
+        type IterFrom = S::IterFrom;
+    }
+
+    impl<S: IterateByValueFrom + ?Sized> IterateByValueFrom for Rc<S> {
+        fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+            (**self).iter_value_from(from)
+        }
+    }
+}

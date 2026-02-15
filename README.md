@@ -87,12 +87,12 @@ subslices of different depth to the same variable.
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>
 [`Index::index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index>
 [`Index`]: <https://doc.rust-lang.org/std/ops/trait.Index.html>
-[`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.Index.html#tymethod.index_mut>
+[`IndexMut::index_mut`]: <https://doc.rust-lang.org/std/ops/trait.IndexMut.html#tymethod.index_mut>
 [`Subslices`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.Subslices.html>
 [`SubslicesMut`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.SubslicesMut.html>
 [`Iterators`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.Iterators.html>
 [`IteratorsMut`]: <https://docs.rs/value_traits_derive/latest/value_traits_derive/derive.IteratorsMut.html>
-[set]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.set>
-[replace]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.replace>
+[set]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.set_value>
+[replace]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.replace_value>
 [apply a function to an element of the slice]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html#method.apply_in_place>
 [few convenience methods]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut#method.copy>

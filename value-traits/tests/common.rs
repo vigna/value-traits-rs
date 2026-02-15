@@ -112,9 +112,7 @@ where
 
 pub fn generic_slice_mut<S>(mut s: S)
 where
-    S: SliceByValue<Value = i32>
-        + SliceByValueMut
-        + SliceByValueSubsliceMut,
+    S: SliceByValue<Value = i32> + SliceByValueMut + SliceByValueSubsliceMut,
     for<'a> <S as SliceByValueSubsliceGatMut<'a>>::SubsliceMut:
         SliceByValue<Value = i32> + SliceByValueMut,
 {
@@ -165,7 +163,7 @@ where
     let mut truth = expected.iter();
 
     for _ in 0..expected.len() + 2 {
-        assert_eq!(truth.next().copied(), iter.next());
+        assert_eq!(iter.next(), truth.next().copied());
     }
 
     for start in 0..expected.len() {
@@ -173,7 +171,7 @@ where
         let mut truth = expected[start..].iter();
 
         for _ in 0..truth.len() + 2 {
-            assert_eq!(truth.next().copied(), iter.next());
+            assert_eq!(iter.next(), truth.next().copied());
         }
     }
 }
@@ -190,19 +188,19 @@ where
     let mut truth = expected.iter();
 
     for _ in 0..expected.len() + 2 {
-        assert_eq!(truth.len(), iter.len());
-        assert_eq!(truth.next().copied(), iter.next());
+        assert_eq!(iter.len(), truth.len());
+        assert_eq!(iter.next(), truth.next().copied());
     }
 
     let mut iter = IterateByValue::iter_value(s);
     let mut truth = expected.iter();
 
     for i in 0..truth.len() + 2 {
-        assert_eq!(truth.len(), iter.len());
+        assert_eq!(iter.len(), truth.len());
         if i % 2 == 0 {
-            assert_eq!(truth.next().copied(), iter.next());
+            assert_eq!(iter.next(), truth.next().copied());
         } else {
-            assert_eq!(truth.next_back().copied(), iter.next_back());
+            assert_eq!(iter.next_back(), truth.next_back().copied());
         }
     }
 
@@ -211,18 +209,18 @@ where
         let mut truth = expected[start..].iter();
 
         for _ in 0..truth.len() + 2 {
-            assert_eq!(truth.len(), iter.len());
-            assert_eq!(truth.next().copied(), iter.next());
+            assert_eq!(iter.len(), truth.len());
+            assert_eq!(iter.next(), truth.next().copied());
         }
 
         let mut iter = IterateByValueFrom::iter_value_from(s, start);
         let mut truth = expected[start..].iter();
         for i in 0..truth.len() + 2 {
-            assert_eq!(truth.len(), iter.len());
+            assert_eq!(iter.len(), truth.len());
             if i % 2 == 0 {
-                assert_eq!(truth.next().copied(), iter.next());
+                assert_eq!(iter.next(), truth.next().copied());
             } else {
-                assert_eq!(truth.next_back().copied(), iter.next_back());
+                assert_eq!(iter.next_back(), truth.next_back().copied());
             }
         }
     }

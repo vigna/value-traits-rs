@@ -16,7 +16,7 @@
 //! using a succinct/compressed representation.
 //!
 //! The fundamental trait for by-value slices is [`SliceByValue`], which
-//! specifies the type of the values, the length of the slice, and provide
+//! specifies the type of the values, the length of the slice, and provides
 //! read-only access. Additional functionality is provided by the
 //! [`SliceByValueMut`] trait, which provides mutation methods. Note that,
 //! contrarily to the standard slices, replacement can be obtained by a pair of
@@ -76,7 +76,7 @@
 //!
 //! struct Squares();
 //!
-//! impl<'a> SliceByValue for Squares {
+//! impl SliceByValue for Squares {
 //!     type Value = usize;
 //!     fn len(&self) -> usize {
 //!         100
@@ -134,7 +134,7 @@ fn assert_index(index: usize, len: usize) {
 fn assert_range(range: &impl ComposeRange, len: usize) {
     assert!(
         range.is_valid(len),
-        "range {range:?} out of range for slice of length {len}: ",
+        "range {range:?} out of range for slice of length {len}",
     );
 }
 
@@ -157,7 +157,7 @@ pub trait SliceByValue {
     /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
     fn index_value(&self, index: usize) -> Self::Value {
         assert_index(index, self.len());
-        // SAFETY: index is without bounds
+        // SAFETY: index is within bounds
         unsafe { self.get_value_unchecked(index) }
     }
 
@@ -174,7 +174,7 @@ pub trait SliceByValue {
     /// See [`slice::get`].
     fn get_value(&self, index: usize) -> Option<Self::Value> {
         if index < self.len() {
-            // SAFETY: index is without bounds
+            // SAFETY: index is within bounds
             let value = unsafe { self.get_value_unchecked(index) };
             Some(value)
         } else {
@@ -245,10 +245,10 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// # Panics
     ///
-    /// This method will panic is the index is not within bounds.
+    /// This method will panic if the index is not within bounds.
     fn set_value(&mut self, index: usize, value: Self::Value) {
         assert_index(index, self.len());
-        // SAFETY: index is without bounds
+        // SAFETY: index is within bounds
         unsafe {
             self.set_value_unchecked(index, value);
         }
@@ -277,10 +277,10 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// # Panics
     ///
-    /// This method will panic is the index is not within bounds.
+    /// This method will panic if the index is not within bounds.
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         assert_index(index, self.len());
-        // SAFETY: index is without bounds
+        // SAFETY: index is within bounds
         unsafe { self.replace_value_unchecked(index, value) }
     }
 
@@ -305,7 +305,10 @@ pub trait SliceByValueMut: SliceByValue {
     /// by one. It is expected to be implemented in a more efficient way.
     fn copy(&self, from: usize, dst: &mut Self, to: usize, len: usize) {
         // Reduce len to the elements available in both vectors
-        let len = Ord::min(Ord::min(len, dst.len() - to), self.len() - from);
+        let len = Ord::min(
+            Ord::min(len, dst.len().saturating_sub(to)),
+            self.len().saturating_sub(from),
+        );
         for i in 0..len {
             dst.set_value(to + i, self.index_value(from + i));
         }
@@ -426,15 +429,17 @@ impl<S: SliceByValueMut + ?Sized> SliceByValueMut for &mut S {
     fn set_value(&mut self, index: usize, value: Self::Value) {
         (**self).set_value(index, value);
     }
-    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) { unsafe {
-        (**self).set_value_unchecked(index, value);
-    }}
+    unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value) {
+        unsafe {
+            (**self).set_value_unchecked(index, value);
+        }
+    }
     fn replace_value(&mut self, index: usize, value: Self::Value) -> Self::Value {
         (**self).replace_value(index, value)
     }
-    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value { unsafe {
-        (**self).replace_value_unchecked(index, value)
-    }}
+    unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
+        unsafe { (**self).replace_value_unchecked(index, value) }
+    }
 
     type ChunksMut<'a>
         = S::ChunksMut<'a>
@@ -651,7 +656,9 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRange<R> + ?Sized> SliceByValueSubs
 /// A GAT-like trait specifying the mutable subslice type.
 ///
 /// See [`SliceByValueSubsliceGat`].
-pub trait SliceByValueSubsliceGatMut<'a, __Implicit = &'a Self>: SliceByValueMut {
+pub trait SliceByValueSubsliceGatMut<'a, __Implicit: ImplBound = Ref<'a, Self>>:
+    SliceByValueMut
+{
     /// The type of the mutable subslice.
     type SubsliceMut: 'a
         + SliceByValueMut<Value = Self::Value>
@@ -721,9 +728,9 @@ impl<R: ComposeRange, S: SliceByValueSubsliceRangeMut<R> + ?Sized> SliceByValueS
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
         (**self).index_subslice_mut(range)
     }
-    unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> { unsafe {
-        (**self).get_subslice_unchecked_mut(range)
-    }}
+    unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
+        unsafe { (**self).get_subslice_unchecked_mut(range) }
+    }
 }
 
 /// A convenience trait combining all instances of [`SliceByValueSubsliceRange`]
@@ -1004,9 +1011,9 @@ mod std_impls {
         fn index_value(&self, index: usize) -> Self::Value {
             (**self).index_value(index)
         }
-        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value { unsafe {
-            (**self).get_value_unchecked(index)
-        }}
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+            unsafe { (**self).get_value_unchecked(index) }
+        }
     }
     impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Arc<S> {
         type Subslice = S::Subslice;
@@ -1026,9 +1033,9 @@ mod std_impls {
         fn index_value(&self, index: usize) -> Self::Value {
             (**self).index_value(index)
         }
-        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value { unsafe {
-            (**self).get_value_unchecked(index)
-        }}
+        unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+            unsafe { (**self).get_value_unchecked(index) }
+        }
     }
 
     impl<'a, S: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> for Rc<S> {
