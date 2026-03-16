@@ -1,12 +1,12 @@
 # Traits By Value
 
-[![downloads](https://img.shields.io/crates/d/value-traits)](https://crates.io/crates/value-traits)
-[![dependents](https://img.shields.io/librariesio/dependents/cargo/value-traits)](https://crates.io/crates/value-traits/reverse_dependencies)
-![GitHub CI](https://github.com/vigna/value-traits-rs/actions/workflows/rust.yml/badge.svg)
+[![crates.io](https://img.shields.io/crates/v/value-traits.svg)](https://crates.io/crates/value-traits)
+[![docs.rs](https://docs.rs/value-traits/badge.svg)](https://docs.rs/value-traits)
+[![rustc](https://img.shields.io/badge/rustc-1.85+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![CI](https://github.com/vigna/value-traits-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/vigna/value-traits-rs/actions)
 ![license](https://img.shields.io/crates/l/value-traits)
-[![Latest version](https://img.shields.io/crates/v/value-traits.svg)](https://crates.io/crates/value-traits)
-[![Documentation](https://docs.rs/value-traits/badge.svg)](https://docs.rs/value-traits)
-[![Coverage Status](https://coveralls.io/repos/github/vigna/value-traits-rs/badge.svg?branch=main)](https://coveralls.io/github/vigna/value-traits-rs?branch=main)
+[![downloads](https://img.shields.io/crates/d/value-traits)](https://crates.io/crates/value-traits)
+[![coveralls](https://coveralls.io/repos/github/vigna/value-traits-rs/badge.svg?branch=main)](https://coveralls.io/github/vigna/value-traits-rs?branch=main)
 
 ## Why
 
