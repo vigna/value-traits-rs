@@ -25,12 +25,12 @@ representations, such as compressed, succinct, functional, implicit, and so on.
 
 For this reason, this crate provides traits parallel to slices and iterators,
 but by value, rather than by reference. [`SliceByValue`] specifies the type of
-values of the slice (via an associated type), its length, ad provides methods
+values of the slice (via an associated type), its length, and provides methods
 that are exactly analogous of [`std::slice::get`] and [`Index::index`], but
 return values, rather than references; they are named [`get_value`] and
 [`index_value`] instead. The longer names are necessary to avoid ambiguity, as
 all slices of cloneable elements implement our by-value traits. It might be
-argued `RandomAccessList` or `Sequence` might be more standard name, but we want
+argued `RandomAccessList` or `Sequence` might be a more standard name, but we want
 to underline the fact that the read access is closely modeled after slices. Note
 that we cannot overload the `[]` operator, as [`Index`] methods must necessarily
 return references.
@@ -78,10 +78,10 @@ subslices of different depth to the same variable.
 [`SliceByValue`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html>
 [`SliceByValueMut`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueMut.html>
 [subslicing]: <https://docs.rs/value-traits/latest/value_traits/slices/trait.SliceByValueSubslice.html>
-[`get_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html#tymethod.get_value>
-[`index_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html#tymethod.index_value>
-[`get_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.get_subslice>
-[`index_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubslice.html#tymethod.index_subslice>
+[`get_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html#method.get_value>
+[`index_value`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValue.html#method.index_value>
+[`get_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubsliceRange.html#method.get_subslice>
+[`index_subslice`]: <https://docs.rs/value_traits/latest/value_traits/slices/trait.SliceByValueSubsliceRange.html#method.index_subslice>
 [`IterateByValue`]: <https://docs.rs/value_traits/latest/value_traits/iter/trait.IterateByValue.html>
 [`IntoIterator`]: <https://doc.rust-lang.org/std/iter/trait.IntoIterator.html>
 [`std::slice::get`]: <https://doc.rust-lang.org/std/slice/trait.SliceIndex.html#tymethod.get>

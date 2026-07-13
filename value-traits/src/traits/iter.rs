@@ -12,13 +12,15 @@ use crate::{ImplBound, Ref};
 
 /// A GAT-like trait specifying the type of a by-value iterator.
 ///
-/// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
-/// more information.
+/// See [`SliceByValueSubsliceGat`] for more information.
+///
+/// [`SliceByValueSubsliceGat`]: crate::slices::SliceByValueSubsliceGat
 pub trait IterateByValueGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     /// The type of the items returned by the iterator.
     type Item;
-    /// The type of the iterator returned by
-    /// [`iter_value`](IterateByValue::iter_value).
+    /// The type of the iterator returned by [`iter_value`].
+    ///
+    /// [`iter_value`]: IterateByValue::iter_value
     type Iter: 'a + Iterator<Item = Self::Item>;
 }
 
@@ -38,12 +40,11 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 
 /// A trait for obtaining a by-value iterator.
 ///
-/// This trait necessary as all standard Rust containers already have
+/// This trait is necessary as all standard Rust containers already have
 /// [`IntoIterator`]-based methods for obtaining reference-based iterators.
 ///
-/// Note that [`iter_value`](IterateByValue::iter_value) returns a standard
-/// iterator. However, the intended semantics is that the iterator will return
-/// values.
+/// Note that [`iter_value`] returns a standard iterator. However, the
+/// intended semantics is that the iterator will return values.
 ///
 /// If you need to iterate from a given position, and you can implement such an
 /// iterator more efficiently, please consider [`IterateByValueFrom`].
@@ -89,10 +90,9 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 /// }
 /// ```
 ///
-/// As it happens for
-/// [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html),
-/// it is possible to bind the type of the items returned by the iterator
-/// without referring to the iterator type itself:
+/// As it happens for [`IntoIterator`], it is possible to bind the type of the
+/// items returned by the iterator without referring to the iterator type
+/// itself:
 ///
 /// ```rust
 /// use value_traits::iter::*;
@@ -117,6 +117,8 @@ impl<'a, T: IterateByValueGat<'a> + ?Sized> IterateByValueGat<'a> for &mut T {
 ///     let _: Option<usize> = s.iter_value().next();
 /// }
 /// ```
+///
+/// [`iter_value`]: IterateByValue::iter_value
 pub trait IterateByValue: for<'a> IterateByValueGat<'a> {
     /// Returns an iterator on values.
     fn iter_value(&self) -> Iter<'_, Self>;
@@ -137,13 +139,15 @@ impl<T: IterateByValue + ?Sized> IterateByValue for &mut T {
 /// A GAT-like trait specifying the type of a by-value iterator starting from
 /// a given position.
 ///
-/// See [`SliceByValueSubsliceGat`](crate::slices::SliceByValueSubsliceGat) for
-/// more information.
+/// See [`SliceByValueSubsliceGat`] for more information.
+///
+/// [`SliceByValueSubsliceGat`]: crate::slices::SliceByValueSubsliceGat
 pub trait IterateByValueFromGat<'a, __Implicit: ImplBound = Ref<'a, Self>> {
     /// The type of the items returned by the iterator.
     type Item;
-    /// The type of the iterator returned by
-    /// [`iter_value_from`](IterateByValueFrom::iter_value_from).
+    /// The type of the iterator returned by [`iter_value_from`].
+    ///
+    /// [`iter_value_from`]: IterateByValueFrom::iter_value_from
     type IterFrom: 'a + Iterator<Item = Self::Item>;
 }
 
@@ -169,7 +173,7 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 /// We cannot provide a skip-based default implementation because the returned
 /// type is not necessarily the same type as that returned by
 /// [`IterateByValue::iter_value`], but you are free to implement
-/// [`iter_value_from`](IterateByValueFrom::iter_value_from) that way.
+/// [`iter_value_from`] that way.
 ///
 /// ## Binding the Iterator Type
 ///
@@ -212,10 +216,9 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 /// }
 /// ```
 ///
-/// As it happens for
-/// [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html),
-/// it is possible to bind the type of the items returned by the iterator
-/// without referring to the iterator type itself:
+/// As it happens for [`IntoIterator`], it is possible to bind the type of the
+/// items returned by the iterator without referring to the iterator type
+/// itself:
 ///
 /// ```rust
 /// use value_traits::iter::*;
@@ -240,8 +243,18 @@ pub type IterFrom<'a, T> = <T as IterateByValueFromGat<'a>>::IterFrom;
 ///     let _: Option<usize> = s.iter_value_from(0).next();
 /// }
 /// ```
+///
+/// [`iter_value_from`]: IterateByValueFrom::iter_value_from
 pub trait IterateByValueFrom: for<'a> IterateByValueFromGat<'a> {
     /// Returns an iterator on values starting at the given position.
+    ///
+    /// Iterating from the length of the structure is allowed, and returns an
+    /// exhausted iterator.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if `from` is greater than the length of the
+    /// structure being iterated, mirroring the behavior of slice indexing.
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self>;
 }
 

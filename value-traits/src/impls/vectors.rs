@@ -6,12 +6,15 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Implementations of by-value traits for [`Vec`] and
-//! [`VecDeque`](std::collections::VecDeque) of [cloneable](Clone) types.
+//! Implementations of by-value traits for [`Vec`] and [`VecDeque`] of
+//! [cloneable] types.
 //!
 //! The [`Vec`] implementations are available only if the `alloc` feature is
-//! enabled, while the [`VecDeque`](std::collections::VecDeque) implementations
-//! are available only if the `std` feature is enabled.
+//! enabled, while the [`VecDeque`] implementations are available only if the
+//! `std` feature is enabled.
+//!
+//! [`VecDeque`]: std::collections::VecDeque
+//! [cloneable]: Clone
 
 #![cfg(feature = "alloc")]
 
@@ -174,6 +177,11 @@ impl<'a, T: Clone> IterateByValueFromGat<'a> for Vec<T> {
 
 impl<T: Clone> IterateByValueFrom for Vec<T> {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+        let len = self.len();
+        assert!(
+            from <= len,
+            "index out of bounds: the len is {len} but the starting index is {from}"
+        );
         self.iter().skip(from).cloned()
     }
 }
@@ -246,12 +254,15 @@ mod vec_deque {
 
         type ChunksMutError = core::convert::Infallible;
 
+        /// This implementation always succeeds.
+        ///
+        /// Note that it calls [`VecDeque::make_contiguous`], which
+        /// rearranges the internal storage of the deque in *O*(*n*) time.
         #[inline]
         fn try_chunks_mut(
             &mut self,
             chunk_size: usize,
         ) -> Result<Self::ChunksMut<'_>, Self::ChunksMutError> {
-            // Make the VecDeque contiguous so we can use chunks_mut
             Ok(self.make_contiguous().chunks_mut(chunk_size))
         }
     }
@@ -274,6 +285,11 @@ mod vec_deque {
 
     impl<T: Clone> IterateByValueFrom for VecDeque<T> {
         fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+            let len = self.len();
+            assert!(
+                from <= len,
+                "index out of bounds: the len is {len} but the starting index is {from}"
+            );
             self.iter().skip(from).cloned()
         }
     }

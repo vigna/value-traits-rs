@@ -6,11 +6,13 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Implementations of by-value traits for (boxed) slices of [cloneable](Clone)
+//! Implementations of by-value traits for (boxed) slices of [cloneable]
 //! types.
 //!
 //! Implementations for boxed slices are only available if the `alloc` feature is
 //! enabled.
+//!
+//! [cloneable]: Clone
 
 use core::{
     iter::{Cloned, Skip},
@@ -169,6 +171,11 @@ impl<'a, T: Clone> IterateByValueFromGat<'a> for [T] {
 
 impl<T: Clone> IterateByValueFrom for [T] {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+        let len = self.len();
+        assert!(
+            from <= len,
+            "index out of bounds: the len is {len} but the starting index is {from}"
+        );
         self.iter().skip(from).cloned()
     }
 }

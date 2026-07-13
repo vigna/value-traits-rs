@@ -34,8 +34,8 @@
 //!
 //! ## Examples
 //!
-//! As a very simple worked-out example, let us a by-value read-only slice of
-//! `usize` using a vector of `u8` as a basic form of compression:
+//! As a very simple worked-out example, let us define a by-value read-only
+//! slice of `usize` using a vector of `u8` as a basic form of compression:
 //!
 //! ```rust
 //! use value_traits::slices::*;
@@ -47,7 +47,7 @@
 //!     fn len(&self) -> usize {
 //!         self.0.len()
 //!     }
-
+//!
 //!     unsafe fn get_value_unchecked(&self, index: usize) -> usize {
 //!         unsafe { self.0.get_value_unchecked(index) as usize }
 //!     }
@@ -105,11 +105,12 @@ use core::ops::{
 
 use crate::{ImplBound, Ref};
 
-/// Error type returned when [`try_chunks_mut`](SliceByValueMut::try_chunks_mut)
-/// is not supported by a type.
+/// Error type returned when [`try_chunks_mut`] is not supported by a type.
 ///
 /// This error is typically returned by derived subslice types which cannot
 /// provide mutable chunks due to their implementation constraints.
+///
+/// [`try_chunks_mut`]: SliceByValueMut::try_chunks_mut
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ChunksMutNotSupported;
 
@@ -140,8 +141,10 @@ fn assert_range(range: &impl ComposeRange, len: usize) {
 /// Read-only by-value slice trait.
 ///
 /// The only methods that must be implemented are
-/// [`get_value_unchecked`](`SliceByValue::get_value_unchecked`) and
-/// [`len`](`SliceByValue::len`).
+/// [`get_value_unchecked`] and [`len`].
+///
+/// [`get_value_unchecked`]: SliceByValue::get_value_unchecked
+/// [`len`]: SliceByValue::len
 pub trait SliceByValue {
     /// The type of the values in the slice.
     type Value;
@@ -153,7 +156,9 @@ pub trait SliceByValue {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
+    /// See [the `Index` implementation for slices][slice-index].
+    ///
+    /// [slice-index]: slice#impl-Index%3CI%3E-for-%5BT%5D
     fn index_value(&self, index: usize) -> Self::Value {
         assert_index(index, self.len());
         // SAFETY: index is within bounds
@@ -162,12 +167,14 @@ pub trait SliceByValue {
 
     /// See [`slice::get_unchecked`].
     ///
-    /// For a safe alternative see [`get_value`](SliceByValue::get_value)
-    /// or [`index_value`](SliceByValue::index_value).
+    /// For a safe alternative see [`get_value`] or [`index_value`].
     ///
     /// # Safety
     ///
     /// The index must be within bounds.
+    ///
+    /// [`get_value`]: SliceByValue::get_value
+    /// [`index_value`]: SliceByValue::index_value
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value;
 
     /// See [`slice::get`].
@@ -222,22 +229,28 @@ impl<S: SliceByValue + ?Sized> SliceByValue for &mut S {
 
 /// Mutable by-value slice trait providing setting and replacement methods.
 ///
-/// This trait provides both [`set_value`](SliceByValueMut::set_value) (for setting
-/// without returning the previous value) and [`replace_value`](SliceByValueMut::replace_value)
-/// (for setting and returning the previous value).
+/// This trait provides both [`set_value`] (for setting without returning the
+/// previous value) and [`replace_value`] (for setting and returning the
+/// previous value).
 ///
-/// The only methods that must be implemented are
-/// [`set_value_unchecked`](`SliceByValueMut::set_value_unchecked`) and
-/// [`replace_value_unchecked`](`SliceByValueMut::replace_value_unchecked`).
+/// The only methods that must be implemented are [`set_value_unchecked`] and
+/// [`replace_value_unchecked`].
+///
+/// [`set_value`]: SliceByValueMut::set_value
+/// [`replace_value`]: SliceByValueMut::replace_value
+/// [`set_value_unchecked`]: SliceByValueMut::set_value_unchecked
+/// [`replace_value_unchecked`]: SliceByValueMut::replace_value_unchecked
 pub trait SliceByValueMut: SliceByValue {
     /// Sets the value at the given index to the given value without doing
     /// bounds checking.
     ///
-    /// For a safe alternative see [`set_value`](SliceByValueMut::set_value).
+    /// For a safe alternative see [`set_value`].
     ///
     /// # Safety
     ///
     /// The index must be within bounds.
+    ///
+    /// [`set_value`]: SliceByValueMut::set_value
     unsafe fn set_value_unchecked(&mut self, index: usize, value: Self::Value);
 
     /// Sets the value at the given index to the given value.
@@ -256,15 +269,18 @@ pub trait SliceByValueMut: SliceByValue {
     /// Sets the value at the given index to the given value and
     /// returns the previous value, without doing bounds checking.
     ///
-    /// For a safe alternative see [`replace_value`](SliceByValueMut::replace_value).
+    /// For a safe alternative see [`replace_value`].
     ///
-    /// This default implementation uses
-    /// [`get_value_unchecked`](SliceByValue::get_value_unchecked) and
-    /// [`set_value_unchecked`](SliceByValueMut::set_value_unchecked).
+    /// This default implementation uses [`get_value_unchecked`] and
+    /// [`set_value_unchecked`].
     ///
     /// # Safety
     ///
     /// The index must be within bounds.
+    ///
+    /// [`replace_value`]: SliceByValueMut::replace_value
+    /// [`get_value_unchecked`]: SliceByValue::get_value_unchecked
+    /// [`set_value_unchecked`]: SliceByValueMut::set_value_unchecked
     unsafe fn replace_value_unchecked(&mut self, index: usize, value: Self::Value) -> Self::Value {
         let old_value = unsafe { self.get_value_unchecked(index) };
         unsafe { self.set_value_unchecked(index, value) };
@@ -286,15 +302,15 @@ pub trait SliceByValueMut: SliceByValue {
     /// Copy part of the content of the slice to another slice.
     ///
     /// At most `len` elements are copied, compatibly with the elements
-    /// available in both vectors.
+    /// available in both slices.
     ///
     /// # Arguments
     ///
     /// * `from`: the index of the first element to copy.
     ///
-    /// * `dst`: the destination vector.
+    /// * `dst`: the destination slice.
     ///
-    /// * `to`: the index of the first element in the destination vector.
+    /// * `to`: the index of the first element in the destination slice.
     ///
     /// * `len`: the maximum number of elements to copy.
     ///
@@ -302,7 +318,13 @@ pub trait SliceByValueMut: SliceByValue {
     ///
     /// The default implementation is a simple loop that copies the elements one
     /// by one. It is expected to be implemented in a more efficient way.
-    fn copy(&self, from: usize, dst: &mut Self, to: usize, len: usize) {
+    fn copy(
+        &self,
+        from: usize,
+        dst: &mut (impl SliceByValueMut<Value = Self::Value> + ?Sized),
+        to: usize,
+        len: usize,
+    ) {
         // Reduce len to the elements available in both vectors
         let len = Ord::min(
             Ord::min(len, dst.len().saturating_sub(to)),
@@ -324,13 +346,15 @@ pub trait SliceByValueMut: SliceByValue {
     /// ```
     /// and this is indeed the default implementation.
     ///
-    /// See [`apply_in_place`](SliceByValueMut::apply_in_place) for examples.
+    /// See [`apply_in_place`] for examples.
     ///
     /// # Safety
     ///
     /// The function must return a value that agrees with the safety
-    /// requirements of
-    /// [`set_value_unchecked`](SliceByValueMut::set_value_unchecked).
+    /// requirements of [`set_value_unchecked`].
+    ///
+    /// [`apply_in_place`]: SliceByValueMut::apply_in_place
+    /// [`set_value_unchecked`]: SliceByValueMut::set_value_unchecked
     unsafe fn apply_in_place_unchecked<F>(&mut self, mut f: F)
     where
         F: FnMut(Self::Value) -> Self::Value,
@@ -380,32 +404,36 @@ pub trait SliceByValueMut: SliceByValue {
         }
     }
 
-    /// The iterator type returned by [`try_chunks_mut`](SliceByValueMut::try_chunks_mut).
+    /// The iterator type returned by [`try_chunks_mut`].
+    ///
+    /// [`try_chunks_mut`]: SliceByValueMut::try_chunks_mut
     type ChunksMut<'a>: Iterator<Item: SliceByValueMut<Value = Self::Value>>
     where
         Self: 'a;
 
-    /// The error type returned by [`try_chunks_mut`](SliceByValueMut::try_chunks_mut).
+    /// The error type returned by [`try_chunks_mut`].
     ///
     /// For implementations that always succeed (like slices, arrays, and vectors),
     /// this should be [`core::convert::Infallible`].
+    ///
+    /// [`try_chunks_mut`]: SliceByValueMut::try_chunks_mut
     type ChunksMutError: core::fmt::Debug;
 
     /// Tries and returns an iterator over mutable chunks of a slice, starting
     /// at the beginning of the slice.
     ///
     /// This might not always be possible; implementations must document when
-    /// the method will success (see, for example, [the implementation for
-    /// `BitFieldVec`](https://docs.rs/sux/latest/sux/bits/bit_field_vec/struct.BitFieldVec.html#impl-BitFieldSliceMut<W>-for-BitFieldVec<W,+B>)).
+    /// the method will succeed (see, for example, [the implementation for
+    /// `BitFieldVec`][bit-field-vec]).
     ///
     /// When the slice len is not evenly divided by the chunk size, the last
     /// chunk of the iteration will be the remainder.
     ///
     /// # Errors
     ///
-    /// Returns an error of type [`ChunksMutError`](SliceByValueMut::ChunksMutError)
-    /// if the operation is not supported by the implementation. For example,
-    /// derived subslice types return [`ChunksMutNotSupported`].
+    /// Returns an error of type [`ChunksMutError`] if the operation is not
+    /// supported by the implementation. For example, derived subslice types
+    /// return [`ChunksMutNotSupported`].
     ///
     /// # Examples
     ///
@@ -418,6 +446,9 @@ pub trait SliceByValueMut: SliceByValue {
     /// assert_eq!(b, vec![5, 500, 5, 3, 5]);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
+    ///
+    /// [bit-field-vec]: https://docs.rs/sux/latest/sux/bits/bit_field_vec/struct.BitFieldVec.html#impl-BitFieldSliceMut<W>-for-BitFieldVec<W,+B>
+    /// [`ChunksMutError`]: SliceByValueMut::ChunksMutError
     fn try_chunks_mut(
         &mut self,
         chunk_size: usize,
@@ -468,8 +499,8 @@ pub trait ComposeRange: RangeBounds<usize> + core::fmt::Debug {
 
     /// Returns a new range that is the composition of `base` with the range.
     ///
-    /// The resulting range is guaranteed to be contained in `base` if `self` [is
-    /// valid](ComposeRange::is_valid) for `base.len()`.
+    /// The resulting range is guaranteed to be contained in `base` if `self`
+    /// [is valid][ComposeRange::is_valid] for `base.len()`.
     ///
     /// ```rust
     /// use value_traits::slices::ComposeRange;
@@ -516,7 +547,10 @@ impl ComposeRange for RangeFull {
 
 impl ComposeRange for RangeInclusive<usize> {
     fn is_valid(&self, len: usize) -> bool {
-        *self.start() < len && *self.end() < len && self.start() <= self.end()
+        // Same semantics as the standard library: empty inclusive ranges
+        // (start == end + 1) are valid if they are within bounds. Note that
+        // the first condition guarantees that end + 1 cannot overflow.
+        *self.end() < len && *self.start() <= *self.end() + 1
     }
 
     fn compose(&self, base: Range<usize>) -> Range<usize> {
@@ -550,7 +584,7 @@ impl ComposeRange for RangeToInclusive<usize> {
 /// `where Self: 'a`. Moreover, it requires [`SliceByValue`].
 ///
 /// As in other theoretical applications of GATs (Generic Associated Types),
-/// like [lenders](https://crates.io/crates/lender), using a GAT to express the
+/// like [lenders], using a GAT to express the
 /// type of a subslice is problematic because when bounding the type itself in a
 /// `where` clause using Higher-Rank Trait Bounds (HRTBs) the bound must be true
 /// for all lifetimes, including `'static`, resulting in the sliced type having
@@ -564,6 +598,7 @@ impl ComposeRange for RangeToInclusive<usize> {
 /// Please see [Sabrina's Blog][1] for more information, and how a trait like
 /// this can be used to solve it by implicitly restricting HRTBs.
 ///
+/// [lenders]: https://crates.io/crates/lender
 /// [1]:
 ///     <https://sabrinajewson.org/blog/the-better-alternative-to-lifetime-gats>
 pub trait SliceByValueSubsliceGat<'a, __Implicit: ImplBound = Ref<'a, Self>>: SliceByValue {
@@ -592,9 +627,13 @@ impl<'a, T: SliceByValueSubsliceGat<'a> + ?Sized> SliceByValueSubsliceGat<'a> fo
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
 ///
 /// The only method that must be implemented is
-/// [`get_subslice_unchecked`](`SliceByValueSubsliceRange::get_subslice_unchecked`).
+/// [`get_subslice_unchecked`].
+///
+/// [`get_subslice_unchecked`]: SliceByValueSubsliceRange::get_subslice_unchecked
 pub trait SliceByValueSubsliceRange<R: ComposeRange>: for<'a> SliceByValueSubsliceGat<'a> {
-    /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
+    /// See [the `Index` implementation for slices][slice-index].
+    ///
+    /// [slice-index]: slice#impl-Index%3CI%3E-for-%5BT%5D
     fn index_subslice(&self, range: R) -> Subslice<'_, Self> {
         assert_range(&range, self.len());
         unsafe {
@@ -605,13 +644,14 @@ pub trait SliceByValueSubsliceRange<R: ComposeRange>: for<'a> SliceByValueSubsli
 
     /// See [`slice::get_unchecked`].
     ///
-    /// For a safe alternative see
-    /// [`get_subslice`](SliceByValueSubsliceRange::get_subslice) or
-    /// [`index_subslice`](SliceByValueSubsliceRange::index_subslice).
+    /// For a safe alternative see [`get_subslice`] or [`index_subslice`].
     ///
     /// # Safety
     ///
     /// The range must be within bounds.
+    ///
+    /// [`get_subslice`]: SliceByValueSubsliceRange::get_subslice
+    /// [`index_subslice`]: SliceByValueSubsliceRange::index_subslice
     unsafe fn get_subslice_unchecked(&self, range: R) -> Subslice<'_, Self>;
 
     /// See [`slice::get`].
@@ -682,11 +722,15 @@ impl<'a, T: SliceByValueSubsliceGatMut<'a> + ?Sized> SliceByValueSubsliceGatMut<
 /// ranges ([`core::ops::Range`], [`core::ops::RangeFull`], etc.).
 ///
 /// The only method that must be implemented is
-/// [`get_subslice_unchecked_mut`](`SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut`).
+/// [`get_subslice_unchecked_mut`].
+///
+/// [`get_subslice_unchecked_mut`]: SliceByValueSubsliceRangeMut::get_subslice_unchecked_mut
 pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
     for<'a> SliceByValueSubsliceGatMut<'a>
 {
-    /// See [the `Index` implementation for slices](slice#impl-Index%3CI%3E-for-%5BT%5D).
+    /// See [the `Index` implementation for slices][slice-index].
+    ///
+    /// [slice-index]: slice#impl-Index%3CI%3E-for-%5BT%5D
     fn index_subslice_mut(&mut self, range: R) -> SubsliceMut<'_, Self> {
         assert_range(&range, self.len());
         unsafe {
@@ -697,13 +741,15 @@ pub trait SliceByValueSubsliceRangeMut<R: ComposeRange>:
 
     /// See [`slice::get_unchecked`].
     ///
-    /// For a safe alternative see
-    /// [`get_subslice_mut`](SliceByValueSubsliceRangeMut::get_subslice_mut) or
-    /// [`index_subslice_mut`](SliceByValueSubsliceRangeMut::index_subslice_mut).
+    /// For a safe alternative see [`get_subslice_mut`] or
+    /// [`index_subslice_mut`].
     ///
     /// # Safety
     ///
     /// The range must be within bounds.
+    ///
+    /// [`get_subslice_mut`]: SliceByValueSubsliceRangeMut::get_subslice_mut
+    /// [`index_subslice_mut`]: SliceByValueSubsliceRangeMut::index_subslice_mut
     unsafe fn get_subslice_unchecked_mut(&mut self, range: R) -> SubsliceMut<'_, Self>;
 
     /// See [`slice::get`].
@@ -1114,8 +1160,13 @@ mod tests {
 
         // RangeInclusive
         assert!((0..=1).is_valid(2));
-        assert!(!(1..=0).is_valid(2));
+        // Empty inclusive ranges are valid if within bounds, as in the
+        // standard library
+        assert!((1..=0).is_valid(2));
+        assert!((2..=1).is_valid(2));
+        assert!(!(3..=1).is_valid(2));
         assert!(!(0..=1).is_valid(1));
+        assert!(!(0..=usize::MAX).is_valid(usize::MAX));
 
         // RangeTo
         assert!((..0).is_valid(1));

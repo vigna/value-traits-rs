@@ -6,7 +6,9 @@
  * SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
  */
 
-//! Implementations of by-value traits for arrays of [cloneable](Clone) types.
+//! Implementations of by-value traits for arrays of [cloneable] types.
+//!
+//! [cloneable]: Clone
 
 use core::{
     iter::{Cloned, Skip},
@@ -164,6 +166,10 @@ impl<'a, T: Clone, const N: usize> IterateByValueFromGat<'a> for [T; N] {
 
 impl<T: Clone, const N: usize> IterateByValueFrom for [T; N] {
     fn iter_value_from(&self, from: usize) -> IterFrom<'_, Self> {
+        assert!(
+            from <= N,
+            "index out of bounds: the len is {N} but the starting index is {from}"
+        );
         self.iter().skip(from).cloned()
     }
 }

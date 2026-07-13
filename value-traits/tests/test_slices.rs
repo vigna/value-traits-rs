@@ -224,6 +224,57 @@ fn test_subslice_iter_value_from() {
     // iter_value_from(0) should give the full subslice
     let values: Vec<_> = value_traits::iter::IterateByValueFrom::iter_value_from(&sub, 0).collect();
     assert_eq!(values, vec![20, 30, 40]);
+
+    // iter_value_from at the length of the subslice gives an empty iterator
+    let values: Vec<_> = value_traits::iter::IterateByValueFrom::iter_value_from(&sub, 3).collect();
+    assert!(values.is_empty());
+}
+
+/// `iter_value_from` must panic when the starting position is greater than
+/// the length, both for native and for derived implementations.
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn test_native_iter_value_from_out_of_bounds() {
+    let v = vec![1_i32, 2, 3];
+    let _ = value_traits::iter::IterateByValueFrom::iter_value_from(&v.as_slice(), 4);
+}
+
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn test_derived_iter_value_from_out_of_bounds() {
+    let s = Sbv(vec![1_i32, 2, 3]);
+    let sub = s.index_subslice(..);
+    let _ = value_traits::iter::IterateByValueFrom::iter_value_from(&sub, 4);
+}
+
+/// Test the constructors of the generated iterator type.
+#[test]
+fn test_iter_new_with_range() {
+    let s = Sbv(vec![1_i32, 2, 3, 4, 5]);
+    let iter = SbvIter::new(&s);
+    assert_eq!(iter.collect::<Vec<_>>(), vec![1, 2, 3, 4, 5]);
+    let iter = SbvIter::new_with_range(&s, 1..4);
+    assert_eq!(iter.collect::<Vec<_>>(), vec![2, 3, 4]);
+    let iter = SbvIter::new_with_range(&s, 5..5);
+    assert_eq!(iter.count(), 0);
+}
+
+/// The generated `new_with_range` must reject out-of-bounds ranges: it used
+/// to accept them, which made an out-of-bounds `get_value_unchecked` read
+/// reachable from safe code.
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_iter_new_with_range_out_of_bounds() {
+    let s = Sbv(vec![1_i32]);
+    let _ = SbvIter::new_with_range(&s, 0..1_000_000);
+}
+
+#[test]
+#[should_panic(expected = "out of range")]
+#[allow(clippy::reversed_empty_ranges)] // We intentionally test a reversed range
+fn test_iter_new_with_range_reversed() {
+    let s = Sbv(vec![1_i32, 2, 3]);
+    let _ = SbvIter::new_with_range(&s, 2..1);
 }
 
 /// Test that `nth()` on a derived iterator works correctly for subslices with
@@ -319,43 +370,136 @@ fn test_copy_out_of_bounds() {
     let mut dst = vec![0_i32; 5];
 
     // Normal copy
-    src.copy(1, &mut dst, 2, 2);
+    src.as_slice().copy(1, dst.as_mut_slice(), 2, 2);
     assert_eq!(dst, vec![0, 0, 2, 3, 0]);
 
     // from > src.len(): should copy 0 elements
     let mut dst = vec![0_i32; 5];
-    src.copy(10, &mut dst, 0, 5);
+    src.as_slice().copy(10, dst.as_mut_slice(), 0, 5);
     assert_eq!(dst, vec![0, 0, 0, 0, 0]);
 
     // to > dst.len(): should copy 0 elements
     let mut dst = vec![0_i32; 5];
-    src.copy(0, &mut dst, 10, 5);
+    src.as_slice().copy(0, dst.as_mut_slice(), 10, 5);
     assert_eq!(dst, vec![0, 0, 0, 0, 0]);
 
     // from == src.len(): should copy 0 elements
     let mut dst = vec![0_i32; 5];
-    src.copy(5, &mut dst, 0, 5);
+    src.as_slice().copy(5, dst.as_mut_slice(), 0, 5);
     assert_eq!(dst, vec![0, 0, 0, 0, 0]);
 
     // to == dst.len(): should copy 0 elements
     let mut dst = vec![0_i32; 5];
-    src.copy(0, &mut dst, 5, 5);
+    src.as_slice().copy(0, dst.as_mut_slice(), 5, 5);
     assert_eq!(dst, vec![0, 0, 0, 0, 0]);
 
     // len = 0: should copy 0 elements
     let mut dst = vec![0_i32; 5];
-    src.copy(0, &mut dst, 0, 0);
+    src.as_slice().copy(0, dst.as_mut_slice(), 0, 0);
     assert_eq!(dst, vec![0, 0, 0, 0, 0]);
 
     // Partial copy clamped by src availability
     let mut dst = vec![0_i32; 5];
-    src.copy(3, &mut dst, 0, 100);
+    src.as_slice().copy(3, dst.as_mut_slice(), 0, 100);
     assert_eq!(dst, vec![4, 5, 0, 0, 0]);
 
     // Partial copy clamped by dst availability
     let mut dst = vec![0_i32; 3];
-    src.copy(0, &mut dst, 1, 100);
+    src.as_slice().copy(0, dst.as_mut_slice(), 1, 100);
     assert_eq!(dst, vec![0, 1, 2]);
+}
+
+/// Test `copy` between different slice types sharing the same value type.
+#[test]
+fn test_copy_across_types() {
+    let src = vec![1_i32, 2, 3, 4, 5];
+
+    // Vec -> array
+    let mut dst = [0_i32; 5];
+    src.as_slice().copy(1, &mut dst, 0, 3);
+    assert_eq!(dst, [2, 3, 4, 0, 0]);
+
+    // Vec -> slice
+    let mut dst = vec![0_i32; 5];
+    src.as_slice().copy(0, dst.as_mut_slice(), 2, 2);
+    assert_eq!(dst, vec![0, 0, 1, 2, 0]);
+
+    // Vec -> custom slice type
+    let mut dst = Sbv(vec![0_i32; 4]);
+    src.as_slice().copy(0, &mut dst, 2, 10);
+    assert_eq!(dst.0, vec![0, 0, 1, 2]);
+}
+
+/// Empty inclusive ranges are handled as in the standard library, both by
+/// native and by derived implementations.
+#[test]
+#[allow(clippy::reversed_empty_ranges)] // We intentionally test empty inclusive ranges
+fn test_empty_inclusive_ranges() {
+    let v = vec![10, 20, 30, 40, 50];
+    let s = Sbv(v.clone());
+
+    // In-bounds empty inclusive ranges are valid
+    assert!((2..=1).is_valid(5));
+    assert_eq!(v.get_subslice(2..=1).map(<[i32]>::len), Some(0));
+    assert_eq!(s.get_subslice(2..=1).map(|sub| sub.len()), Some(0));
+    assert_eq!(s.index_subslice(2..=1).len(), 0);
+
+    // Non-normalizable or out-of-bounds inclusive ranges are not
+    assert!(!(3..=1).is_valid(5));
+    assert!(v.as_slice().get_subslice(3..=1).is_none());
+    assert!(s.get_subslice(3..=1).is_none());
+    assert!(v.as_slice().get_subslice(0..=5).is_none());
+    assert!(s.get_subslice(0..=5).is_none());
+}
+
+/// Test `apply_in_place` and `apply_in_place_unchecked`, both on native and
+/// on derived types.
+#[test]
+fn test_apply_in_place() {
+    let mut v = vec![1_i32, 2, 3, 4, 5];
+    v.apply_in_place(|x| x * 2);
+    assert_eq!(v, vec![2, 4, 6, 8, 10]);
+    // SAFETY: the function preserves the value type
+    unsafe { v.apply_in_place_unchecked(|x| x - 1) };
+    assert_eq!(v, vec![1, 3, 5, 7, 9]);
+
+    let mut s = Sbv(vec![1_i32, 2, 3, 4, 5]);
+    let mut sub = s.index_subslice_mut(1..4);
+    sub.apply_in_place(|x| x + 10);
+    assert_eq!(s.0, vec![1, 12, 13, 14, 5]);
+}
+
+/// Derived mutable subslices do not support `try_chunks_mut` and must return
+/// `ChunksMutNotSupported`.
+#[test]
+fn test_derived_try_chunks_mut_not_supported() {
+    let mut s = Sbv(vec![1_i32, 2, 3, 4, 5]);
+    let mut sub = s.index_subslice_mut(..);
+    assert_eq!(sub.try_chunks_mut(2).err(), Some(ChunksMutNotSupported));
+    assert_eq!(
+        ChunksMutNotSupported.to_string(),
+        "try_chunks_mut is not supported on subslices"
+    );
+}
+
+/// The generated subslice and iterator types implement `Clone` and `Debug`.
+#[test]
+fn test_generated_types_clone_debug() {
+    let s = Sbv(vec![1_i32, 2, 3]);
+    let sub = s.index_subslice(1..3);
+    let sub2 = sub.clone();
+    assert_eq!(sub2.index_value(0), 2);
+    assert!(format!("{sub:?}").contains("SbvSubsliceImpl"));
+
+    let mut iter = value_traits::iter::IterateByValue::iter_value(&sub);
+    iter.next();
+    let iter2 = iter.clone();
+    assert_eq!(iter2.collect::<Vec<_>>(), vec![3]);
+    assert!(format!("{iter:?}").contains("SbvIter"));
+
+    let mut s = Sbv(vec![1_i32, 2, 3]);
+    let sub_mut = s.index_subslice_mut(..);
+    assert!(format!("{sub_mut:?}").contains("SbvSubsliceImplMut"));
 }
 
 // Checks that we can derive an enum.
@@ -392,6 +536,78 @@ impl SliceByValue for Sbv4 {
     unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
         index
     }
+}
+
+// Checks that we can derive a non-public type: the generated types share its
+// visibility.
+#[derive(Subslices, Iterators)]
+struct SbvPrivate(Vec<i32>);
+
+impl SliceByValue for SbvPrivate {
+    type Value = i32;
+
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        unsafe { self.0.as_slice().get_value_unchecked(index) }
+    }
+}
+
+#[test]
+fn test_private_derive() {
+    let s = SbvPrivate(vec![1, 2, 3]);
+    assert_eq!(s.index_subslice(1..).len(), 2);
+}
+
+// Checks that we can derive types with lifetime and const generic parameters.
+#[derive(Subslices, Iterators)]
+pub struct SbvBorrowed<'x, T: Clone>(&'x [T]);
+
+impl<'x, T: Clone> SliceByValue for SbvBorrowed<'x, T> {
+    type Value = T;
+
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        unsafe { self.0.get_value_unchecked(index) }
+    }
+}
+
+#[derive(Subslices, Iterators)]
+pub struct SbvFixed<T: Clone, const N: usize>([T; N]);
+
+impl<T: Clone, const N: usize> SliceByValue for SbvFixed<T, N> {
+    type Value = T;
+
+    fn len(&self) -> usize {
+        N
+    }
+
+    unsafe fn get_value_unchecked(&self, index: usize) -> Self::Value {
+        unsafe { self.0.get_value_unchecked(index) }
+    }
+}
+
+#[test]
+fn test_generic_derives() {
+    let v = [1_i32, 2, 3];
+    let b = SbvBorrowed(&v);
+    assert_eq!(b.index_subslice(1..).len(), 2);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&b.index_subslice(..)).collect::<Vec<_>>(),
+        vec![1, 2, 3]
+    );
+
+    let f = SbvFixed([1_i32, 2, 3, 4]);
+    assert_eq!(f.index_subslice(..2).len(), 2);
+    assert_eq!(
+        value_traits::iter::IterateByValue::iter_value(&f.index_subslice(2..)).collect::<Vec<_>>(),
+        vec![3, 4]
+    );
 }
 
 /// Test optimized `count()` on derived iterators.
