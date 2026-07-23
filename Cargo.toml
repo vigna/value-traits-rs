@@ -8,4 +8,4 @@ members = [
 
 [workspace.dependencies]
 value-traits = {path = "./value-traits" }
-value-traits-derive = {path = "./value-traits-derive", version = "0.3.0" }
+value-traits-derive = {path = "./value-traits-derive", version = "0.3.1" }
